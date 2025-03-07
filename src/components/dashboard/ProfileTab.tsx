@@ -1,9 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
-import { PencilIcon, CheckIcon, X } from 'lucide-react';
+import { PencilIcon, CheckIcon, X,
+  Github, Twitter, Linkedin, Award, Layers as LayersIcon, MessageCircle
+ } from 'lucide-react';
+import { storage } from '@/lib/firebase';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { db } from '@/lib/firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { toast } from 'sonner';
 
 export default function ProfileTab({ user }) {
   const [isEditing, setIsEditing] = useState(false);
+  const [originalProfile, setOriginalProfile] = useState(null);
   const [profile, setProfile] = useState({
     name: user?.fullName || '',
     title: user?.title || '',
@@ -18,29 +26,168 @@ export default function ProfileTab({ user }) {
     education: user?.education || [],
     skills: user?.skills || [],
     projects: user?.projects || [],
-    certifications: user?.certifications || []
+    certifications: user?.certifications || [],
+    contributions: user?.contributions || 0,
+    projectsCount: user?.projectsCount || 0,
+    badges: user?.badges || [],
+    social: user?.social || {
+      github: '',
+      twitter: '',
+      linkedin: ''
+    }
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSave = () => {
-    // Here you would typically call an API to save the profile
-    console.log('Saving profile:', profile);
-    // Then exit edit mode
-    setIsEditing(false);
+    useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!user?.uid) return;
+      
+      try {
+        setIsLoading(true);
+        const profileRef = doc(db, 'public_profiles', user.uid);
+        const profileSnap = await getDoc(profileRef);
+        
+        if (profileSnap.exists()) {
+          const data = profileSnap.data();
+          setProfile({
+            name: data.name || user?.fullName || '',
+          title: data.title || user?.title || '',
+          photo: data.photo || user?.photo || '',
+          coverPhoto: data.coverPhoto || user?.coverPhoto || '',
+          location: data.location || user?.location || '',
+          email: data.email || user?.email || '',
+          phone: data.phone || user?.phone || '',
+          website: data.website || user?.website || '',
+          about: data.about || user?.about || '',
+          experience: data.experience || [],
+          education: data.education || [],
+          skills: data.skills || [],
+          projects: data.projects || [],
+          certifications: data.certifications || [],
+          contributions: data.contributions || 0,
+          projectsCount: data.projectsCount || (data.projects?.length || 0),
+          badges: data.badges || [],
+          social: data.social || {
+            github: '',
+            twitter: '',
+            linkedin: ''
+          }
+        });
+        } else {
+          // If no public profile exists yet, create one with user data
+          setDoc(profileRef, {
+            name: user?.fullName || '',
+            email: user?.email || '',
+            userId: user.uid,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        toast.error("Failed to load profile data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    fetchProfileData();
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!user?.uid) {
+      toast.error("You must be logged in to update your profile");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      let updatedProfile = {...profile};
+      
+      // Handle photo uploads if they are data URLs (from new uploads)
+      // if (profile.photo && profile.photo.startsWith('data:')) {
+      //   const photoRef = ref(storage, `profiles/${user.uid}/profile-photo`);
+      //   await uploadString(photoRef, profile.photo, 'data_url');
+      //   const photoURL = await getDownloadURL(photoRef);
+      //   updatedProfile.photo = photoURL;
+      // }
+      
+      // if (profile.coverPhoto && profile.coverPhoto.startsWith('data:')) {
+      //   const coverRef = ref(storage, `profiles/${user.uid}/cover-photo`);
+      //   await uploadString(coverRef, profile.coverPhoto, 'data_url');
+      //   const coverURL = await getDownloadURL(coverRef);
+      //   updatedProfile.coverPhoto = coverURL;
+      // }
+      
+      // Save to Firebase
+      const profileRef = doc(db, 'public_profiles', user.uid);
+      await setDoc(profileRef, {
+        ...updatedProfile,
+        userId: user.uid,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      
+      // Update the name in the user profile if changed
+      if (profile.name && profile.name !== user?.fullName) {
+        const userProfileRef = doc(db, 'profiles', user.uid);
+        await setDoc(userProfileRef, {
+          full_name: profile.name
+        }, { merge: true });
+      }
+      
+      setOriginalProfile(null);
+      toast.success("Profile updated successfully");
+      setIsEditing(false);
+      
+      // Update local state with the URLs from Firebase Storage
+      setProfile(updatedProfile);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
-    // Revert changes (would need to store original state)
+    // Revert to original profile if we have one
+    if (originalProfile) {
+      setProfile(originalProfile);
+    }
     setIsEditing(false);
   };
 
+  const startEditing = () => {
+    // Store current profile before editing
+    setOriginalProfile({...profile});
+    setIsEditing(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4 sm:space-y-6 mt-5">
+        <WelcomeSection title="Profile" subtitle="Your Public Profile" />
+        <div className="p-8 flex flex-col items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading your profile...</p>
+          <div className="w-full max-w-md mt-8">
+        <div className="h-4 bg-gray-200 rounded animate-pulse mb-4"></div>
+        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4 mb-4"></div>
+        <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-4 sm:space-y-6 mt-5">
-    <div className="grid grid-rows-1 gap-1">
-      <WelcomeSection title="Profile" subtitle="Your Public Profile" />
+      <div className="grid grid-rows-1 gap-1">
+        <WelcomeSection title="Profile" subtitle="Your Public Profile" />
         <div>
           {!isEditing ? (
             <button 
-              onClick={() => setIsEditing(true)}
+              onClick={startEditing}
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               <PencilIcon className="h-4 w-4 mr-2" /> Edit Profile
@@ -49,13 +196,20 @@ export default function ProfileTab({ user }) {
             <div className="flex space-x-2">
               <button 
                 onClick={handleSave}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                disabled={isLoading}
+                className={`flex items-center px-4 py-2 bg-green-600 text-white rounded-md ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}`}
               >
-                <CheckIcon className="h-4 w-4 mr-2" /> Save
+                {isLoading ? (
+                  <span className="inline-block h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                ) : (
+                  <CheckIcon className="h-4 w-4 mr-2" />
+                )}
+                {isLoading ? 'Saving...' : 'Save'}
               </button>
               <button 
                 onClick={handleCancel}
-                className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                disabled={isLoading}
+                className={`flex items-center px-4 py-2 bg-gray-600 text-white rounded-md ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-700'}`}
               >
                 <X className="h-4 w-4 mr-2" /> Cancel
               </button>
@@ -92,7 +246,14 @@ export default function ProfileTab({ user }) {
               className="hidden" 
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 if (e.target.files && e.target.files[0]) {
-                  // For demo purposes - would typically upload to server
+                  // Validate file size (limit to 2MB)
+                  const fileSize = e.target.files[0].size / 1024 / 1024; // in MB
+                  if (fileSize > 2) {
+                    toast.error("File size should not exceed 2MB");
+                    return;
+                  }
+                  
+                  // For demo purposes - would typically upload to Firebase Storage
                   const reader = new FileReader();
                   reader.onload = (event) => {
                     if (event.target?.result) {
@@ -101,6 +262,9 @@ export default function ProfileTab({ user }) {
                         coverPhoto: event.target.result as string
                       });
                     }
+                  };
+                  reader.onerror = () => {
+                    toast.error("Failed to read file");
                   };
                   reader.readAsDataURL(e.target.files[0]);
                 }
@@ -241,14 +405,14 @@ export default function ProfileTab({ user }) {
                       {profile.website && (
                         <div className="flex items-center mt-1">
                           <span className="text-gray-500 text-sm mr-2">Website:</span>
-                          <a 
-                            href={profile.website} 
+                            <a 
+                            href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
-                          >
+                            >
                             {profile.website.replace(/(https?:\/\/)?(www\.)?/i, '')}
-                          </a>
+                            </a>
                         </div>
                       )}
                     </>
@@ -295,9 +459,101 @@ export default function ProfileTab({ user }) {
                 )}
               </div>
             </div>
+
+            {/* Social Links */}
+            <h4 className="text-md font-medium mb-3">Social Media</h4>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <Github className="h-5 w-5" />
+                {isEditing ? (
+                  <input
+                    type="url"
+                    value={profile.social.github}
+                    onChange={(e) => setProfile({
+                      ...profile,
+                      social: {...profile.social, github: e.target.value}
+                    })}
+                    className="p-2 border rounded focus:border-blue-500 focus:outline-none"
+                    placeholder="GitHub profile URL"
+                  />
+                ) : (
+                  profile.social.github ? (
+                    <a 
+                      href={profile.social.github} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {profile.social.github.replace(/^https?:\/\/(www\.)?github\.com\//, '')}
+                    </a>
+                  ) : (
+                    <span className="text-gray-500 italic">Not provided</span>
+                  )
+                )}
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <Twitter className="h-5 w-5" />
+                {isEditing ? (
+                  <input
+                    type="url"
+                    value={profile.social.twitter}
+                    onChange={(e) => setProfile({
+                      ...profile,
+                      social: {...profile.social, twitter: e.target.value}
+                    })}
+                    className="p-2 border rounded focus:border-blue-500 focus:outline-none"
+                    placeholder="Twitter/X profile URL"
+                  />
+                ) : (
+                  profile.social.twitter ? (
+                    <a 
+                      href={profile.social.twitter} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {profile.social.twitter.replace(/^https?:\/\/(www\.)?(twitter|x)\.com\//, '@')}
+                    </a>
+                  ) : (
+                    <span className="text-gray-500 italic">Not provided</span>
+                  )
+                )}
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <Linkedin className="h-5 w-5" />
+                {isEditing ? (
+                  <input
+                    type="url"
+                    value={profile.social.linkedin}
+                    onChange={(e) => setProfile({
+                      ...profile,
+                      social: {...profile.social, linkedin: e.target.value}
+                    })}
+                    className="p-2 border rounded focus:border-blue-500 focus:outline-none"
+                    placeholder="LinkedIn profile URL"
+                  />
+                ) : (
+                  profile.social.linkedin ? (
+                    <a 
+                      href={profile.social.linkedin} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {profile.social.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/(in\/)?/, '')}
+                    </a>
+                  ) : (
+                    <span className="text-gray-500 italic">Not provided</span>
+                  )
+                )}
+              </div>
+            </div>
+
             
             {/* About Section (keeping this for context) */}
-            <div className="mb-8">
+            <div className="mb-8 mt-10">
               <h3 className="text-lg font-semibold mb-3 border-b pb-2">About</h3>
               {isEditing ? (
                 <textarea
@@ -315,8 +571,56 @@ export default function ProfileTab({ user }) {
               )}
             </div>
 
+            
+
+          {/* Community Profile Section */}
+          {!isEditing && (
+            <>
+            <div className="flex justify-between items-center mb-3 mt-10 border-b pb-2">
+              <h3 className="text-lg font-semibold">Community Involvement</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <h4 className="text-md font-medium mb-3">Activity Stats</h4>
+                <div className="flex items-center justify-between mb-2 p-3 bg-gray-50 rounded-md">
+                  <div className="flex items-center">
+                    <MessageCircle className="h-5 w-5 text-blue-600 mr-3" />
+                    <span>Contributions</span>
+                  </div>
+                    <span className="font-semibold">{profile.contributions}</span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                  <div className="flex items-center">
+                    <LayersIcon className="h-5 w-5 text-blue-600 mr-3" />
+                    <span>Projects</span>
+                  </div>
+                    <span className="font-semibold">{profile.projectsCount}</span>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-md font-medium mb-3">Badges</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.badges.length === 0 ? (
+                      <p className="text-gray-500 italic">No badges earned yet.</p>
+                    ) : (
+                      profile.badges.map((badge, index) => (
+                        <div key={index} className="flex items-center bg-primary/10 text-primary rounded-full px-3 py-1">
+                          <Award className="h-3 w-3 mr-1" />
+                          <span className="text-sm">{badge}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+              </div>
+            </div>
+            </>
+          )}
+
           {/* Experience Section */}
-          <div className="mb-8">
+          <div className="mb-8 mt-10">
             <div className="flex justify-between items-center mb-3 border-b pb-2">
               <h3 className="text-lg font-semibold">Experience</h3>
               {isEditing && (
@@ -437,7 +741,7 @@ export default function ProfileTab({ user }) {
           </div>
 
           {/* Education Section */}
-          <div className="mb-8">
+          <div className="mb-8 mt-10">
             <div className="flex justify-between items-center mb-3 border-b pb-2">
               <h3 className="text-lg font-semibold">Education</h3>
               {isEditing && (
@@ -553,7 +857,7 @@ export default function ProfileTab({ user }) {
           </div>
 
           {/* Skills Section */}
-          <div className="mb-8">
+          <div className="mb-8 mt-10">
             <div className="flex justify-between items-center mb-3 border-b pb-2">
               <h3 className="text-lg font-semibold">Skills</h3>
             </div>
@@ -612,7 +916,7 @@ export default function ProfileTab({ user }) {
           </div>
 
           {/* Projects Section */}
-          <div className="mb-8">
+          <div className="mb-8 mt-10">
             <div className="flex justify-between items-center mb-3 border-b pb-2">
               <h3 className="text-lg font-semibold">Projects</h3>
               {isEditing && (
@@ -725,6 +1029,6 @@ export default function ProfileTab({ user }) {
           </div>
         </div>
       </div>
-    </div>
+      </div>
   );
 }

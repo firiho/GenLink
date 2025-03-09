@@ -68,20 +68,21 @@ const NotificationsDropdown = () => {
       <AnimatePresence>
         {isOpen && (
           <>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setIsOpen(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.2 }}
-              className={cn(
-                "absolute right-0 mt-2 w-80 sm:w-96 rounded-xl shadow-lg z-50",
-                "bg-white border border-gray-200 py-2"
-              )}
-            >
+          <div
+            className="fixed inset-0 z-40 bg-transparent cursor-default"
+            onClick={() => setIsOpen(false)}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className={cn(
+              "absolute right-0 mt-2 w-80 sm:w-96 rounded-xl shadow-lg z-50",
+              "bg-white border border-gray-200 py-2 pointer-events-auto"
+            )}
+            onClick={(e) => e.stopPropagation()}
+          >
               <div className="px-4 py-2 border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-gray-900">Notifications</h3>

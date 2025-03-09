@@ -68,7 +68,7 @@ const Dashboard = () => {
       ]
     },
     {
-      label: 'Settings',
+      label: 'Account',
       items: [
         { 
           icon: User, 

@@ -14,6 +14,7 @@ import {
 import { toast } from 'sonner';
 import { signOut } from '@/services/auth';
 import Logo from './Logo';
+import NotificationsDropdown from './dashboard/NotificationsDropdown';
 
 const navItems = [
   { label: 'Challenges', path: '/challenges' },
@@ -168,28 +169,26 @@ export const Header = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            className="md:hidden p-2 rounded-xl hover:bg-gray-100"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            <Menu className="h-6 w-6 text-gray-600" />
-          </motion.button>
+            <div className="md:hidden flex items-center ml-auto space-x-2">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <NotificationsDropdown />
+            </motion.div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              className="p-2 rounded-xl hover:bg-gray-100"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              <Menu className="h-6 w-6 text-gray-600" />
+            </motion.button>
+            </div>
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-3">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    variant="ghost"
-                    className="relative rounded-xl hover:bg-primary/5 w-10 h-10 p-0"
-                  >
-                    <Bell className="h-5 w-5 text-gray-600" />
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
-                  </Button>
+                  <NotificationsDropdown />
                 </motion.div>
-
                 <ProfileMenu user={user} />
               </div>
             ) : (

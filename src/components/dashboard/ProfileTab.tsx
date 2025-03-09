@@ -52,7 +52,7 @@ export default function ProfileTab({ user }) {
           setProfile({
             name: data.name || user?.fullName || '',
           title: data.title || user?.title || '',
-          photo: data.photo || user?.photo || '',
+          photo: data.photo || user?.photo || '/placeholder user.svg',
           coverPhoto: data.coverPhoto || user?.coverPhoto || '',
           location: data.location || user?.location || '',
           email: data.email || user?.email || '',
@@ -65,7 +65,7 @@ export default function ProfileTab({ user }) {
           projects: data.projects || [],
           certifications: data.certifications || [],
           contributions: data.contributions || 0,
-          projectsCount: data.projectsCount || (data.projects?.length || 0),
+          projectsCount: data.projectsCount || 0,
           badges: data.badges || [],
           social: data.social || {
             github: '',
@@ -594,7 +594,7 @@ export default function ProfileTab({ user }) {
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                   <div className="flex items-center">
                     <LayersIcon className="h-5 w-5 text-blue-600 mr-3" />
-                    <span>Projects</span>
+                    <span>Genlink Projects</span>
                   </div>
                     <span className="font-semibold">{profile.projectsCount}</span>
                 </div>
@@ -929,6 +929,7 @@ export default function ProfileTab({ user }) {
                       name: '', 
                       description: '',
                       link: 'https://',
+                      public: false,
                       year: ''
                     }]
                   })}
@@ -980,7 +981,7 @@ export default function ProfileTab({ user }) {
                           className="w-full h-24 p-2 border rounded-md focus:border-blue-500 focus:outline-none"
                           placeholder="Description"
                         />
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-3 gap-3">
                           <input
                             type="text"
                             value={project.link}
@@ -1003,12 +1004,34 @@ export default function ProfileTab({ user }) {
                             className="block border-b border-white p-1 focus:border-blue-500 focus:outline-none"
                             placeholder="Year"
                           />
+                          <label className="flex items-center cursor-pointer">
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                className="sr-only"
+                                checked={project.public}
+                                onChange={(e) => {
+                                  const updatedProjects = [...profile.projects];
+                                  updatedProjects[index].public = e.target.checked;
+                                  setProfile({...profile, projects: updatedProjects});
+                                }}
+                              />
+                              <div className={`block w-10 h-6 rounded-full transition-colors ${project.public ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+                              <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform ${project.public ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                            </div>
+                            <span className="ml-3 text-sm text-gray-700">{project.public ? 'Public' : 'Private'}</span>
+                          </label>
                         </div>
                       </div>
                     ) : (
                       <>
                         <h4 className="font-medium">{project.name}</h4>
-                        <p className="text-sm text-gray-500">{project.year}</p>
+                        <div className="flex items-center">
+                          <p className="text-sm text-gray-500">{project.year}</p>
+                          <span className={`ml-2 text-xs px-2 py-0.5 rounded ${project.public ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                            {project.public ? 'Public' : 'Private'}
+                          </span>
+                        </div>
                         <p className="mt-2 text-gray-600">{project.description}</p>
                         {project.link && (
                           <a 

@@ -1,9 +1,8 @@
 [build]
-  command = "npm install netlify-cli -g && npm run build"
-  publish = "/opt/build/repo/dist"
+  command = "npm install netlify-cli -g && npm run build && netlify build && netlify deploy --prod"
+  publish = "dist"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-[[plugins]]
-  package = "netlify-plugin-inline-functions-env"
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200 

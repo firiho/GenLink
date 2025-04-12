@@ -1,5 +1,5 @@
 [build]
-  command = "npm install netlify-cli -g && npm run build && netlify build && netlify deploy --prod"
+  command = "npm run build && netlify deploy --prod"
   publish = "dist"
 
 [[redirects]]

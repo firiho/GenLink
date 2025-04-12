@@ -369,8 +369,6 @@ const Community = () => {
       
       {/* Member Profile Modal */}
       <ProfileModal selectedMember={selectedMember} isProfileOpen={isProfileOpen} setIsProfileOpen={setIsProfileOpen} />
-
-      <Footer />
     </div>
   );
 };

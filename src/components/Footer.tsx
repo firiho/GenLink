@@ -105,7 +105,7 @@ export const Footer = () => {
               <Link to="/terms" className="hover:text-primary transition-colors">
                 Terms of Service
               </Link>
-              <span className="text-gray-400">© {new Date().getFullYear()} GAMO & FLA. All rights reserved.</span>
+              <span className="text-gray-400">© {new Date().getFullYear()} GenLink All rights reserved.</span>
             </div>
           </div>
         </div>

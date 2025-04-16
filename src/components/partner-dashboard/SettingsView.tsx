@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Plus, Building2, Globe, Mail, Bell, Users, Shield,
-  CreditCard, Smartphone, Upload, ChevronRight, Check
+  Plus, Building2, Globe,
+  CreditCard, Upload, ChevronRight, Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from '@/components/ui/badge';
 import { User } from '@/types/user';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import WelcomeSection from '../dashboard/WelcomeSection';
 
 interface SettingsViewProps {
   user: User | null;
@@ -34,12 +35,10 @@ export const SettingsView = ({ user, onSaveChanges }: SettingsViewProps) => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-5xl space-y-8"
+      className="space-y-5 sm:space-y-6 lg:space-y-8 mt-5"
     >
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Settings</h2>
-        <p className="text-gray-600">Manage your organization and account settings</p>
-      </div>
+
+      <WelcomeSection title={'Settings'} subtitle={'Manage your organization and account settings'} />
 
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full justify-start border-b mb-6">

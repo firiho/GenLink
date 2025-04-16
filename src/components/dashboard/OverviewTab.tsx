@@ -4,48 +4,90 @@ import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import SearchAndFilter from '@/components/dashboard/SearchAndFilter';
 import ChallengeCard from '@/components/dashboard/ChallengeCard';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useChallenges from '@/components/dashboard/useChallenges';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 export default function OverviewTab({setActiveView, user}) {
     const [showAllChallenges, setShowAllChallenges] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('all');
+    const [statsData, setStatsData] = useState({
+        active_challenges: '0',
+        total_active_team_members: '0',
+        total_submissions: '0',
+        success_rate: '0%'
+    });
+    const [loading, setLoading] = useState(true);
+
+        useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                setLoading(true);
+                const db = getFirestore();
+                
+                // Using direct document reference with user.uid
+                const profileDocRef = doc(db, 'public_profiles', user?.uid);
+                const profileSnapshot = await getDoc(profileDocRef);
+                
+                if (profileSnapshot.exists()) {
+                    const profileData = profileSnapshot.data();
+                    setStatsData({
+                        active_challenges: profileData.active_challenges?.toString() || '0',
+                        total_active_team_members: profileData.total_active_team_members?.toString() || '0',
+                        total_submissions: profileData.total_submissions?.toString() || '0',
+                        success_rate: `${profileData.success_rate || 0}%`
+                    });
+                } else {
+                    console.log("No profile document found for this user");
+                }
+            } catch (error) {
+                console.error("Error fetching stats:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+    
+        if (user?.uid) {
+            fetchStats();
+        }
+    }, [user]);
 
     const stats = [
         { 
-        label: 'Active Challenges', 
-        value: '8', 
-        change: '+2 this month',
-        icon: Trophy,
-        color: 'text-purple-500',
-        bg: 'bg-purple-500/10'
+            label: 'Active Challenges', 
+            value: statsData.active_challenges, 
+            change: '+0 this month',
+            icon: Trophy,
+            color: 'text-purple-500',
+            bg: 'bg-purple-500/10'
         },
         { 
-        label: 'Team Members', 
-        value: '24', 
-        change: '+5 this month',
-        icon: Users,
-        color: 'text-blue-500',
-        bg: 'bg-blue-500/10'
+            label: 'Team Members', 
+            value: statsData.total_active_team_members, 
+            change: '+0 this month',
+            icon: Users,
+            color: 'text-blue-500',
+            bg: 'bg-blue-500/10'
         },
         { 
-        label: 'Total Submissions', 
-        value: '156', 
-        change: '+32 this week',
-        icon: Target,
-        color: 'text-green-500',
-        bg: 'bg-green-500/10'
+            label: 'Total Submissions', 
+            value: statsData.total_submissions, 
+            change: '+0 this week',
+            icon: Target,
+            color: 'text-green-500',
+            bg: 'bg-green-500/10'
         },
         { 
-        label: 'Success Rate', 
-        value: '92%', 
-        change: '+8% this month',
-        icon: Star,
-        color: 'text-yellow-500',
-        bg: 'bg-yellow-500/10'
+            label: 'Success Rate', 
+            value: statsData.success_rate, 
+            change: '+0% this month',
+            icon: Star,
+            color: 'text-yellow-500',
+            bg: 'bg-yellow-500/10'
         }
     ];
+
     const allChallenges = [
         {
         id: '1',
@@ -73,7 +115,7 @@ export default function OverviewTab({setActiveView, user}) {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {stats.map((stat, index) => (
-            <StatsCard key={stat.label} stat={stat} index={index} />
+                <StatsCard key={stat.label} stat={stat} index={index} loading={loading} />
             ))}
         </div>
 

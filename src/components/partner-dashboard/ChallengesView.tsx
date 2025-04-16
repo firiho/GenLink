@@ -1,76 +1,66 @@
 import { motion } from 'framer-motion';
+import { useState, useMemo } from 'react';
 import { Plus, Search, FileText, Eye, PenTool, Play, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Challenge } from '@/types/user';
-
-interface ChallengesViewProps {
-  challenges: Challenge[];
-  searchQuery: string;
-  selectedFilter: string;
-  onSearchChange: (query: string) => void;
-  onFilterChange: (filter: string) => void;
-  onCreateChallenge: () => void;
-  onViewChallenge: (challenge: Challenge) => void;
-  onEditChallenge: (challenge: Challenge) => void;
-  onPublishChallenge: (challenge: Challenge) => void;
-  onArchiveChallenge: (challenge: Challenge) => void;
-}
+import WelcomeSection from '../dashboard/WelcomeSection';
+import { toast } from 'sonner';
 
 export const ChallengesView = ({
   challenges,
-  searchQuery,
-  selectedFilter,
-  onSearchChange,
-  onFilterChange,
-  onCreateChallenge,
-  onViewChallenge,
-  onEditChallenge,
-  onPublishChallenge,
-  onArchiveChallenge
-}: ChallengesViewProps) => {
+  setActiveView
+}) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+
+  const filteredChallenges = useMemo(() => {
+    return challenges.filter(challenge => {
+      // First apply the status filter
+      if (selectedFilter !== 'all' && challenge.status !== selectedFilter) {
+        return false;
+      }
+      
+      // Then apply the search filter
+      if (searchQuery.trim() === '') {
+        return true;
+      }
+      
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        challenge.title.toLowerCase().includes(searchLower) ||
+        challenge.description.toLowerCase().includes(searchLower) ||
+        challenge.categories.some(cat => cat.toLowerCase().includes(searchLower))
+      );
+    });
+  }, [challenges, searchQuery, selectedFilter]);
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold mb-2">Challenge Management</h2>
-          <p className="text-gray-600">Create and manage your innovation challenges</p>
-        </div>
-        <Button 
-          onClick={onCreateChallenge}
-          className="bg-primary text-white"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Create Challenge
-        </Button>
-      </div>
+    <div className="space-y-5 sm:space-y-6 lg:space-y-8 mt-5">
+      <WelcomeSection title={'Challenge Management'} subtitle={'Create and manage your innovation challenges'} />
 
       <div className="flex items-center space-x-4 mb-6">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Search challenges..."
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
           />
         </div>
-        <select
-          value={selectedFilter}
-          onChange={(e) => onFilterChange(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2"
+        <Button 
+          onClick={() => setActiveView('create-challenge')}
+          className="bg-primary text-white whitespace-nowrap"
+          size="sm"
         >
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="draft">Draft</option>
-          <option value="completed">Completed</option>
-          <option value="archived">Archived</option>
-        </select>
+          <Plus className="mr-2 h-3.5 w-3.5" />
+          Create Challenge
+        </Button>
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
+      <Tabs defaultValue="all" className="w-full" onValueChange={setSelectedFilter}>
         <TabsList className="w-full justify-start">
           <TabsTrigger value="all" className="flex-1">All Challenges</TabsTrigger>
           <TabsTrigger value="active" className="flex-1">Active</TabsTrigger>
@@ -80,14 +70,59 @@ export const ChallengesView = ({
 
         <TabsContent value="all" className="mt-6">
           <div className="grid gap-6">
-            {challenges.map((challenge) => (
+            {filteredChallenges.map((challenge) => (
               <ChallengeCard
                 key={challenge.id}
                 challenge={challenge}
-                onView={() => onViewChallenge(challenge)}
-                onEdit={() => onEditChallenge(challenge)}
-                onPublish={() => onPublishChallenge(challenge)}
-                onArchive={() => onArchiveChallenge(challenge)}
+                onView={() => console.log('View Challenge', challenge.id)}
+                onEdit={() => console.log('Edit Challenge', challenge.id)}
+                onPublish={() => console.log('Publish Challenge', challenge.id)}
+                onArchive={() => console.log('Archive Challenge', challenge.id)}
+              />
+            ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="active" className="mt-6">
+          <div className="grid gap-6">
+            {filteredChallenges.map((challenge) => (
+              <ChallengeCard
+                key={challenge.id}
+                challenge={challenge}
+                onView={() => console.log('View Challenge', challenge.id)}
+                onEdit={() => console.log('Edit Challenge', challenge.id)}
+                onPublish={() => console.log('Publish Challenge', challenge.id)}
+                onArchive={() => console.log('Archive Challenge', challenge.id)}
+              />
+            ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="draft" className="mt-6">
+          <div className="grid gap-6">
+            {filteredChallenges.map((challenge) => (
+              <ChallengeCard
+                key={challenge.id}
+                challenge={challenge}
+                onView={() => console.log('View Challenge', challenge.id)}
+                onEdit={() => console.log('Edit Challenge', challenge.id)}
+                onPublish={() => console.log('Publish Challenge', challenge.id)}
+                onArchive={() => console.log('Archive Challenge', challenge.id)}
+              />
+            ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="completed" className="mt-6">
+          <div className="grid gap-6">
+            {filteredChallenges.map((challenge) => (
+              <ChallengeCard
+                key={challenge.id}
+                challenge={challenge}
+                onView={() => console.log('View Challenge', challenge.id)}
+                onEdit={() => console.log('Edit Challenge', challenge.id)}
+                onPublish={() => console.log('Publish Challenge', challenge.id)}
+                onArchive={() => console.log('Archive Challenge', challenge.id)}
               />
             ))}
           </div>
@@ -98,7 +133,7 @@ export const ChallengesView = ({
 };
 
 interface ChallengeCardProps {
-  challenge: Challenge;
+  challenge;
   onView: () => void;
   onEdit: () => void;
   onPublish: () => void;

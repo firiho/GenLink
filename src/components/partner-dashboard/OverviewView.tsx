@@ -125,7 +125,7 @@ export const OverviewView = ({
               {recentChallenges.slice(0, 3).map((challenge) => (
                 <div
                   key={challenge.id}
-                  onClick={() => {}}
+                  onClick={() => setActiveView('preview-challenge', { challenge })}
                   className="p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                   <div className="flex items-start space-x-3">

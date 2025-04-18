@@ -7,15 +7,76 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WelcomeSection from '../dashboard/WelcomeSection';
 import { toast } from 'sonner';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 export const ChallengesView = ({
   challenges,
-  setActiveView
+  setActiveView,
+  refreshChallenges // Optional prop to refresh challenges after status changes
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Function to publish a challenge (change status to active)
+  const publishChallenge = async (challengeId) => {
+    if (isUpdating) return;
+    
+    try {
+      setIsUpdating(true);
+      
+      // Update the challenge status in Firestore
+      const challengeRef = doc(db, 'challenges', challengeId);
+      await updateDoc(challengeRef, {
+        status: 'active',
+        updatedAt: new Date()
+      });
+      
+      toast.success('Challenge published successfully!');
+      
+      // Refresh the challenges list if the refreshChallenges function is provided
+      if (typeof refreshChallenges === 'function') {
+        await refreshChallenges();
+      }
+    } catch (error) {
+      console.error('Error publishing challenge:', error);
+      toast.error('Failed to publish challenge. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Function to archive a challenge (change status to completed)
+  const archiveChallenge = async (challengeId) => {
+    if (isUpdating) return;
+    
+    try {
+      setIsUpdating(true);
+      
+      // Update the challenge status in Firestore
+      const challengeRef = doc(db, 'challenges', challengeId);
+      await updateDoc(challengeRef, {
+        status: 'completed',
+        updatedAt: new Date()
+      });
+      
+      toast.success('Challenge archived successfully!');
+      
+      // Refresh the challenges list if the refreshChallenges function is provided
+      if (typeof refreshChallenges === 'function') {
+        await refreshChallenges();
+      }
+    } catch (error) {
+      console.error('Error archiving challenge:', error);
+      toast.error('Failed to archive challenge. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const filteredChallenges = useMemo(() => {
+    // Your existing filtering logic
     return challenges.filter(challenge => {
       // First apply the status filter
       if (selectedFilter !== 'all' && challenge.status !== selectedFilter) {
@@ -74,10 +135,10 @@ export const ChallengesView = ({
               <ChallengeCard
                 key={challenge.id}
                 challenge={challenge}
-                onView={() => console.log('View Challenge', challenge.id)}
-                onEdit={() => console.log('Edit Challenge', challenge.id)}
-                onPublish={() => console.log('Publish Challenge', challenge.id)}
-                onArchive={() => console.log('Archive Challenge', challenge.id)}
+                onView={() => setActiveView('preview-challenge', { challenge })}
+                onEdit={() => setActiveView('create-challenge', { challenge, editMode: true })}
+                onPublish={() => publishChallenge(challenge.id)}
+                onArchive={() => archiveChallenge(challenge.id)}
               />
             ))}
           </div>
@@ -89,10 +150,10 @@ export const ChallengesView = ({
               <ChallengeCard
                 key={challenge.id}
                 challenge={challenge}
-                onView={() => console.log('View Challenge', challenge.id)}
-                onEdit={() => console.log('Edit Challenge', challenge.id)}
-                onPublish={() => console.log('Publish Challenge', challenge.id)}
-                onArchive={() => console.log('Archive Challenge', challenge.id)}
+                onView={() => setActiveView('preview-challenge', { challenge })}
+                onEdit={() => setActiveView('create-challenge', { challenge, editMode: true })}
+                onPublish={() => publishChallenge(challenge.id)}
+                onArchive={() => archiveChallenge(challenge.id)}
               />
             ))}
           </div>
@@ -104,10 +165,10 @@ export const ChallengesView = ({
               <ChallengeCard
                 key={challenge.id}
                 challenge={challenge}
-                onView={() => console.log('View Challenge', challenge.id)}
-                onEdit={() => console.log('Edit Challenge', challenge.id)}
-                onPublish={() => console.log('Publish Challenge', challenge.id)}
-                onArchive={() => console.log('Archive Challenge', challenge.id)}
+                onView={() => setActiveView('preview-challenge', { challenge })}
+                onEdit={() => setActiveView('create-challenge', { challenge, editMode: true })}
+                onPublish={() => publishChallenge(challenge.id)}
+                onArchive={() => archiveChallenge(challenge.id)}
               />
             ))}
           </div>
@@ -119,10 +180,10 @@ export const ChallengesView = ({
               <ChallengeCard
                 key={challenge.id}
                 challenge={challenge}
-                onView={() => console.log('View Challenge', challenge.id)}
-                onEdit={() => console.log('Edit Challenge', challenge.id)}
-                onPublish={() => console.log('Publish Challenge', challenge.id)}
-                onArchive={() => console.log('Archive Challenge', challenge.id)}
+                onView={() => setActiveView('preview-challenge', { challenge })}
+                onEdit={() => setActiveView('create-challenge', { challenge, editMode: true })}
+                onPublish={() => publishChallenge(challenge.id)}
+                onArchive={() => archiveChallenge(challenge.id)}
               />
             ))}
           </div>
@@ -192,7 +253,7 @@ const ChallengeCard = ({
             {challenge.status.charAt(0).toUpperCase() + challenge.status.slice(1)}
           </Badge>
           <p className="text-primary font-semibold">
-            {challenge.prize}
+            ${challenge.total_prize}
           </p>
         </div>
       </div>
@@ -227,12 +288,12 @@ const ChallengeCard = ({
                 <Play className="h-4 w-4 mr-1" />
                 Publish
               </Button>
-            ) : (
+            ) : challenge.status !== 'completed' ? (
               <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={onArchive}>
                 <Archive className="h-4 w-4 mr-1" />
                 Archive
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

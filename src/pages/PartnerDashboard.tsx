@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';  // Add useRef
 import { useNavigate, Navigate } from 'react-router-dom';
 import { signOut } from '@/services/auth';
 import { 
@@ -16,11 +16,94 @@ import SubmissionsView from '@/components/partner-dashboard/SubmissionsView';
 import { SettingsView } from '@/components/partner-dashboard/SettingsView';
 import { ChallengesView } from '@/components/partner-dashboard/ChallengesView';
 import { NewChallengeForm } from '@/components/partner-dashboard/NewChallengeForm';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import PreviewChallenge from '@/components/partner-dashboard/PreviewChallenge';
 
 const PartnerDashboard = () => {
   const [activeView, setActiveView] = useState('overview');
   const navigate = useNavigate();
   const { user: authUser, loading } = useAuth();
+  const [challenges, setChallenges] = useState([]);
+  const [fetchingChallenges, setFetchingChallenges] = useState(true);
+  const [viewData, setViewData] = useState(null);
+  const previousView = useRef(activeView);  // Track previous view
+  
+  // Extract the fetch function so we can reuse it
+  const fetchChallenges = async () => {
+    if (!authUser || !authUser.uid) return;
+    
+    setFetchingChallenges(true);
+    try {
+      // Query challenges where createdBy equals current user's UID
+      const challengesQuery = query(
+        collection(db, 'challenges'), 
+        where('createdBy', '==', authUser.uid)
+      );
+      
+      const querySnapshot = await getDocs(challengesQuery);
+      const challengesList = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        
+        // Convert Firestore timestamps to JS dates
+        const createdAt = data.createdAt?.toDate ? 
+          data.createdAt.toDate().toISOString() : 
+          data.createdAt;
+          
+        const updatedAt = data.updatedAt?.toDate ? 
+          data.updatedAt.toDate().toISOString() : 
+          data.updatedAt;
+          
+        const deadline = data.deadline;
+        
+        // Calculate days left          
+        const daysLeft = deadline ? 
+          Math.max(0, Math.ceil((new Date(deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 
+          'Unknown';
+        
+        return {
+          id: doc.id,
+          ...data,
+          createdAt,
+          updatedAt,
+          daysLeft,
+          participants: data.participants || 0,
+          submissions: data.submissions || 0,
+        };
+      });
+      
+      setChallenges(challengesList);
+      console.log("Challenges refreshed:", challengesList.length);
+    } catch (error) {
+      console.error('Error fetching challenges:', error);
+    } finally {
+      setFetchingChallenges(false);
+    }
+  };
+
+  // Initial fetch when component mounts
+  useEffect(() => {
+    if (authUser) {
+      fetchChallenges();
+    }
+  }, [authUser]);
+
+  // Only fetch when specifically going to 'challenges' view
+  useEffect(() => {
+    if (activeView === 'challenges' && previousView.current === 'create-challenge') {
+      fetchChallenges();
+    }
+    
+    // Also fetch when returning to overview after editing/creating a challenge
+    if (activeView === 'overview' && 
+        (previousView.current === 'create-challenge' || 
+         previousView.current === 'preview-challenge')) {
+      fetchChallenges();
+    }
+    
+    // Update the previous view ref
+    previousView.current = activeView;
+  }, [activeView]);
 
   const handleSignOut = async () => {
     try {
@@ -31,40 +114,10 @@ const PartnerDashboard = () => {
     }
   };
 
-  const challenges = [
-    {
-      id: '1',
-      title: 'AI Innovation Challenge 2024',
-      description: 'Looking for breakthrough AI solutions in healthcare',
-      organization: 'TechCorp International',
-      status: 'active',
-      participants: 234,
-      submissions: 89,
-      progress: 75,
-      daysLeft: 12,
-      prize: '$75,000',
-      deadline: '2024-05-20',
-      categories: ['AI', 'Healthcare'],
-      createdAt: '2024-01-15',
-      updatedAt: '2024-03-01'
-    },
-    {
-      id: '2',
-      title: 'Sustainable Energy Challenge',
-      description: 'Developing renewable energy solutions for rural areas',
-      organization: 'TechCorp International',
-      status: 'draft',
-      participants: 0,
-      submissions: 0,
-      progress: 0,
-      daysLeft: 30,
-      prize: '$50,000',
-      deadline: '2024-06-15',
-      categories: ['CleanTech', 'Sustainability'],
-      createdAt: '2024-03-01',
-      updatedAt: '2024-03-01'
-    }
-  ];
+  const handleViewChange = (view, data = null) => {
+    setActiveView(view);
+    setViewData(data);
+  };
 
   const submissions = [
     {
@@ -100,41 +153,64 @@ const PartnerDashboard = () => {
       score: 0
     },
   ];
-
-  if (loading) {
-      return <LoadingScreen />;
-    }
   
-    if (!authUser) {
-      return <Navigate to="/signin" />;
-    }
+  if (!authUser) {
+    return <Navigate to="/signin" />;
+  }
 
   const renderMainContent = () => {
     switch (activeView) {
       case 'overview':
         return (
-            < OverviewView user={authUser} recentChallenges={challenges} recentSubmissions={submissions} setActiveView={setActiveView}/>
+          <OverviewView 
+            user={authUser} 
+            recentChallenges={challenges.slice(0, 3)} 
+            recentSubmissions={submissions} 
+            setActiveView={handleViewChange}
+          />
         );
 
       case 'challenges':
         return (
-            <ChallengesView challenges={challenges} setActiveView={setActiveView}/>
+          <ChallengesView 
+            challenges={challenges} 
+            setActiveView={handleViewChange}
+            refreshChallenges={fetchChallenges}
+          />
         );
 
       case 'submissions':
         return (
-          <SubmissionsView submissions={submissions} challenges={challenges}/>
+          <SubmissionsView 
+            submissions={submissions} 
+            challenges={challenges}
+          />
         );
 
-      case 'create-challenge':
-        return (
-          <NewChallengeForm />
-        );
+        case 'create-challenge':
+          return (
+            <NewChallengeForm 
+              setActiveView={handleViewChange}
+              editMode={viewData?.editMode || false}
+              existingChallenge={viewData?.challenge || null}
+            />
+          );
 
       case 'settings':
         return (
-            <SettingsView user={authUser} onSaveChanges={() => {}}/>  
+          <SettingsView 
+            user={authUser} 
+            onSaveChanges={() => {}}
+          />  
         );
+
+        case 'preview-challenge':
+          return (
+            <PreviewChallenge 
+              challenge={viewData?.challenge}
+              setActiveView={handleViewChange}
+            />
+          );
 
       default:
         return null;
@@ -143,6 +219,7 @@ const PartnerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
+      {/* Rest of the component remains the same */}
       <MobileHeader
         user={authUser}
         onSignOut={handleSignOut}
@@ -152,6 +229,7 @@ const PartnerDashboard = () => {
         "fixed left-0 top-0 h-screen bg-white border-r border-gray-200 z-50",
         "w-72 hidden lg:block"
       )}>
+        {/* Sidebar content remains the same */}
         <div className="flex flex-col h-full">
           <Logo class_name="ml-4" />
 
@@ -248,21 +326,27 @@ const PartnerDashboard = () => {
           </div>
         </div>
       </aside>
-
       <main className={cn(
           "transition-all duration-200 ease-in-out",
           "lg:ml-72",
           "px-3 sm:px-6 lg:px-8",
           "pt-20 sm:pt-17 lg:pt-1 pb-20 lg:pb-12",
         )}>
+          {loading || fetchingChallenges ? (
+        <div className="flex items-center justify-center">
+          <LoadingScreen />
+        </div>
+      ) : (
         <div className="max-w-7xl mx-auto">
           {renderMainContent()}
         </div>
+           )}  
       </main>
+ 
 
       <MobileTabNav activeView={activeView} setActiveView={setActiveView} />
     </div>
   );
 };
 
-export default PartnerDashboard; 
+export default PartnerDashboard;

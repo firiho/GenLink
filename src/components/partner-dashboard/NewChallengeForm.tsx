@@ -1,171 +1,401 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import WelcomeSection from '../dashboard/WelcomeSection';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, X, Plus } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
+import { db, storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, setDoc } from 'firebase/firestore';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+import { query, collection, where, getDocs } from 'firebase/firestore';
 
-export const NewChallengeForm = () => {
+export const NewChallengeForm = ({setActiveView, editMode=false, existingChallenge = null}) => {
+
+  console.log('Edit Mode:', editMode, existingChallenge);
   // New challenge form state
-  const [newChallenge, setNewChallenge] = useState({
-    title: '',
-    description: '',
-    prize: '',
-    total_prize: 0,
-    deadline: '',
-    requirements: '',
-    categories: [],
-    skills: [],
-    status: 'draft',
-    maxParticipants: '',
-    submissionFormat: 'github', // or 'file' or 'url'
-    evaluationCriteria: '',
-    termsAndConditions: '',
-    coverImage: null,
-    companyInfo: {
-      name: '',
-      logo: null,
-      website: '',
-      contactEmail: ''
-    },
-    timeline: [
-      { phase: 'Judging', startDate: '', endDate: '' },
-      { phase: 'Announcement', startDate: '', endDate: '' }
-    ],
-    visibility: 'public',
-    allowTeams: true,
-    maxTeamSize: 5,
-    judges: [],
-    resources: [],
-    faq: []
+  const [challengeData, setChallengeData] = useState(() => {
+    if (editMode && existingChallenge) {
+      // When editing, use the existing challenge data
+      return {
+        ...existingChallenge,
+        // Ensure all expected fields exist
+        timeline: existingChallenge.timeline || [
+          { phase: 'Judging', startDate: '', endDate: '' },
+          { phase: 'Announcement', startDate: '', endDate: '' }
+        ],
+        resources: existingChallenge.resources || [],
+        faq: existingChallenge.faq || [],
+        judges: existingChallenge.judges || [],
+        categories: existingChallenge.categories || [],
+        skills: existingChallenge.skills || [],
+        companyInfo: existingChallenge.companyInfo || {
+          name: '',
+          logo: null,
+          logoUrl: '',
+          website: '',
+          contactEmail: ''
+        },
+      };
+    } else {
+      // When creating, use the default values
+      return {
+        id: uuidv4(),
+        title: '',
+        description: '',
+        prize: '',
+        total_prize: 0,
+        deadline: '',
+        requirements: '',
+        categories: [],
+        skills: [],
+        status: 'draft',
+        maxParticipants: '',
+        submissionFormat: 'github', // or 'file' or 'url'
+        evaluationCriteria: '',
+        termsAndConditions: '',
+        coverImage: null,
+        coverImageUrl: '',
+        companyInfo: {
+          name: '',
+          logo: null,
+          logoUrl: '',
+          website: '',
+          contactEmail: ''
+        },
+        timeline: [
+          { phase: 'Judging', startDate: '', endDate: '' },
+          { phase: 'Announcement', startDate: '', endDate: '' }
+        ],
+        visibility: 'public',
+        allowTeams: true,
+        maxTeamSize: 5,
+        judges: [],
+        resources: [],
+        faq: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: '' 
+      };
+    }
   });
 
   // For free-form input of categories and skills
   const [newCategory, setNewCategory] = useState('');
   const [newSkill, setNewSkill] = useState('');
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('basic');
-  const [showPreview, setShowPreview] = useState(false);
+
+  const { user } = useAuth();
+
+
+  // Fetch organization data when component mounts
+  useEffect(() => {
+    const fetchOrganizationData = async () => {
+      if (!user || !user.uid) return;
+      
+      setIsLoading(true);
+      try {
+        const orgQuery = query(collection(db, 'organizations'), where('created_by', '==', user.uid));
+        const orgSnapshot = await getDocs(orgQuery);
+        const orgDoc = orgSnapshot.docs.length > 0 ? orgSnapshot.docs[0] : null;
+  
+        console.log('Organization document:', orgDoc?.exists(), orgDoc?.data());
+        
+        // Create a single update to the state
+        setChallengeData(prevData => {
+          const updatedData = { ...prevData, createdBy: user.uid };
+          
+          // If org data exists, update the company info
+          if (orgDoc && orgDoc.exists()) {
+            const orgData = orgDoc.data();
+            updatedData.companyInfo = {
+              ...updatedData.companyInfo,
+              name: orgData.name || updatedData.companyInfo.name,
+              logoUrl: orgData.logoUrl || updatedData.companyInfo.logoUrl,
+              website: orgData.website || updatedData.companyInfo.website,
+              contactEmail: user.email || updatedData.companyInfo.contactEmail
+            };
+          }
+          
+          return updatedData;
+        });
+  
+      } catch (error) {
+        console.error("Error fetching organization data:", error);
+        toast.error('Error fetching organization data. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    fetchOrganizationData();
+  }, [user]);
 
   const handleAddCategory = () => {
-    if (newCategory.trim() && !newChallenge.categories.includes(newCategory.trim())) {
-      setNewChallenge({
-        ...newChallenge,
-        categories: [...newChallenge.categories, newCategory.trim()]
+    if (newCategory.trim() && !challengeData.categories.includes(newCategory.trim())) {
+      setChallengeData({
+        ...challengeData,
+        categories: [...challengeData.categories, newCategory.trim()]
       });
       setNewCategory('');
     }
   };
 
   const handleRemoveCategory = (category) => {
-    setNewChallenge({
-      ...newChallenge,
-      categories: newChallenge.categories.filter(c => c !== category)
+    setChallengeData({
+      ...challengeData,
+      categories: challengeData.categories.filter(c => c !== category)
     });
   };
 
   const handleAddSkill = () => {
-    if (newSkill.trim() && !newChallenge.skills.includes(newSkill.trim())) {
-      setNewChallenge({
-        ...newChallenge,
-        skills: [...newChallenge.skills, newSkill.trim()]
+    if (newSkill.trim() && !challengeData.skills.includes(newSkill.trim())) {
+      setChallengeData({
+        ...challengeData,
+        skills: [...challengeData.skills, newSkill.trim()]
       });
       setNewSkill('');
     }
   };
 
   const handleRemoveSkill = (skill) => {
-    setNewChallenge({
-      ...newChallenge,
-      skills: newChallenge.skills.filter(s => s !== skill)
+    setChallengeData({
+      ...challengeData,
+      skills: challengeData.skills.filter(s => s !== skill)
     });
   };
 
   const handleAddResource = () => {
-    setNewChallenge({
-      ...newChallenge,
-      resources: [...newChallenge.resources, { title: '', link: '', type: 'link' }]
+    setChallengeData({
+      ...challengeData,
+      resources: [...challengeData.resources, { title: '', link: '', type: 'link' }]
     });
   };
 
   const handleAddFaq = () => {
-    setNewChallenge({
-      ...newChallenge,
-      faq: [...newChallenge.faq, { question: '', answer: '' }]
+    setChallengeData({
+      ...challengeData,
+      faq: [...challengeData.faq, { question: '', answer: '' }]
     });
   };
 
   const handleAddJudge = () => {
-    setNewChallenge({
-      ...newChallenge,
-      judges: [...newChallenge.judges, { name: '', email: '', organization: '', title: '' }]
+    setChallengeData({
+      ...challengeData,
+      judges: [...challengeData.judges, { name: '', email: '', organization: '', title: '' }]
     });
   };
 
-  const handleUploadImage = (e, field) => {
+  const handleUploadImage = async (e, field) => {
     const file = e.target.files[0];
-    if (file) {
-      // In a real app, you would handle file upload to a storage service
-      // For now, store the file object for preview
-      if (field === 'coverImage') {
-        setNewChallenge({ ...newChallenge, coverImage: file });
-      } else if (field === 'companyLogo') {
-        setNewChallenge({ 
-          ...newChallenge, 
-          companyInfo: { ...newChallenge.companyInfo, logo: file } 
-        });
-      }
+    if (!file) return;
+  
+    if (field === 'coverImage') {
+      // If replacing an existing image, keep track of the original URL 
+      // in case we want to restore it
+      const previousImageUrl = challengeData.coverImageUrl;
+      
+      setChallengeData({ 
+        ...challengeData, 
+        coverImage: file,
+        // Keep old URL for preview until new image is uploaded 
+        _previousCoverImageUrl: previousImageUrl 
+      });
+    } else if (field === 'companyLogo') {
+      const previousLogoUrl = challengeData.companyInfo.logoUrl;
+      
+      setChallengeData({ 
+        ...challengeData, 
+        companyInfo: { 
+          ...challengeData.companyInfo, 
+          logo: file,
+          // Keep old URL for preview until new image is uploaded
+          _previousLogoUrl: previousLogoUrl
+        } 
+      });
     }
   };
 
   const updateTimelinePhase = (index, field, value) => {
-    const updatedTimeline = [...newChallenge.timeline];
+    const updatedTimeline = [...challengeData.timeline];
     updatedTimeline[index] = { ...updatedTimeline[index], [field]: value };
-    setNewChallenge({ ...newChallenge, timeline: updatedTimeline });
+    setChallengeData({ ...challengeData, timeline: updatedTimeline });
   };
 
   const updateResource = (index, field, value) => {
-    const updatedResources = [...newChallenge.resources];
+    const updatedResources = [...challengeData.resources];
     updatedResources[index] = { ...updatedResources[index], [field]: value };
-    setNewChallenge({ ...newChallenge, resources: updatedResources });
+    setChallengeData({ ...challengeData, resources: updatedResources });
   };
 
   const updateFaq = (index, field, value) => {
-    const updatedFaq = [...newChallenge.faq];
+    const updatedFaq = [...challengeData.faq];
     updatedFaq[index] = { ...updatedFaq[index], [field]: value };
-    setNewChallenge({ ...newChallenge, faq: updatedFaq });
+    setChallengeData({ ...challengeData, faq: updatedFaq });
   };
 
   const updateJudge = (index, field, value) => {
-    const updatedJudges = [...newChallenge.judges];
+    const updatedJudges = [...challengeData.judges];
     updatedJudges[index] = { ...updatedJudges[index], [field]: value };
-    setNewChallenge({ ...newChallenge, judges: updatedJudges });
+    setChallengeData({ ...challengeData, judges: updatedJudges });
   };
 
-  const onSubmit = (e) => {
+  const uploadImage = async (file: File, path: string): Promise<string> => {
+    try {
+      // Create a storage reference
+      const storageRef = ref(storage, path);
+      
+      // Upload the file
+      const snapshot = await uploadBytes(storageRef, file);
+      
+      // Get and return the download URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  };
+
+  
+  // Function to upload images to storage
+  const uploadImages = async () => {
+    let updatedChallenge = { ...challengeData };
+    setIsSubmitting(true);
+    
+    try {
+      // Upload cover image if there's a new file
+      if (challengeData.coverImage) {
+        const coverImagePath = `challenges/${challengeData.id}/cover`;
+        const coverImageUrl = await uploadImage(challengeData.coverImage, coverImagePath);
+        updatedChallenge.coverImageUrl = coverImageUrl;
+        updatedChallenge.coverImage = null; // Clear file reference after upload
+      }
+      
+      // Upload company logo if there's a new file
+      if (challengeData.companyInfo.logo) {
+        const logoPath = `challenges/${challengeData.id}/company_logo`;
+        const logoUrl = await uploadImage(challengeData.companyInfo.logo, logoPath);
+        updatedChallenge.companyInfo = {
+          ...updatedChallenge.companyInfo,
+          logoUrl: logoUrl,
+          logo: null // Clear file reference after upload
+        };
+      }
+      
+      return updatedChallenge;
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Function to save challenge to Firestore
+  const saveChallenge = async (challengeData, status) => {
+    try {
+      setIsSubmitting(true);
+      
+      // Prepare challenge data for Firestore
+      const { coverImage, companyInfo, ...rest } = challengeData;
+      
+      const preparedData = {
+        ...rest,
+        status,
+        companyInfo,
+        updatedAt: new Date()
+      };
+      
+      // Save to firebase
+      try {
+        const docRef = doc(db, 'challenges', preparedData.id);
+        await setDoc(docRef, preparedData, { merge: true });
+      } catch (error) {
+        console.error('Error adding document:', error);
+        throw error;
+      }
+    
+    } catch (error) {
+      console.error("Error saving challenge:", error);
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const onSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log('New Challenge:', newChallenge);
+    
+    try {
+      // First upload images
+      const challengeWithImages = await uploadImages();
+      
+      // Then save to Firestore with 'active' status
+      await saveChallenge(challengeWithImages, 'active');
+      
+      toast.success('Challenge created successfully!');
+      
+      // Here you would typically redirect to the challenge page
+      console.log('Challenge created:', challengeWithImages);
+    } catch (error) {
+      toast.error('Error creating challenge. Please try again.');
+    }
   };
 
   const onCancel = () => {
     // Handle cancel action here
-    console.log('Cancelled');
+    setActiveView('challenges')
   };
 
-  const onSaveDraft = () => {
-    setNewChallenge({ ...newChallenge, status: 'draft' });
-    console.log('Saved as draft:', newChallenge);
+  const onSaveDraft = async () => {
+    try {
+      // First upload images
+      const challengeWithImages = await uploadImages();
+      
+      // Then save to Firestore with 'draft' status
+      await saveChallenge(challengeWithImages, 'draft');
+      
+      toast.success('Draft saved successfully!');
+
+    } catch (error) {
+      toast.error('Error saving draft. Please try again.');
+    }
   };
+
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
+        <div className="relative">
+          <div className="h-24 w-24 rounded-full border-t-4 border-b-4 border-primary animate-spin"></div>
+          <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-r-4 border-l-4 border-indigo-300 animate-pulse"></div>
+        </div>
+        <div className="text-center space-y-3">
+          <h3 className="text-2xl font-bold text-primary animate-pulse">
+            Preparing Your Challenge Canvas
+          </h3>
+          <p className="text-gray-500 max-w-md">
+            Setting up the perfect environment for your next challenge...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
-      {!showPreview ? (
         <form onSubmit={onSubmit} className="space-y-5 sm:space-y-6 lg:space-y-8 mt-5">
           {/* Form Title */}
-          <WelcomeSection title={'Create a New Challenge / Hackathon'} subtitle="Fill in the details below to create a new challenge." />
-          
+          <WelcomeSection 
+              title={editMode ? 'Edit Challenge' : 'Create a New Challenge / Hackathon'} 
+              subtitle={editMode ? "Update your challenge details below." : "Fill in the details below to create a new challenge."} 
+            />
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid grid-cols-5 mb-6">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
@@ -184,8 +414,8 @@ export const NewChallengeForm = () => {
                   <div>
                     <label className="block text-sm font-medium mb-1">Challenge Title*</label>
                     <Input
-                      value={newChallenge.title}
-                      onChange={(e) => setNewChallenge({ ...newChallenge, title: e.target.value })}
+                      value={challengeData.title}
+                      onChange={(e) => setChallengeData({ ...challengeData, title: e.target.value })}
                       placeholder="Enter challenge title"
                       required
                     />
@@ -196,8 +426,8 @@ export const NewChallengeForm = () => {
                     <label className="block text-sm font-medium mb-1">Challenge Description*</label>
                     <textarea
                       className="w-full min-h-[150px] rounded-md border border-gray-200 p-2"
-                      value={newChallenge.description}
-                      onChange={(e) => setNewChallenge({ ...newChallenge, description: e.target.value })}
+                      value={challengeData.description}
+                      onChange={(e) => setChallengeData({ ...challengeData, description: e.target.value })}
                       placeholder="Describe your challenge in detail"
                       required
                     />
@@ -208,8 +438,8 @@ export const NewChallengeForm = () => {
                     <label className="block text-sm font-medium mb-1">Prize Details*</label>
                     <textarea
                       className="w-full min-h-[100px] rounded-md border border-gray-200 p-2"
-                      value={newChallenge.prize}
-                      onChange={(e) => setNewChallenge({ ...newChallenge, prize: e.target.value })}
+                      value={challengeData.prize}
+                      onChange={(e) => setChallengeData({ ...challengeData, prize: e.target.value })}
                       placeholder="Describe the prizes offered"
                       required
                     />
@@ -223,9 +453,9 @@ export const NewChallengeForm = () => {
                       <Input
                         type="number"
                         min="0"
-                        value={newChallenge.total_prize}
-                        onChange={(e) => setNewChallenge({ 
-                          ...newChallenge, 
+                        value={challengeData.total_prize}
+                        onChange={(e) => setChallengeData({ 
+                          ...challengeData, 
                           total_prize: parseFloat(e.target.value) || 0 
                         })}
                         placeholder="0.00"
@@ -241,8 +471,8 @@ export const NewChallengeForm = () => {
                     <label className="block text-sm font-medium mb-1">Final Submission Deadline*</label>
                     <Input
                       type="date"
-                      value={newChallenge.deadline}
-                      onChange={(e) => setNewChallenge({ ...newChallenge, deadline: e.target.value })}
+                      value={challengeData.deadline}
+                      onChange={(e) => setChallengeData({ ...challengeData, deadline: e.target.value })}
                       required
                     />
                   </div>
@@ -254,16 +484,52 @@ export const NewChallengeForm = () => {
                   <div>
                     <label className="block text-sm font-medium mb-1">Cover Image</label>
                     <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center">
-                      {newChallenge.coverImage ? (
+                      {challengeData.coverImage ? (
                         <div className="space-y-2">
-                          <p>{newChallenge.coverImage.name}</p>
+                          <p>{challengeData.coverImage.name}</p>
                           <button 
                             type="button" 
                             className="text-red-500 text-sm"
-                            onClick={() => setNewChallenge({ ...newChallenge, coverImage: null })}
+                            onClick={() => setChallengeData({ ...challengeData, coverImage: null })}
                           >
                             Remove
                           </button>
+                        </div>
+                      ) : challengeData.coverImageUrl ? (
+                        <div className="space-y-2">
+                          <div className="relative w-full h-32 mb-2">
+                            <img 
+                              src={challengeData.coverImageUrl} 
+                              alt="Cover" 
+                              className="h-full w-auto mx-auto object-contain"
+                            />
+                          </div>
+                          <p className="text-sm">Current cover image</p>
+                          <div className="flex justify-center gap-2">
+                            <button 
+                              type="button" 
+                              className="text-red-500 text-sm"
+                              onClick={() => setChallengeData({ 
+                                ...challengeData, 
+                                coverImageUrl: '' 
+                              })}
+                            >
+                              Remove
+                            </button>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleUploadImage(e, 'coverImage')}
+                              className="hidden"
+                              id="cover-image-replace"
+                            />
+                            <label 
+                              htmlFor="cover-image-replace" 
+                              className="text-primary text-sm cursor-pointer"
+                            >
+                              Replace
+                            </label>
+                          </div>
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -297,10 +563,10 @@ export const NewChallengeForm = () => {
                     <div>
                       <label className="block text-xs text-gray-500 mb-1">Company Name*</label>
                       <Input
-                        value={newChallenge.companyInfo.name}
-                        onChange={(e) => setNewChallenge({ 
-                          ...newChallenge, 
-                          companyInfo: { ...newChallenge.companyInfo, name: e.target.value } 
+                        value={challengeData.companyInfo.name}
+                        onChange={(e) => setChallengeData({ 
+                          ...challengeData, 
+                          companyInfo: { ...challengeData.companyInfo, name: e.target.value } 
                         })}
                         placeholder="Enter company name"
                         required
@@ -311,10 +577,10 @@ export const NewChallengeForm = () => {
                       <label className="block text-xs text-gray-500 mb-1">Company Website</label>
                       <Input
                         type="url"
-                        value={newChallenge.companyInfo.website}
-                        onChange={(e) => setNewChallenge({ 
-                          ...newChallenge, 
-                          companyInfo: { ...newChallenge.companyInfo, website: e.target.value } 
+                        value={challengeData.companyInfo.website}
+                        onChange={(e) => setChallengeData({ 
+                          ...challengeData, 
+                          companyInfo: { ...challengeData.companyInfo, website: e.target.value } 
                         })}
                         placeholder="https://example.com"
                       />
@@ -324,10 +590,10 @@ export const NewChallengeForm = () => {
                       <label className="block text-xs text-gray-500 mb-1">Contact Email*</label>
                       <Input
                         type="email"
-                        value={newChallenge.companyInfo.contactEmail}
-                        onChange={(e) => setNewChallenge({ 
-                          ...newChallenge, 
-                          companyInfo: { ...newChallenge.companyInfo, contactEmail: e.target.value } 
+                        value={challengeData.companyInfo.contactEmail}
+                        onChange={(e) => setChallengeData({ 
+                          ...challengeData, 
+                          companyInfo: { ...challengeData.companyInfo, contactEmail: e.target.value } 
                         })}
                         placeholder="contact@example.com"
                         required
@@ -363,9 +629,9 @@ export const NewChallengeForm = () => {
                       </Button>
                     </div>
                     
-                    {newChallenge.categories.length > 0 ? (
+                    {challengeData.categories.length > 0 ? (
                       <div className="flex flex-wrap gap-2 mt-2">
-                        {newChallenge.categories.map((category) => (
+                        {challengeData.categories.map((category) => (
                           <div 
                             key={category} 
                             className="flex items-center space-x-1 px-2 py-1 bg-gray-100 rounded-full text-sm"
@@ -406,9 +672,9 @@ export const NewChallengeForm = () => {
                       </Button>
                     </div>
                     
-                    {newChallenge.skills.length > 0 ? (
+                    {challengeData.skills.length > 0 ? (
                       <div className="flex flex-wrap gap-2 mt-2">
-                        {newChallenge.skills.map((skill) => (
+                        {challengeData.skills.map((skill) => (
                           <div 
                             key={skill} 
                             className="flex items-center space-x-1 px-2 py-1 bg-gray-100 rounded-full text-sm"
@@ -437,8 +703,8 @@ export const NewChallengeForm = () => {
                     <label className="block text-sm font-medium mb-1">Submission Format*</label>
                     <select
                       className="w-full rounded-md border border-gray-200 p-2"
-                      value={newChallenge.submissionFormat}
-                      onChange={(e) => setNewChallenge({ ...newChallenge, submissionFormat: e.target.value })}
+                      value={challengeData.submissionFormat}
+                      onChange={(e) => setChallengeData({ ...challengeData, submissionFormat: e.target.value })}
                       required
                     >
                       <option value="github">GitHub Repository</option>
@@ -454,8 +720,8 @@ export const NewChallengeForm = () => {
                     <Input
                       type="number"
                       min="0"
-                      value={newChallenge.maxParticipants}
-                      onChange={(e) => setNewChallenge({ ...newChallenge, maxParticipants: e.target.value })}
+                      value={challengeData.maxParticipants}
+                      onChange={(e) => setChallengeData({ ...challengeData, maxParticipants: e.target.value })}
                       placeholder="Leave blank for unlimited"
                     />
                     <p className="text-xs text-gray-500 mt-1">Leave blank for unlimited participants</p>
@@ -466,8 +732,8 @@ export const NewChallengeForm = () => {
                     <label className="block text-sm font-medium mb-1">Evaluation Criteria*</label>
                     <textarea
                       className="w-full min-h-[100px] rounded-md border border-gray-200 p-2"
-                      value={newChallenge.evaluationCriteria}
-                      onChange={(e) => setNewChallenge({ ...newChallenge, evaluationCriteria: e.target.value })}
+                      value={challengeData.evaluationCriteria}
+                      onChange={(e) => setChallengeData({ ...challengeData, evaluationCriteria: e.target.value })}
                       placeholder="Explain how submissions will be evaluated"
                       required
                     />
@@ -483,8 +749,8 @@ export const NewChallengeForm = () => {
                 <label className="block text-sm font-medium mb-1">Technical Requirements</label>
                 <textarea
                   className="w-full min-h-[200px] rounded-md border border-gray-200 p-2"
-                  value={newChallenge.requirements}
-                  onChange={(e) => setNewChallenge({ ...newChallenge, requirements: e.target.value })}
+                  value={challengeData.requirements}
+                  onChange={(e) => setChallengeData({ ...challengeData, requirements: e.target.value })}
                   placeholder="Describe any technical requirements or constraints for the challenge"
                 />
               </div>
@@ -503,11 +769,11 @@ export const NewChallengeForm = () => {
                   </Button>
                 </div>
                 
-                {newChallenge.resources.length === 0 ? (
+                {challengeData.resources.length === 0 ? (
                   <p className="text-sm text-gray-500 italic">No resources added yet</p>
                 ) : (
                   <div className="space-y-3">
-                    {newChallenge.resources.map((resource, index) => (
+                    {challengeData.resources.map((resource, index) => (
                       <div key={index} className="grid grid-cols-8 gap-2 items-start">
                         <div className="col-span-3">
                           <Input
@@ -540,9 +806,9 @@ export const NewChallengeForm = () => {
                             type="button" 
                             variant="outline" 
                             onClick={() => {
-                              const updatedResources = [...newChallenge.resources];
+                              const updatedResources = [...challengeData.resources];
                               updatedResources.splice(index, 1);
-                              setNewChallenge({ ...newChallenge, resources: updatedResources });
+                              setChallengeData({ ...challengeData, resources: updatedResources });
                             }}
                             size="icon"
                             className="h-9 w-9"
@@ -570,11 +836,11 @@ export const NewChallengeForm = () => {
                   </Button>
                 </div>
                 
-                {newChallenge.faq.length === 0 ? (
+                {challengeData.faq.length === 0 ? (
                   <p className="text-sm text-gray-500 italic">No FAQs added yet</p>
                 ) : (
                   <div className="space-y-4">
-                    {newChallenge.faq.map((faq, index) => (
+                    {challengeData.faq.map((faq, index) => (
                       <div key={index} className="space-y-2 p-3 border border-gray-200 rounded-md">
                         <div className="flex justify-between">
                           <label className="block text-xs text-gray-500">Question</label>
@@ -582,9 +848,9 @@ export const NewChallengeForm = () => {
                             type="button" 
                             variant="ghost" 
                             onClick={() => {
-                              const updatedFaqs = [...newChallenge.faq];
+                              const updatedFaqs = [...challengeData.faq];
                               updatedFaqs.splice(index, 1);
-                              setNewChallenge({ ...newChallenge, faq: updatedFaqs });
+                              setChallengeData({ ...challengeData, faq: updatedFaqs });
                             }}
                             size="icon"
                             className="h-6 w-6 text-gray-400"
@@ -616,7 +882,7 @@ export const NewChallengeForm = () => {
               <div>
                 <label className="block text-sm font-medium mb-3">Challenge Timeline</label>
                 <div className="space-y-4">
-                  {newChallenge.timeline.map((phase, index) => (
+                  {challengeData.timeline.map((phase, index) => (
                     <div key={index} className="grid grid-cols-3 gap-3 p-3 border border-gray-200 rounded-md">
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">{phase.phase}</label>
@@ -661,11 +927,11 @@ export const NewChallengeForm = () => {
                   </Button>
                 </div>
                 
-                {newChallenge.judges.length === 0 ? (
+                {challengeData.judges.length === 0 ? (
                   <p className="text-sm text-gray-500 italic">No judges added yet</p>
                 ) : (
                   <div className="space-y-3">
-                    {newChallenge.judges.map((judge, index) => (
+                    {challengeData.judges.map((judge, index) => (
                       <div key={index} className="grid grid-cols-9 gap-2 items-start">
                         <div className="col-span-2">
                           <Input
@@ -701,9 +967,9 @@ export const NewChallengeForm = () => {
                             type="button" 
                             variant="outline" 
                             onClick={() => {
-                              const updatedJudges = [...newChallenge.judges];
+                              const updatedJudges = [...challengeData.judges];
                               updatedJudges.splice(index, 1);
-                              setNewChallenge({ ...newChallenge, judges: updatedJudges });
+                              setChallengeData({ ...challengeData, judges: updatedJudges });
                             }}
                             size="icon"
                             className="h-9 w-9"
@@ -733,8 +999,8 @@ export const NewChallengeForm = () => {
                           id="visibility-public"
                           name="visibility"
                           value="public"
-                          checked={newChallenge.visibility === 'public'}
-                          onChange={() => setNewChallenge({ ...newChallenge, visibility: 'public' })}
+                          checked={challengeData.visibility === 'public'}
+                          onChange={() => setChallengeData({ ...challengeData, visibility: 'public' })}
                         />
                         <label htmlFor="visibility-public">
                           <span className="font-medium">Public</span>
@@ -748,8 +1014,8 @@ export const NewChallengeForm = () => {
                           id="visibility-private"
                           name="visibility"
                           value="private"
-                          checked={newChallenge.visibility === 'private'}
-                          onChange={() => setNewChallenge({ ...newChallenge, visibility: 'private' })}
+                          checked={challengeData.visibility === 'private'}
+                          onChange={() => setChallengeData({ ...challengeData, visibility: 'private' })}
                         />
                         <label htmlFor="visibility-private">
                           <span className="font-medium">Private</span>
@@ -763,8 +1029,8 @@ export const NewChallengeForm = () => {
                           id="visibility-unlisted"
                           name="visibility"
                           value="unlisted"
-                          checked={newChallenge.visibility === 'unlisted'}
-                          onChange={() => setNewChallenge({ ...newChallenge, visibility: 'unlisted' })}
+                          checked={challengeData.visibility === 'unlisted'}
+                          onChange={() => setChallengeData({ ...challengeData, visibility: 'unlisted' })}
                         />
                         <label htmlFor="visibility-unlisted">
                           <span className="font-medium">Unlisted</span>
@@ -781,24 +1047,24 @@ export const NewChallengeForm = () => {
                     <div className="flex items-center space-x-2">
                       <Checkbox 
                         id="allow-teams" 
-                        checked={newChallenge.allowTeams}
-                        onCheckedChange={(checked) => setNewChallenge({ 
-                          ...newChallenge, 
+                        checked={challengeData.allowTeams}
+                        onCheckedChange={(checked) => setChallengeData({ 
+                          ...challengeData, 
                           allowTeams: checked === true 
                         })}
                       />
                       <label htmlFor="allow-teams" className="text-sm">Allow team participation</label>
                     </div>
                     
-                    {newChallenge.allowTeams && (
+                    {challengeData.allowTeams && (
                       <div>
                         <label className="block text-xs text-gray-500 mb-1">Maximum Team Size</label>
                         <Input
                           type="number"
                           min="2"
                           max="20"
-                          value={newChallenge.maxTeamSize}
-                          onChange={(e) => setNewChallenge({ ...newChallenge, maxTeamSize: parseInt(e.target.value, 10) || 0 })}
+                          value={challengeData.maxTeamSize}
+                          onChange={(e) => setChallengeData({ ...challengeData, maxTeamSize: parseInt(e.target.value, 10) || 0 })}
                         />
                       </div>
                     )}
@@ -812,8 +1078,8 @@ export const NewChallengeForm = () => {
                     <label className="block text-sm font-medium mb-1">Terms and Conditions*</label>
                     <textarea
                       className="w-full min-h-[200px] rounded-md border border-gray-200 p-2"
-                      value={newChallenge.termsAndConditions}
-                      onChange={(e) => setNewChallenge({ ...newChallenge, termsAndConditions: e.target.value })}
+                      value={challengeData.termsAndConditions}
+                      onChange={(e) => setChallengeData({ ...challengeData, termsAndConditions: e.target.value })}
                       placeholder="Enter terms and conditions that participants must agree to"
                       required
                     />
@@ -829,8 +1095,9 @@ export const NewChallengeForm = () => {
               <Button 
                 type="button" 
                 variant="outline"
-                onClick={() => setShowPreview(true)}
+                onClick={() => setActiveView('preview-challenge', { challenge: challengeData })}
                 className="mr-2"
+                disabled={isSubmitting}
               >
                 Preview
               </Button>
@@ -838,8 +1105,9 @@ export const NewChallengeForm = () => {
                 type="button" 
                 variant="outline"
                 onClick={onSaveDraft}
+                disabled={isSubmitting}
               >
-                Save as Draft
+                {isSubmitting ? 'Saving...' : 'Save as Draft'}
               </Button>
             </div>
             <div className="space-x-3">
@@ -847,96 +1115,22 @@ export const NewChallengeForm = () => {
                 type="button" 
                 variant="outline"
                 onClick={onCancel}
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-primary text-white">
-                Create Challenge
+              <Button 
+                type="submit" 
+                className="bg-primary text-white"
+                disabled={isSubmitting}
+              >
+                {isSubmitting 
+                  ? (editMode ? 'Updating...' : 'Creating...')
+                  : (editMode ? 'Update and Launch Challenge' : 'Create Challenge')}
               </Button>
             </div>
           </div>
         </form>
-      ) : (
-        <div className="space-y-5 sm:space-y-6 lg:space-y-8 mt-5">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Challenge Preview</h2>
-            <Button
-              type="button"
-              onClick={() => setShowPreview(false)}
-            >
-              Back to Edit
-            </Button>
-          </div>
-          
-          {/* Preview content */}
-          <div className="border rounded-lg p-6 space-y-6">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold">{newChallenge.title || "Challenge Title"}</h1>
-              <div className="flex items-center space-x-2 text-gray-500">
-                <span>Hosted by {newChallenge.companyInfo.name || "Company Name"}</span>
-                <span>•</span>
-                <span>Deadline: {newChallenge.deadline || "Not set"}</span>
-              </div>
-              <div className="flex items-center space-x-2 text-gray-500">
-                <span>Total Prize: ${newChallenge.total_prize.toLocaleString()}</span>
-              </div>
-              {newChallenge.coverImage && (
-                <div className="mt-4 w-full h-[300px] bg-gray-100 rounded-lg flex items-center justify-center">
-                  <p>Cover Image: {newChallenge.coverImage.name}</p>
-                </div>
-              )}
-            </div>
-            
-            <div className="prose">
-              <h3>Description</h3>
-              <p>{newChallenge.description || "No description provided"}</p>
-              
-              <h3>Prizes</h3>
-              <p>{newChallenge.prize || "No prize information provided"}</p>
-              
-              {newChallenge.categories.length > 0 && (
-                <>
-                  <h3>Categories</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {newChallenge.categories.map(category => (
-                      <span key={category} className="px-2 py-1 bg-gray-100 rounded-full text-sm">
-                        {category}
-                      </span>
-                    ))}
-                  </div>
-                </>
-              )}
-              
-              {newChallenge.skills.length > 0 && (
-                <>
-                  <h3>Required Skills</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {newChallenge.skills.map(skill => (
-                      <span key={skill} className="px-2 py-1 bg-gray-100 rounded-full text-sm">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </>
-              )}
-              
-              <h3>Timeline</h3>
-              <ul>
-                {newChallenge.timeline.map((phase, index) => (
-                  <li key={index}>
-                    <strong>{phase.phase}: </strong>
-                    {phase.startDate && phase.endDate 
-                      ? `${phase.startDate} to ${phase.endDate}`
-                      : "Dates not set"}
-                  </li>
-                ))}
-              </ul>
-              
-              {/* Additional preview sections would go here */}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

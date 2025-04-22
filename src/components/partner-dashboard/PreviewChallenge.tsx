@@ -1,4 +1,4 @@
-import { ArrowLeft, FileText, Users, Award, Calendar, ExternalLink, Clock, Share2 } from 'lucide-react';
+import { ArrowLeft, FileText, Users, Award, Calendar, ExternalLink, Clock, Share2, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -199,10 +199,90 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                 transition={{ delay: 0.1 }}
                 className="bg-white p-6 rounded-xl shadow-sm"
               >
-                <h2 className="text-xl font-semibold mb-4">Prize Information</h2>
-                <div className="prose max-w-none">
-                  <p>{challenge.prize}</p>
+                <h2 className="text-xl font-semibold mb-4">Prize Distribution</h2>
+                
+                {/* Total Prize Display */}
+                <div className="flex items-center mb-4">
+                  <div className="p-2 bg-green-100 rounded-lg mr-3">
+                    <Award className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Total Prize Pool</p>
+                    <p className="text-xl font-semibold">${challenge.total_prize?.toLocaleString() || '0'}</p>
+                  </div>
                 </div>
+                
+                {/* Prize Distribution Visualization */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                  {/* 1st Place */}
+                  <div className="bg-gradient-to-b from-amber-50 to-amber-100 p-4 rounded-lg border border-amber-200 text-center">
+                    <div className="mx-auto w-10 h-10 bg-amber-400 rounded-full flex items-center justify-center mb-2">
+                      <Trophy className="h-5 w-5 text-white" />
+                    </div>
+                    <h4 className="font-bold text-sm mb-1">1st Place</h4>
+                    <p className="text-amber-800 font-bold text-xl">
+                      ${(challenge.prizeDistribution?.first || 
+                        Math.round((challenge.total_prize || 0) * 0.6)
+                      ).toLocaleString()}
+                    </p>
+                  </div>
+                  
+                  {/* 2nd Place */}
+                  <div className="bg-gradient-to-b from-gray-50 to-gray-100 p-4 rounded-lg border border-gray-200 text-center">
+                    <div className="mx-auto w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center mb-2">
+                      <Award className="h-5 w-5 text-white" />
+                    </div>
+                    <h4 className="font-bold text-sm mb-1">2nd Place</h4>
+                    <p className="text-gray-800 font-bold text-xl">
+                      ${(challenge.prizeDistribution?.second || 
+                        Math.round((challenge.total_prize || 0) * 0.3)
+                      ).toLocaleString()}
+                    </p>
+                  </div>
+                  
+                  {/* 3rd Place */}
+                  <div className="bg-gradient-to-b from-amber-50/70 to-amber-100/70 p-4 rounded-lg border border-amber-200/70 text-center">
+                    <div className="mx-auto w-10 h-10 bg-amber-700 rounded-full flex items-center justify-center mb-2">
+                      <Award className="h-5 w-5 text-white" />
+                    </div>
+                    <h4 className="font-bold text-sm mb-1">3rd Place</h4>
+                    <p className="text-amber-800 font-bold text-xl">
+                      ${(challenge.prizeDistribution?.third || 
+                        Math.round((challenge.total_prize || 0) * 0.1)
+                      ).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Additional Prizes */}
+                {challenge.prizeDistribution?.additional && challenge.prizeDistribution.additional.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-base font-medium mb-3">Special Prizes</h3>
+                    <div className="space-y-3">
+                      {challenge.prizeDistribution.additional.map((prize, index) => (
+                        <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3">
+                              <Award className="h-4 w-4" />
+                            </div>
+                            <span className="font-medium">{prize.name || 'Special Prize'}</span>
+                          </div>
+                          <span className="text-primary font-bold">${Number(prize.amount).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Non-monetary benefits */}
+                {challenge.prize && (
+                  <div className="mt-6 pt-4 border-t border-gray-100">
+                    <h3 className="text-base font-medium mb-3">Additional Benefits</h3>
+                    <div className="prose max-w-none text-gray-600">
+                      <p>{challenge.prize}</p>
+                    </div>
+                  </div>
+                )}
               </motion.div>
 
               {challenge.categories?.length > 0 && (

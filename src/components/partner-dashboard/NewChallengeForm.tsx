@@ -47,6 +47,12 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
         title: '',
         description: '',
         prize: '',
+        prizeDistribution: {
+          first: 0,
+          second: 0,
+          third: 0,
+          additional: []
+        },
         total_prize: 0,
         deadline: '',
         requirements: '',
@@ -262,6 +268,24 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
     }
   };
 
+    // Helper function to calculate total allocated prize amount
+  const calculateTotalAllocated = (prizeDistribution) => {
+    if (!prizeDistribution) return 0;
+    
+    let total = 0;
+    total += prizeDistribution.first || 0;
+    total += prizeDistribution.second || 0;
+    total += prizeDistribution.third || 0;
+    
+    if (prizeDistribution.additional && prizeDistribution.additional.length > 0) {
+      prizeDistribution.additional.forEach(prize => {
+        total += prize.amount || 0;
+      });
+    }
+    
+    return total;
+  };
+
   
   // Function to upload images to storage
   const uploadImages = async () => {
@@ -433,37 +457,236 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                     />
                   </div>
                   
-                  {/* Prize */}
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Prize Details*</label>
-                    <textarea
-                      className="w-full min-h-[100px] rounded-md border border-gray-200 p-2"
-                      value={challengeData.prize}
-                      onChange={(e) => setChallengeData({ ...challengeData, prize: e.target.value })}
-                      placeholder="Describe the prizes offered"
-                      required
-                    />
-                  </div>
-
-                  {/* Total Prize Amount */}
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Total Prize Amount*</label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={challengeData.total_prize}
-                        onChange={(e) => setChallengeData({ 
-                          ...challengeData, 
-                          total_prize: parseFloat(e.target.value) || 0 
-                        })}
-                        placeholder="0.00"
-                        className="pl-8"
-                        required
+                  {/* Prize Distribution Section */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Total Prize Amount*</label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={challengeData.total_prize}
+                          onChange={(e) => {
+                            const total = parseFloat(e.target.value) || 0;
+                            setChallengeData({ 
+                              ...challengeData, 
+                              total_prize: total,
+                              // Auto-calculate prize distribution when total changes
+                              prizeDistribution: {
+                                ...challengeData.prizeDistribution,
+                                first: total > 0 ? Math.round(total * 0.6) : 0,
+                                second: total > 0 ? Math.round(total * 0.3) : 0,
+                                third: total > 0 ? Math.round(total * 0.1) : 0
+                              }
+                            });
+                          }}
+                          placeholder="0.00"
+                          className="pl-8"
+                          required
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Enter the total prize pool amount</p>
+                    </div>
+                  
+                    <div>
+                      <label className="block text-sm font-medium mb-3">Prize Distribution</label>
+                      <div className="space-y-3 border border-gray-100 rounded-md p-4 bg-gray-50">
+                        {/* First place */}
+                        <div className="grid grid-cols-5 gap-2 items-center">
+                          <div className="col-span-2 flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center text-white font-bold">
+                              1
+                            </div>
+                            <label className="text-sm font-medium">First Place</label>
+                          </div>
+                          <div className="col-span-3 relative">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={challengeData.prizeDistribution?.first || 0}
+                              onChange={(e) => setChallengeData({
+                                ...challengeData,
+                                prizeDistribution: {
+                                  ...challengeData.prizeDistribution,
+                                  first: parseFloat(e.target.value) || 0
+                                }
+                              })}
+                              className="pl-8"
+                            />
+                          </div>
+                        </div>
+                  
+                        {/* Second place */}
+                        <div className="grid grid-cols-5 gap-2 items-center">
+                          <div className="col-span-2 flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
+                              2
+                            </div>
+                            <label className="text-sm font-medium">Second Place</label>
+                          </div>
+                          <div className="col-span-3 relative">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={challengeData.prizeDistribution?.second || 0}
+                              onChange={(e) => setChallengeData({
+                                ...challengeData,
+                                prizeDistribution: {
+                                  ...challengeData.prizeDistribution,
+                                  second: parseFloat(e.target.value) || 0
+                                }
+                              })}
+                              className="pl-8"
+                            />
+                          </div>
+                        </div>
+                  
+                        {/* Third place */}
+                        <div className="grid grid-cols-5 gap-2 items-center">
+                          <div className="col-span-2 flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-amber-700 flex items-center justify-center text-white font-bold">
+                              3
+                            </div>
+                            <label className="text-sm font-medium">Third Place</label>
+                          </div>
+                          <div className="col-span-3 relative">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={challengeData.prizeDistribution?.third || 0}
+                              onChange={(e) => setChallengeData({
+                                ...challengeData,
+                                prizeDistribution: {
+                                  ...challengeData.prizeDistribution,
+                                  third: parseFloat(e.target.value) || 0
+                                }
+                              })}
+                              className="pl-8"
+                            />
+                          </div>
+                        </div>
+                  
+                        {/* Additional prizes */}
+                        {challengeData.prizeDistribution?.additional?.map((prize, index) => (
+                          <div key={index} className="grid grid-cols-5 gap-2 items-center">
+                            <div className="col-span-2">
+                              <Input
+                                value={prize.name}
+                                onChange={(e) => {
+                                  const updatedAdditional = [...(challengeData.prizeDistribution?.additional || [])];
+                                  updatedAdditional[index] = { ...updatedAdditional[index], name: e.target.value };
+                                  setChallengeData({
+                                    ...challengeData,
+                                    prizeDistribution: {
+                                      ...challengeData.prizeDistribution,
+                                      additional: updatedAdditional
+                                    }
+                                  });
+                                }}
+                                placeholder="Prize name (e.g., Best UI)"
+                              />
+                            </div>
+                            <div className="col-span-2 relative">
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                value={prize.amount}
+                                onChange={(e) => {
+                                  const updatedAdditional = [...(challengeData.prizeDistribution?.additional || [])];
+                                  updatedAdditional[index] = { 
+                                    ...updatedAdditional[index], 
+                                    amount: parseFloat(e.target.value) || 0 
+                                  };
+                                  setChallengeData({
+                                    ...challengeData,
+                                    prizeDistribution: {
+                                      ...challengeData.prizeDistribution,
+                                      additional: updatedAdditional
+                                    }
+                                  });
+                                }}
+                                className="pl-8"
+                              />
+                            </div>
+                            <div className="col-span-1 flex justify-end">
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => {
+                                  const updatedAdditional = [...(challengeData.prizeDistribution?.additional || [])];
+                                  updatedAdditional.splice(index, 1);
+                                  setChallengeData({
+                                    ...challengeData,
+                                    prizeDistribution: {
+                                      ...challengeData.prizeDistribution,
+                                      additional: updatedAdditional
+                                    }
+                                  });
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                  
+                        {/* Add prize button */}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => {
+                            setChallengeData({
+                              ...challengeData,
+                              prizeDistribution: {
+                                ...challengeData.prizeDistribution,
+                                additional: [
+                                  ...(challengeData.prizeDistribution?.additional || []),
+                                  { name: '', amount: 0 }
+                                ]
+                              }
+                            });
+                          }}
+                        >
+                          + Add Special Prize
+                        </Button>
+                  
+                        {/* Summary */}
+                        <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
+                          <span className="text-sm font-medium">Total Allocated:</span>
+                          <span className="font-bold">
+                            ${calculateTotalAllocated(challengeData.prizeDistribution).toLocaleString()}
+                          </span>
+                        </div>
+                        
+                        {/* Warning if allocation doesn't match total */}
+                        {calculateTotalAllocated(challengeData.prizeDistribution) !== challengeData.total_prize && (
+                          <div className="text-amber-600 text-sm flex items-center gap-1 mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            Allocated amount doesn't match total prize pool
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Additional Prize Details</label>
+                      <textarea
+                        className="w-full min-h-[100px] rounded-md border border-gray-200 p-2"
+                        value={challengeData.prize}
+                        onChange={(e) => setChallengeData({ ...challengeData, prize: e.target.value })}
+                        placeholder="Describe any additional prizes, benefits, or opportunities for winners (e.g., mentorship, interviews, etc.)"
                       />
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">Enter the total prize pool amount</p>
                   </div>
 
                   {/* Deadline */}

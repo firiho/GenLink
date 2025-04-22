@@ -14,6 +14,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import PartnerPending from '@/pages/PartnerPending';
 import AdminLogin from '@/pages/AdminLogin';
 import AdminDashboard from '@/pages/AdminDashboard';
+import ChallengeView from '@/pages/ChallengeView';
 
 const PartnerRoute = ({ children }) => {
   const { user } = useAuth();
@@ -67,6 +68,7 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/challenges" element={<Challenges />} />
+          <Route path="/challenges/:id" element={<ChallengeView />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/community" element={<Community />} />
           <Route 

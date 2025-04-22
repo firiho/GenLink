@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Sparkles, ChevronDown, Bell, Menu, ArrowRight, LogOut, LayoutDashboard, Settings } from 'lucide-react';
+import { User, ChevronDown, Menu, ArrowRight, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
@@ -50,29 +50,17 @@ export const Header = () => {
     }
   };
 
+  const handleDashboardClick = () => {
+    if (user?.role === 'partner') {
+      navigate('/partner-dashboard');
+    } else if (user?.role === 'admin') {
+      navigate('/admin/dashboard');
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   const ProfileMenu = ({ user }) => {
-    const navigate = useNavigate();
-
-    const handleDashboardClick = () => {
-      // Check if user is a partner and navigate accordingly
-      if (user?.role === 'partner') {
-        navigate('/partner-dashboard');
-      } if (user?.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
-    };
-
-    // const handleSettingsClick = () => {
-    //   if (user?.role === 'partner') {
-    //     navigate('/partner-dashboard');
-    //   } if (user?.role === 'admin') {
-    //     navigate('/admin/dashboard?view=settings');
-    //   } else {
-    //     navigate('/dashboard');
-    //   }
-    // };
 
     return (
       <DropdownMenu>
@@ -253,7 +241,7 @@ export const Header = () => {
                 <div className="pt-3 border-t border-gray-200/50">
                   <Button
                     onClick={() => {
-                      navigate('/dashboard');
+                      handleDashboardClick();
                       setIsMobileMenuOpen(false);
                     }}
                     className="w-full justify-start"

@@ -2,42 +2,15 @@ import React from 'react';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { Partners } from '@/components/Partners';
-import { HackathonCard } from '@/components/HackathonCard';
 import { Footer } from '@/components/Footer';
 import { motion } from 'framer-motion';
 import { ArrowRight, Trophy, Users, Calendar, Star, Award, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import FeaturedChallenges from '@/components/FeaturedChallenges';
 
 const Index = () => {
-  const hackathons = [
-    {
-      title: "Rwanda Tech Innovation Challenge",
-      organizer: "Rwanda ICT Chamber",
-      prize: "$25,000",
-      participants: 450,
-      daysLeft: 14,
-      image: "/lovable-uploads/e2721391-268f-467e-a649-b1423b9e99d5.png"
-    },
-    {
-      title: "East African FinTech Hackathon",
-      organizer: "Bank of Kigali",
-      prize: "$30,000",
-      participants: 380,
-      daysLeft: 21,
-      image: "/lovable-uploads/e2721391-268f-467e-a649-b1423b9e99d5.png"
-    },
-    {
-      title: "Smart Cities Innovation Challenge",
-      organizer: "City of Kigali",
-      prize: "$20,000",
-      participants: 290,
-      daysLeft: 7,
-      image: "/lovable-uploads/e2721391-268f-467e-a649-b1423b9e99d5.png"
-    }
-  ];
-
   const winners = [
     {
       name: "Team Innovate",
@@ -118,56 +91,7 @@ const Index = () => {
       <Partners />
       
       {/* Featured Hackathons Section with Enhanced Design */}
-      <section className="py-24 bg-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-50/50 to-white pointer-events-none" />
-        <div className="container mx-auto px-4 relative">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex justify-between items-center mb-12"
-          >
-            <div className="flex flex-col sm:flex-row sm:justify-between items-center w-full gap-4 mt-4 sm:mt-0">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="w-5 h-5 text-yellow-500" />
-                <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700">
-                  Featured
-                </Badge>
-              </div>
-              <h2 className="text-3xl font-bold mb-2">Featured Challenges</h2>
-              <p className="text-gray-600">Explore our most popular innovation challenges</p>
-            </div>
-            <Link to="/challenges" className="w-full sm:w-auto">
-              <Button variant="ghost" className="group w-full sm:w-auto">
-                View all challenges
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
-          </div>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            {hackathons.map((hackathon, index) => (
-              <motion.div
-                key={hackathon.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-              >
-                <HackathonCard {...hackathon} />
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+      <FeaturedChallenges />
 
       {/* Project Winners Section with Enhanced Design */}
       <section className="py-24 bg-gray-50/50 relative overflow-hidden">

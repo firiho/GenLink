@@ -1,11 +1,11 @@
-import React from 'react';
-import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Calendar, Users, Award, ArrowUpRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface HackathonCardProps {
+  challengeId: string;
   title: string;
   organizer: string;
   prize: string;
@@ -15,6 +15,7 @@ interface HackathonCardProps {
 }
 
 export const HackathonCard = ({
+  challengeId,
   title,
   organizer,
   prize,
@@ -22,6 +23,13 @@ export const HackathonCard = ({
   daysLeft,
   image
 }: HackathonCardProps) => {
+  const navigate = useNavigate();
+
+  const handleViewChallenge = () => {
+    console.log(`Navigating to challenge with ID: ${challengeId}`);
+    navigate(`/challenge/${challengeId}`);
+  };
+
   return (
     <motion.div 
       whileHover={{ y: -5 }}
@@ -71,6 +79,7 @@ export const HackathonCard = ({
           <Button 
             variant="ghost" 
             className="text-primary hover:text-primary/80 hover:bg-primary/5 group/btn"
+            onClick={handleViewChallenge}
           >
             <span className="mr-2">View Challenge</span>
             <ArrowUpRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />

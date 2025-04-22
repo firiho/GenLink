@@ -11,15 +11,22 @@ import MobileTabNav from '@/components/dashboard/MobileTabNav';
 import LoadingScreen from '@/components/dashboard/LoadingScreen';
 import Logo from '@/components/Logo';
 import OverviewTab from '@/components/dashboard/OverviewTab';
-import ChallengesTab from '@/components/dashboard/ChallengesTab';
+import ChallengesTab from '@/components/dashboard/challenges/ChallengesTab';
 import TeamsTab from '@/components/dashboard/TeamsTab';
 import SettingsTab from '@/components/dashboard/SettingsTab';
 import ProfileTab from '@/components/dashboard/ProfileTab';
+import ChallengesView from '@/components/dashboard/challenges/ChallengesView';
 
 const Dashboard = () => {
   const { user: authUser, loading } = useAuth();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState('overview');
+  const [viewData, setViewData] = useState(null);
+
+  const handleViewChange = (view, data = null) => {
+    setActiveView(view);
+    setViewData(data);
+  };
   
   useEffect(() => {
     return () => {
@@ -42,9 +49,12 @@ const Dashboard = () => {
     return <LoadingScreen />;
   }
 
+  useEffect(() => {
   if (!authUser) {
-    return <Navigate to="/signin" />;
+    navigate('/login');
   }
+  }, [authUser]);
+  
 
   const MENU_ITEMS = [
     {
@@ -87,16 +97,19 @@ const Dashboard = () => {
   const renderMainContent = () => {
     switch (activeView) {
       case 'overview':
-        return <OverviewTab setActiveView={setActiveView} user={authUser} />;
+        return <OverviewTab setActiveView={handleViewChange} user={authUser} />;
 
       case 'challenges':
-        return <ChallengesTab />;
+        return <ChallengesTab setActiveView={handleViewChange}/>;
       
       case 'profile':
         return <ProfileTab user={authUser} />;
       
       case 'teams':
         return <TeamsTab />;
+
+      case 'do-challenge':
+        return <ChallengesView challengeId={viewData} onBack={() => setActiveView('challenges')} setActiveView={setActiveView} />;
 
       case 'settings':
         return <SettingsTab user={authUser} />;

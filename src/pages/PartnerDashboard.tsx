@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';  // Add useRef
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { signOut } from '@/services/auth';
 import { 
@@ -17,7 +17,7 @@ import { SettingsView } from '@/components/partner-dashboard/SettingsView';
 import { ChallengesView } from '@/components/partner-dashboard/ChallengesView';
 import { NewChallengeForm } from '@/components/partner-dashboard/NewChallengeForm';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import PreviewChallenge from '@/components/partner-dashboard/PreviewChallenge';
 
 const PartnerDashboard = () => {
@@ -25,10 +25,12 @@ const PartnerDashboard = () => {
   const navigate = useNavigate();
   const { user: authUser, loading } = useAuth();
   const [challenges, setChallenges] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
   const [fetchingChallenges, setFetchingChallenges] = useState(true);
+  const [fetchingSubmissions, setFetchingSubmissions] = useState(true);
   const [viewData, setViewData] = useState(null);
-  const previousView = useRef(activeView);  // Track previous view
-  
+  const previousView = useRef(activeView);
+
   // Extract the fetch function so we can reuse it
   const fetchChallenges = async () => {
     if (!authUser || !authUser.uid) return;
@@ -74,10 +76,98 @@ const PartnerDashboard = () => {
       
       setChallenges(challengesList);
       console.log("Challenges refreshed:", challengesList.length);
+      
+      // Fetch submissions for these challenges
+      if (challengesList.length > 0) {
+        fetchSubmissions(challengesList.map(c => c.id));
+      } else {
+        setFetchingSubmissions(false);
+      }
     } catch (error) {
       console.error('Error fetching challenges:', error);
+      setFetchingSubmissions(false);
     } finally {
       setFetchingChallenges(false);
+    }
+  };
+  
+  // New function to fetch submissions
+  const fetchSubmissions = async (challengeIds) => {
+    if (!challengeIds || challengeIds.length === 0) {
+      setSubmissions([]);
+      setFetchingSubmissions(false);
+      return;
+    }
+    
+    setFetchingSubmissions(true);
+    try {
+      // Get all submissions for challenges created by this partner
+      const submissionsQuery = query(
+        collection(db, 'submissions'),
+        where('challengeId', 'in', challengeIds.slice(0, 10)) // Firestore limits 'in' queries to 10 items
+      );
+      
+      const submissionsSnapshot = await getDocs(submissionsQuery);
+      
+      const submissionsPromises = submissionsSnapshot.docs.map(async (submissionDoc) => {
+        const data = submissionDoc.data();
+        
+        
+        // Get public profile for avatar
+        const publicProfileRef = doc(db, 'public_profiles', data.userId);
+        const publicProfileSnap = await getDoc(publicProfileRef);
+        const publicProfileData = publicProfileSnap.exists() ? publicProfileSnap.data() : {};
+        
+        console.log("Public Profile Data:", publicProfileData);
+        // Get challenge data
+        const challengeRef = doc(db, 'challenges', data.challengeId);
+        const challengeSnap = await getDoc(challengeRef);
+        const challengeData = challengeSnap.exists() ? challengeSnap.data() : {};
+        
+        console.log("Challenge Data:", challengeData);
+        // Convert timestamps
+        const submittedAt = data.createdAt?.toDate ? 
+          data.createdAt.toDate().toISOString() : 
+          data.createdAt;
+          
+        const updatedAt = data.updatedAt?.toDate ? 
+          data.updatedAt.toDate().toISOString() : 
+          data.updatedAt;
+        
+        return {
+          id: submissionDoc.id,
+          title: challengeData.title || 'Unnamed Challenge',
+          challenge: challengeData.title || 'Unnamed Challenge',
+          challengeId: data.challengeId,
+          githubUrl: data.submissionUrl || '',
+          participant: {
+            uid: data.userId,
+            name: publicProfileData.name || 'Anonymous User',
+            email: publicProfileData.email || 'No email provided',
+            avatar: publicProfileData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(publicProfileData.fullName || 'U')}`
+          },
+          status: data.status || 'pending',
+          submittedAt: submittedAt,
+          lastUpdated: updatedAt,
+          tags: challengeData.tags || [],
+          score: data.score || 0,
+          feedback: data.feedback || '',
+          note: data.note || ''
+        };
+      });
+      
+      // Use Promise.all to process all promises in parallel
+      const submissionsList = await Promise.all(submissionsPromises);
+      
+      // Sort submissions by date (newest first)
+      submissionsList.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+      
+      setSubmissions(submissionsList);
+      console.log("Submissions refreshed:", submissionsList.length);
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+    } finally {
+      setFetchingSubmissions(false);
     }
   };
 
@@ -88,22 +178,27 @@ const PartnerDashboard = () => {
     }
   }, [authUser]);
 
-  // Only fetch when specifically going to 'challenges' view
+  // Only fetch when specifically going to relevant views
   useEffect(() => {
-    if (activeView === 'challenges' && previousView.current === 'create-challenge') {
+    // Fetch challenges when returning to these views
+    if ((activeView === 'challenges' && previousView.current === 'create-challenge') ||
+        (activeView === 'overview' && 
+         (previousView.current === 'create-challenge' || 
+          previousView.current === 'preview-challenge'))) {
       fetchChallenges();
     }
     
-    // Also fetch when returning to overview after editing/creating a challenge
-    if (activeView === 'overview' && 
-        (previousView.current === 'create-challenge' || 
-         previousView.current === 'preview-challenge')) {
-      fetchChallenges();
+    // Fetch submissions when going to submissions view
+    if (activeView === 'submissions' && previousView.current !== 'submissions') {
+      // If we already have challenge IDs, fetch submissions directly
+      if (challenges.length > 0) {
+        fetchSubmissions(challenges.map(c => c.id));
+      }
     }
     
     // Update the previous view ref
     previousView.current = activeView;
-  }, [activeView]);
+  }, [activeView, challenges]);
 
   const handleSignOut = async () => {
     try {
@@ -119,44 +214,12 @@ const PartnerDashboard = () => {
     setViewData(data);
   };
 
-  const submissions = [
-    {
-      id: '1',
-      title: 'AI Healthcare Assistant',
-      challenge: 'AI Innovation Challenge 2024',
-      githubUrl: 'https://github.com/user/ai-healthcare',
-      participant: {
-        name: 'John Smith',
-        email: 'john@example.com',
-        avatar: 'https://ui-avatars.com/api/?name=John+Smith'
-      },
-      status: 'pending',
-      submittedAt: '2024-03-15T10:30:00Z',
-      lastUpdated: '2024-03-15T10:30:00Z',
-      tags: ['AI', 'Healthcare', 'Python'],
-      score: 0
-    },
-    {
-      id: '2',
-      title: 'Smart Diagnosis System',
-      challenge: 'Sustainable Energy Challenge',
-      githubUrl: 'https://github.com/user/smart-diagnosis',
-      participant: {
-        name: 'Sarah Johnson',
-        email: 'sarah@example.com',
-        avatar: 'https://ui-avatars.com/api/?name=Sarah+Johnson'
-      },
-      status: 'pending',
-      submittedAt: '2024-03-15T10:30:00Z',
-      lastUpdated: '2024-03-15T10:30:00Z',
-      tags: ['AI', 'Healthcare', 'Python'],
-      score: 0
-    },
-  ];
-  
   if (!authUser) {
     return <Navigate to="/signin" />;
   }
+
+  const isLoading = loading || fetchingChallenges || 
+    (activeView === 'submissions' && fetchingSubmissions);
 
   const renderMainContent = () => {
     switch (activeView) {
@@ -165,7 +228,7 @@ const PartnerDashboard = () => {
           <OverviewView 
             user={authUser} 
             recentChallenges={challenges.slice(0, 3)} 
-            recentSubmissions={submissions} 
+            recentSubmissions={submissions.slice(0, 5)} 
             setActiveView={handleViewChange}
           />
         );
@@ -184,6 +247,8 @@ const PartnerDashboard = () => {
           <SubmissionsView 
             submissions={submissions} 
             challenges={challenges}
+            refreshSubmissions={() => fetchSubmissions(challenges.map(c => c.id))}
+            isLoading={fetchingSubmissions}
           />
         );
 
@@ -217,9 +282,10 @@ const PartnerDashboard = () => {
     }
   };
 
+  // Rest of the component remains the same...
   return (
     <div className="min-h-screen bg-gray-50/50">
-      {/* Rest of the component remains the same */}
+      {/* Rest of the component render code */}
       <MobileHeader
         user={authUser}
         onSignOut={handleSignOut}
@@ -332,7 +398,7 @@ const PartnerDashboard = () => {
           "px-3 sm:px-6 lg:px-8",
           "pt-20 sm:pt-17 lg:pt-1 pb-20 lg:pb-12",
         )}>
-          {loading || fetchingChallenges ? (
+          {isLoading ? (
         <div className="flex items-center justify-center">
           <LoadingScreen />
         </div>
@@ -340,10 +406,9 @@ const PartnerDashboard = () => {
         <div className="max-w-7xl mx-auto">
           {renderMainContent()}
         </div>
-           )}  
+      )}  
       </main>
- 
-
+      {/* Rest of the component render code */}
       <MobileTabNav activeView={activeView} setActiveView={setActiveView} />
     </div>
   );

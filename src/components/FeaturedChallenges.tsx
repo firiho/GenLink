@@ -58,58 +58,100 @@ export default function FeaturedChallenges() {
   }, []);
 
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-50/50 to-white pointer-events-none" />
+    <section className="py-24 bg-gradient-to-b from-neutral-900 to-neutral-950 relative overflow-hidden">
+      {/* Advanced Background Effects */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-tech-grid opacity-[0.02]" />
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-accent/5 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
+        
+        {/* Floating Code Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute text-primary/10 font-mono text-xs select-none"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -15, 0],
+                opacity: [0.1, 0.3, 0.1],
+              }}
+              transition={{
+                duration: 8 + Math.random() * 4,
+                repeat: Infinity,
+                delay: Math.random() * 5,
+              }}
+            >
+              {['{ }', '< >', '[ ]', '=> ', 'fn()', 'API', 'HTTP', 'JSON'][i]}
+            </motion.div>
+          ))}
+        </div>
+      </div>
+      
       <div className="container mx-auto px-4 relative">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="flex justify-between items-center mb-12"
+          transition={{ duration: 0.6 }}
+          className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-16 text-center lg:text-left"
         >
-          <div className="flex flex-col sm:flex-row sm:justify-between items-center w-full gap-4 mt-4 sm:mt-0">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="w-5 h-5 text-yellow-500" />
-                <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700">
-                  Featured
-                </Badge>
-              </div>
-              <h2 className="text-3xl font-bold mb-2">Featured Challenges</h2>
-              <p className="text-gray-600">Explore our most popular innovation challenges</p>
+          <div className="flex-1 mb-8 lg:mb-0">
+            <div className="flex justify-center lg:justify-start items-center gap-3 mb-4">
+              <Star className="w-6 h-6 text-primary" />
+              <Badge variant="secondary" className="bg-primary/10 text-primary border border-primary/20 backdrop-blur-sm px-4 py-1">
+                Featured Challenges
+              </Badge>
             </div>
-            <Link to="/challenges" className="w-full sm:w-auto">
-              <Button variant="ghost" className="group w-full sm:w-auto">
-                View all challenges
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              Innovation at Its Peak
+            </h2>
+            <p className="text-xl text-gray-400 max-w-2xl">
+              Join the most exciting challenges where visionary minds compete to build tomorrow's solutions
+            </p>
+          </div>
+          <Link to="/challenges" className="w-full lg:w-auto">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button 
+                variant="outline"
+                className="bg-transparent border-gray-600 hover:bg-white/5 text-white font-medium px-6 py-3 rounded-xl backdrop-blur-sm transition-all duration-300 group w-full lg:w-auto"
+              >
+                Explore All Challenges
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
-            </Link>
-          </div>
+            </motion.div>
+          </Link>
         </motion.div>
         
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           {loading ? (
-            // Loading skeletons
+            // Modern Loading Skeletons with Dark Theme
             [...Array(3)].map((_, index) => (
               <motion.div
                 key={`skeleton-${index}`}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.15, duration: 0.6 }}
+                className="group relative overflow-hidden"
               >
-                <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                  <Skeleton className="h-48 w-full rounded-md mb-4" />
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2 mb-4" />
-                  <div className="flex justify-between items-center mt-4">
-                    <Skeleton className="h-4 w-16" />
-                    <Skeleton className="h-4 w-20" />
+                <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-white/0 backdrop-blur-md border border-white/10 rounded-2xl" />
+                <div className="relative p-6">
+                  <Skeleton className="h-48 w-full rounded-xl mb-6 bg-gray-700/50" />
+                  <Skeleton className="h-6 w-3/4 mb-3 bg-gray-700/50" />
+                  <Skeleton className="h-4 w-1/2 mb-6 bg-gray-700/50" />
+                  <div className="flex justify-between items-center">
+                    <Skeleton className="h-4 w-20 bg-gray-700/50" />
+                    <Skeleton className="h-4 w-24 bg-gray-700/50" />
                   </div>
                 </div>
               </motion.div>
@@ -118,11 +160,12 @@ export default function FeaturedChallenges() {
             hackathons.map((hackathon, index) => (
               <motion.div
                 key={hackathon.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
+                transition={{ delay: index * 0.15, duration: 0.6 }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="transform transition-all duration-300"
               >
                 <HackathonCard {...hackathon} />
               </motion.div>

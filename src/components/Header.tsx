@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, ChevronDown, Menu, ArrowRight, LogOut, LayoutDashboard } from 'lucide-react';
+import { User, ChevronDown, Menu, ArrowRight, LogOut, LayoutDashboard, Code, Sparkles, X, Folder } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
@@ -17,9 +17,9 @@ import Logo from './Logo';
 import NotificationsDropdown from './dashboard/NotificationsDropdown';
 
 const navItems = [
-  { label: 'Challenges', path: '/challenges' },
-  { label: 'Projects', path: '/projects' },
-  { label: 'Community', path: '/community' },
+  { label: 'Challenges', path: '/challenges', icon: Code },
+  { label: 'Projects', path: '/projects', icon: Folder },
+  { label: 'Community', path: '/community', icon: User },
 ];
 
 export const Header = () => {
@@ -120,53 +120,56 @@ export const Header = () => {
       className="fixed top-0 left-0 right-0 z-[100]"
     >
       <div 
-        className={`absolute inset-0 transition-all duration-300 ${
+        className={`absolute inset-0 transition-all duration-500 ${
           scrolled 
-            ? 'bg-white/80 backdrop-blur-xl shadow-lg shadow-gray-200/20' 
-            : 'bg-white/70 backdrop-blur-lg'
+            ? 'bg-neutral-900/95 backdrop-blur-xl shadow-xl shadow-black/20 border-b border-neutral-800/50' 
+            : 'bg-neutral-900/80 backdrop-blur-lg border-b border-neutral-800/30'
         }`}
       />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-12 h-full">
-           <Logo />
+            <Logo />
 
             {/* Navigation Items */}
             
-            <nav className="hidden md:flex items-center space-x-2">
-              {navItems.map((item) => (
-                <Link 
-                  key={item.label} 
-                  to={item.path}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    location.pathname === item.path
-                      ? 'text-primary bg-primary/5 shadow-sm'
-                      : 'text-gray-600 hover:text-primary hover:bg-gray-50'
-                  }`}
-                >
-                  <motion.span
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+            <nav className="hidden md:flex items-center space-x-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link 
+                    key={item.label} 
+                    to={item.path}
                   >
-                    {item.label}
-                  </motion.span>
-                </Link>
-              ))}
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-300 flex items-center space-x-2 ${
+                        isActive
+                          ? 'text-primary bg-primary/10 shadow-lg shadow-primary/20 border border-primary/30'
+                          : 'text-gray-300 hover:text-white hover:bg-white/5 border border-transparent'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </motion.div>
+                  </Link>
+                );
+              })}
             </nav>
             
           </div>
 
           {/* Mobile Menu Button */}
             <div className="md:hidden flex items-center ml-auto space-x-2">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <NotificationsDropdown />
-            </motion.div>
+            {user && <NotificationsDropdown />}
             <motion.button
               whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-xl hover:bg-gray-100"
+              className="p-2 rounded-xl bg-white/5 border border-neutral-700 text-white hover:bg-white/10 transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <Menu className="h-6 w-6 text-gray-600" />
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </motion.button>
             </div>
 
@@ -189,14 +192,14 @@ export const Header = () => {
                   <Link to="/signin">
                     <Button 
                       variant="ghost" 
-                      className="text-gray-600 hover:text-primary hover:bg-primary/5 rounded-xl px-5"
+                      className="text-gray-300 hover:text-white hover:bg-white/5 border border-neutral-700 hover:border-neutral-600 backdrop-blur-sm rounded-xl px-5"
                     >
                       Sign In
                     </Button>
                   </Link>
                   <Link to="/signup">
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                      <Button className="bg-gradient-to-r from-primary via-primary/90 to-blue-500 text-white hover:opacity-90 shadow-md shadow-primary/25 hover:shadow-primary/40 transition-all rounded-xl px-6">
+                      <Button className="bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl shadow-glow hover:shadow-glow-lg transition-all duration-300 px-6">
                         Get Started
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
@@ -216,35 +219,40 @@ export const Header = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="md:hidden absolute top-full left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200/50 shadow-lg"
+            className="md:hidden absolute top-full left-0 right-0 bg-neutral-900/98 backdrop-blur-xl border-t border-neutral-800/50 shadow-xl"
           >
             <div className="p-4 space-y-3">
-              {navItems.map((item) => (
-                <Link 
-                  key={item.label} 
-                  to={item.path}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <motion.div
-                    whileTap={{ scale: 0.98 }}
-                    className={`px-4 py-3 rounded-xl ${
-                      location.pathname === item.path
-                        ? 'text-primary bg-primary/5 font-medium'
-                        : 'text-gray-600 hover:text-primary hover:bg-gray-50'
-                    }`}
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link 
+                    key={item.label} 
+                    to={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {item.label}
-                  </motion.div>
-                </Link>
-              ))}
+                    <motion.div
+                      whileTap={{ scale: 0.98 }}
+                      className={`px-4 py-3 rounded-xl flex items-center space-x-3 transition-all ${
+                        isActive
+                          ? 'text-primary bg-primary/10 font-medium border border-primary/30'
+                          : 'text-gray-300 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span>{item.label}</span>
+                    </motion.div>
+                  </Link>
+                );
+              })}
               {user ? (
-                <div className="pt-3 border-t border-gray-200/50">
+                <div className="pt-3 border-t border-neutral-800/50">
                   <Button
                     onClick={() => {
                       handleDashboardClick();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="w-full justify-start"
+                    className="w-full justify-start text-gray-300 hover:text-white hover:bg-white/5"
                     variant="ghost"
                   >
                     <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -252,7 +260,7 @@ export const Header = () => {
                   </Button>
                   <Button
                     onClick={handleLogout}
-                    className="w-full justify-start text-red-600"
+                    className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10"
                     variant="ghost"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -260,14 +268,14 @@ export const Header = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="pt-3 border-t border-gray-200/50 space-y-2">
+                <div className="pt-3 border-t border-neutral-800/50 space-y-2">
                   <Link to="/signin" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full">
+                    <Button variant="ghost" className="w-full text-gray-300 hover:text-white hover:bg-white/5">
                       Sign In
                     </Button>
                   </Link>
                   <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button className="w-full">
+                    <Button className="w-full bg-primary hover:bg-primary/90">
                       Get Started
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>

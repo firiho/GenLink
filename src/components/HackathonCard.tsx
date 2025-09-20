@@ -32,62 +32,89 @@ export const HackathonCard = ({
 
   return (
     <motion.div 
-      whileHover={{ y: -5 }}
-      className="group relative bg-white rounded-2xl overflow-hidden"
+      whileHover={{ y: -8 }}
+      className="group relative overflow-hidden h-full"
     >
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      {/* Modern Dark Card Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-white/0 backdrop-blur-md border border-white/10 rounded-2xl" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
       
-      {/* Image Container */}
-      <div className="relative h-48 overflow-hidden">
-        <img 
-          src={image} 
-          alt={title} 
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-        <div className="absolute top-4 right-4">
-          <Badge className="bg-white/90 text-primary shadow-lg backdrop-blur-sm">
-            {daysLeft} days left
-          </Badge>
-        </div>
-      </div>
+      {/* Glow Effect on Hover */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl opacity-0 group-hover:opacity-100 blur transition-all duration-500" />
+      
+      <div className="relative h-full rounded-2xl overflow-hidden">
+        {/* Enhanced Image Container */}
+        <div className="relative h-48 overflow-hidden">
+          <img 
+            src={image} 
+            alt={title} 
+            className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          
+          {/* Floating Time Badge */}
+          <motion.div 
+            initial={{ y: -10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="absolute top-4 right-4"
+          >
+            <Badge className="bg-primary/90 text-white shadow-lg backdrop-blur-sm border-0 px-3 py-1 font-medium">
+              <Calendar className="h-3 w-3 mr-1" />
+              {daysLeft} days left
+            </Badge>
+          </motion.div>
 
-      {/* Content */}
-      <div className="p-6">
-        <div className="mb-4">
-          <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
-            {title}
-          </h3>
-          <p className="text-gray-600">{organizer}</p>
-        </div>
-        
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center text-gray-500">
-              <Users className="h-4 w-4 mr-1" />
-              <span className="text-sm">{participants}</span>
-            </div>
-            <div className="flex items-center text-primary font-medium">
-              <Award className="h-4 w-4 mr-1" />
-              <span>{prize}</span>
-            </div>
+          {/* Organizer Badge */}
+          <div className="absolute bottom-4 left-4">
+            <Badge variant="outline" className="bg-black/50 text-white border-white/20 backdrop-blur-sm">
+              {organizer}
+            </Badge>
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            className="text-primary hover:text-primary/80 hover:bg-primary/5 group/btn"
-            onClick={handleViewChallenge}
-          >
-            <span className="mr-2">View Challenge</span>
-            <ArrowUpRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
-          </Button>
-          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-            <Calendar className="h-3 w-3 mr-1" />
-            Active
-          </Badge>
+        {/* Enhanced Content */}
+        <div className="p-6 relative">
+          <div className="mb-6">
+            <h3 className="text-xl font-bold mb-2 text-white group-hover:text-primary transition-colors duration-300 line-clamp-2">
+              {title}
+            </h3>
+          </div>
+          
+          {/* Stats Row */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center text-gray-400 group-hover:text-gray-300 transition-colors">
+                <Users className="h-4 w-4 mr-1" />
+                <span className="text-sm font-medium">{participants.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center text-primary font-semibold">
+                <Award className="h-4 w-4 mr-1" />
+                <span className="text-sm">{prize}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Row */}
+          <div className="flex items-center justify-between">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button 
+                variant="ghost" 
+                className="text-primary hover:text-white hover:bg-primary/20 group/btn p-0 h-auto font-medium"
+                onClick={handleViewChallenge}
+              >
+                <span className="mr-2">View Challenge</span>
+                <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1" />
+              </Button>
+            </motion.div>
+            
+            <Badge 
+              variant="outline" 
+              className="bg-green-500/10 text-green-400 border-green-500/30 backdrop-blur-sm px-3 py-1"
+            >
+              <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse" />
+              Active
+            </Badge>
+          </div>
         </div>
       </div>
     </motion.div>

@@ -163,10 +163,10 @@ const SignUp = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/50 grid lg:grid-cols-2">
+    <div className="min-h-screen bg-background grid lg:grid-cols-2">
       {/* Left Side - Form */}
       <div className="relative flex items-center justify-center p-8">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-accent/5 to-transparent" />
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -178,8 +178,8 @@ const SignUp = () => {
 
           {/* Welcome Text */}
           <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-2">Create an account</h2>
-            <p className="text-gray-600">
+            <h2 className="text-3xl font-bold mb-2 text-foreground">Create an account</h2>
+            <p className="text-muted-foreground">
               Join our community of innovators today
             </p>
           </div>
@@ -189,7 +189,7 @@ const SignUp = () => {
             <div className="space-y-4">
               {/* User Type Selection */}
               <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-foreground">
                   I want to
                 </label>
                 <RadioGroup
@@ -208,11 +208,11 @@ const SignUp = () => {
                       />
                       <Label
                         htmlFor={type.value}
-                        className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-white p-4 hover:bg-gray-50 peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all"
+                        className="flex flex-col items-center justify-between rounded-xl border-2 border-border bg-card p-4 hover:bg-accent/5 peer-data-[state=checked]:border-accent [&:has([data-state=checked])]:border-accent cursor-pointer transition-all"
                       >
-                        <type.icon className="mb-2 h-6 w-6 text-primary" />
-                        <p className="font-medium">{type.title}</p>
-                        <p className="text-sm text-gray-500 text-center">
+                        <type.icon className="mb-2 h-6 w-6 text-accent" />
+                        <p className="font-medium text-foreground">{type.title}</p>
+                        <p className="text-sm text-muted-foreground text-center">
                           {type.description}
                         </p>
                       </Label>
@@ -224,12 +224,12 @@ const SignUp = () => {
               {/* Personal Information */}
               <div className="space-y-4 pt-4">
                 <div>
-                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label htmlFor="fullName" className="block text-sm font-medium text-foreground mb-1.5">
                     Full Name
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-gray-400" />
+                      <User className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <Input
                       id="fullName"
@@ -238,19 +238,19 @@ const SignUp = () => {
                       value={formData.fullName}
                       onChange={handleChange}
                       required
-                      className="pl-10 bg-white"
+                      className="pl-10 bg-card border-border"
                       placeholder="Enter your full name"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
                     Email address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
+                      <Mail className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <Input
                       id="email"
@@ -259,19 +259,19 @@ const SignUp = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="pl-10 bg-white"
+                      className="pl-10 bg-card border-border"
                       placeholder="Enter your email"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1.5">
                     Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <Input
                       id="password"
@@ -280,7 +280,7 @@ const SignUp = () => {
                       value={formData.password}
                       onChange={handleChange}
                       required
-                      className="pl-10 pr-10 bg-white"
+                      className="pl-10 pr-10 bg-card border-border"
                       placeholder="Create a password"
                     />
                     <button
@@ -289,24 +289,24 @@ const SignUp = () => {
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     >
                       {showPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400" />
+                        <EyeOff className="h-5 w-5 text-muted-foreground" />
                       ) : (
-                        <Eye className="h-5 w-5 text-gray-400" />
+                        <Eye className="h-5 w-5 text-muted-foreground" />
                       )}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Must be at least 8 characters long
                   </p>
                 </div>
 
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-1.5">
                     Confirm Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <Input
                       id="confirmPassword"
@@ -315,7 +315,7 @@ const SignUp = () => {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       required
-                      className="pl-10 pr-10 bg-white"
+                      className="pl-10 pr-10 bg-card border-border"
                       placeholder="Confirm your password"
                     />
                     <button
@@ -324,9 +324,9 @@ const SignUp = () => {
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     >
                       {showConfirmPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400" />
+                        <EyeOff className="h-5 w-5 text-muted-foreground" />
                       ) : (
-                        <Eye className="h-5 w-5 text-gray-400" />
+                        <Eye className="h-5 w-5 text-muted-foreground" />
                       )}
                     </button>
                   </div>
@@ -341,37 +341,37 @@ const SignUp = () => {
                     className="space-y-4"
                   >
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      <label className="block text-sm font-medium text-foreground mb-1.5">
                         Organization Name
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Building2 className="h-5 w-5 text-gray-400" />
+                          <Building2 className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <Input
                           name="organization"
                           value={formData.organization}
                           onChange={handleChange}
                           required
-                          className="pl-10 bg-white"
+                          className="pl-10 bg-card border-border"
                           placeholder="Enter your organization name"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      <label className="block text-sm font-medium text-foreground mb-1.5">
                         Your Position
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Briefcase className="h-5 w-5 text-gray-400" />
+                          <Briefcase className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <Input
                           name="position"
                           value={formData.position}
                           onChange={handleChange}
                           required
-                          className="pl-10 bg-white"
+                          className="pl-10 bg-card border-border"
                           placeholder="Enter your position"
                         />
                       </div>
@@ -381,22 +381,20 @@ const SignUp = () => {
               </div>
             </div>
 
-            <p className="text-left text-sm text-gray-600" style={{margin: '20px', color: 'red'}}>
-              {error && (
-                <span className="text-red-500 text-sm">
-                  {error}
-                </span>
-              )}
-            </p>
+            {error && (
+              <p className="text-destructive text-sm">
+                {error}
+              </p>
+            )}
 
             <Button
               type="submit"
-              className="w-full bg-primary text-white hover:bg-primary/90 transition-colors rounded-xl h-11"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground transition-colors rounded-xl h-11"
               disabled={isLoading}
             >
               {isLoading ? (
                 <div className="flex items-center">
-                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
                   {formData.userType === 'partner' ? 'Submitting...' : 'Creating account...'}
                 </div>
               ) : (
@@ -407,11 +405,11 @@ const SignUp = () => {
               )}
             </Button>
 
-            <p className="text-center text-sm text-gray-600">
+            <p className="text-center text-sm text-muted-foreground">
               Already have an account?{' '}
               <Link
                 to="/signin"
-                className="text-primary hover:text-primary/80 transition-colors font-medium"
+                className="text-accent hover:text-accent/80 transition-colors font-medium"
               >
                 Sign in
               </Link>
@@ -422,8 +420,8 @@ const SignUp = () => {
 
       {/* Right Side - Benefits */}
       <div className="hidden lg:block relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-          <div className="absolute inset-0 bg-grid-white/[0.02]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-primary/15">
+          <div className="absolute inset-0 bg-tech-grid opacity-[0.03]" />
           
           {/* Animated Blobs */}
           <motion.div
@@ -436,7 +434,7 @@ const SignUp = () => {
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.2 }}
-            className="absolute -right-1/4 -bottom-1/4 w-1/2 h-1/2 bg-blue-500/20 rounded-full blur-3xl"
+            className="absolute -right-1/4 -bottom-1/4 w-1/2 h-1/2 bg-accent/30 rounded-full blur-3xl"
           />
 
           {/* Content */}
@@ -445,9 +443,9 @@ const SignUp = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-white max-w-md"
+              className="text-foreground max-w-md"
             >
-              <Sparkles className="h-12 w-12 mb-6 text-primary" />
+              <Sparkles className="h-12 w-12 mb-6 text-accent" />
               <h2 className="text-3xl font-bold mb-8">
                 {formData.userType === 'partner' 
                   ? 'Partner with Us' 
@@ -462,8 +460,8 @@ const SignUp = () => {
                     transition={{ delay: 0.5 + index * 0.1 }}
                     className="flex items-center space-x-3"
                   >
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="text-gray-300">{benefit}</span>
+                    <CheckCircle2 className="h-5 w-5 text-accent flex-shrink-0" />
+                    <span className="text-muted-foreground">{benefit}</span>
                   </motion.div>
                 ))}
               </div>

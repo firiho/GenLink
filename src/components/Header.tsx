@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { signOut } from '@/services/auth';
 import Logo from './Logo';
 import NotificationsDropdown from './dashboard/NotificationsDropdown';
+import ThemeSwitcher from './ThemeSwitcher';
 
 const navItems = [
   { label: 'Challenges', path: '/challenges', icon: Code },
@@ -68,26 +69,26 @@ export const Header = () => {
           <motion.div whileHover={{ scale: 1.02 }}>
             <Button
               variant="ghost"
-              className="rounded-xl hover:bg-primary/5 border border-gray-200/50 shadow-sm pl-2 pr-3"
+              className="rounded-xl hover:bg-accent/5 border border-border shadow-sm pl-2 pr-3"
             >
               <div className="flex items-center space-x-2">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary/10 to-blue-500/10 flex items-center justify-center">
-                  <User className="h-4 w-4 text-primary" />
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
+                  <User className="h-4 w-4 text-accent" />
                 </div>
-                <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 group-hover:rotate-180" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-hover:rotate-180" />
               </div>
             </Button>
           </motion.div>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="w-56 p-2 bg-white/80 backdrop-blur-xl border border-gray-200/50"
+          className="w-56 p-2 bg-card/95 backdrop-blur-xl border border-border"
         >
-          <div className="px-2 py-1.5 border-b border-gray-100">
-            <p className="text-sm font-medium">{user.fullName}</p>
-            <p className="text-xs text-gray-500">{user.email}</p>
+          <div className="px-2 py-1.5 border-b border-border">
+            <p className="text-sm font-medium text-foreground">{user.fullName}</p>
+            <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
-          <DropdownMenuItem onClick={handleDashboardClick}>
+          <DropdownMenuItem onClick={handleDashboardClick} className="text-foreground hover:bg-accent/5">
             <LayoutDashboard className="w-4 h-4 mr-2" />
             Dashboard
           </DropdownMenuItem>
@@ -98,11 +99,11 @@ export const Header = () => {
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </DropdownMenuItem> */}
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator className="bg-border" />
           
           <DropdownMenuItem 
             onClick={() => handleLogout()}
-            className="rounded-lg cursor-pointer"
+            className="rounded-lg cursor-pointer text-foreground hover:bg-destructive/10 hover:text-destructive"
           >
             Log Out
           </DropdownMenuItem>  
@@ -120,19 +121,18 @@ export const Header = () => {
       className="fixed top-0 left-0 right-0 z-[100]"
     >
       <div 
-        className={`absolute inset-0 transition-all duration-500 ${
+        className={`absolute inset-0 transition-all duration-300 ${
           scrolled 
-            ? 'bg-neutral-900/95 backdrop-blur-xl shadow-xl shadow-black/20 border-b border-neutral-800/50' 
-            : 'bg-neutral-900/80 backdrop-blur-lg border-b border-neutral-800/30'
+            ? 'bg-background/95 backdrop-blur-xl border-b border-border shadow-subtle' 
+            : 'bg-background/80 backdrop-blur-lg border-b border-border/50'
         }`}
       />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-12 h-full">
+          <div className="flex items-center space-x-8 h-full">
             <Logo />
 
             {/* Navigation Items */}
-            
             <nav className="hidden md:flex items-center space-x-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -143,12 +143,12 @@ export const Header = () => {
                     to={item.path}
                   >
                     <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-300 flex items-center space-x-2 ${
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 flex items-center space-x-2 ${
                         isActive
-                          ? 'text-primary bg-primary/10 shadow-lg shadow-primary/20 border border-primary/30'
-                          : 'text-gray-300 hover:text-white hover:bg-white/5 border border-transparent'
+                          ? 'text-foreground bg-accent/10'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/5'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -162,22 +162,23 @@ export const Header = () => {
           </div>
 
           {/* Mobile Menu Button */}
-            <div className="md:hidden flex items-center ml-auto space-x-2">
+          <div className="md:hidden flex items-center ml-auto space-x-2">
             {user && <NotificationsDropdown />}
             <motion.button
               whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-xl bg-white/5 border border-neutral-700 text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-md bg-accent/5 border border-border text-foreground hover:bg-accent/10 transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </motion.button>
-            </div>
+          </div>
 
           {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
+            <ThemeSwitcher />
             {user ? (
               <div className="flex items-center space-x-3">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <NotificationsDropdown />
                 </motion.div>
                 <ProfileMenu user={user} />
@@ -192,14 +193,14 @@ export const Header = () => {
                   <Link to="/signin">
                     <Button 
                       variant="ghost" 
-                      className="text-gray-300 hover:text-white hover:bg-white/5 border border-neutral-700 hover:border-neutral-600 backdrop-blur-sm rounded-xl px-5"
+                      className="text-muted-foreground hover:text-foreground hover:bg-accent/5 px-4"
                     >
                       Sign In
                     </Button>
                   </Link>
                   <Link to="/signup">
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                      <Button className="bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl shadow-glow hover:shadow-glow-lg transition-all duration-300 px-6">
+                      <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg shadow-modern hover:shadow-lg transition-all duration-200 px-6">
                         Get Started
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
@@ -219,9 +220,9 @@ export const Header = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="md:hidden absolute top-full left-0 right-0 bg-neutral-900/98 backdrop-blur-xl border-t border-neutral-800/50 shadow-xl"
+            className="md:hidden absolute top-full left-0 right-0 bg-background/98 backdrop-blur-xl border-t border-border shadow-modern"
           >
-            <div className="p-4 space-y-3">
+            <div className="p-4 space-y-2">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -233,10 +234,10 @@ export const Header = () => {
                   >
                     <motion.div
                       whileTap={{ scale: 0.98 }}
-                      className={`px-4 py-3 rounded-xl flex items-center space-x-3 transition-all ${
+                      className={`px-4 py-3 rounded-md flex items-center space-x-3 transition-all ${
                         isActive
-                          ? 'text-primary bg-primary/10 font-medium border border-primary/30'
-                          : 'text-gray-300 hover:text-white hover:bg-white/5'
+                          ? 'text-foreground bg-accent/10 font-medium'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/5'
                       }`}
                     >
                       <Icon className="w-5 h-5" />
@@ -245,14 +246,20 @@ export const Header = () => {
                   </Link>
                 );
               })}
+              <div className="pt-3 border-t border-border">
+                <div className="flex items-center justify-between px-4 py-2">
+                  <span className="text-sm text-muted-foreground">Theme</span>
+                  <ThemeSwitcher />
+                </div>
+              </div>
               {user ? (
-                <div className="pt-3 border-t border-neutral-800/50">
+                <div className="pt-3 border-t border-border">
                   <Button
                     onClick={() => {
                       handleDashboardClick();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="w-full justify-start text-gray-300 hover:text-white hover:bg-white/5"
+                    className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent/5"
                     variant="ghost"
                   >
                     <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -260,7 +267,7 @@ export const Header = () => {
                   </Button>
                   <Button
                     onClick={handleLogout}
-                    className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
                     variant="ghost"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -268,14 +275,14 @@ export const Header = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="pt-3 border-t border-neutral-800/50 space-y-2">
+                <div className="pt-3 border-t border-border space-y-2">
                   <Link to="/signin" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full text-gray-300 hover:text-white hover:bg-white/5">
+                    <Button variant="ghost" className="w-full text-muted-foreground hover:text-foreground hover:bg-accent/5">
                       Sign In
                     </Button>
                   </Link>
                   <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button className="w-full bg-primary hover:bg-primary/90">
+                    <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                       Get Started
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>

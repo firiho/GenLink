@@ -65,10 +65,23 @@ const Logo = ({class_name=''}) => {
           className="h-30 w-auto flex items-center justify-center group-hover:scale-105 transition-all duration-300"
           >
           <img 
-            src="/logo.png" 
+            src="/logo1.png" 
             alt="Logo" 
-            className="h-16 w-auto"
+            className="h-8 w-auto"
           />
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
+            className="flex flex-col"
+          >
+            <motion.span 
+              className="text-xl font-bold text-foreground group-hover:text-accent transition-colors duration-200"
+            >
+              GenLink
+            </motion.span>
           </motion.div>
         </Link>
   );

@@ -201,7 +201,7 @@ const handleAddChallenge = async (challengeId) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-background">
         <Header />
         <ChallengeSkeleton />
       </div>
@@ -210,11 +210,11 @@ const handleAddChallenge = async (challengeId) => {
 
   if (!challenge) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-12 text-center">
-          <h2 className="text-2xl font-bold">Challenge not found</h2>
-          <p className="mt-2 text-gray-600">The challenge you're looking for doesn't exist or has been removed.</p>
+          <h2 className="text-2xl font-bold text-foreground">Challenge not found</h2>
+          <p className="mt-2 text-muted-foreground">The challenge you're looking for doesn't exist or has been removed.</p>
           <Button 
             className="mt-6"
             onClick={() => navigate('/challenges')}
@@ -228,13 +228,13 @@ const handleAddChallenge = async (challengeId) => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <Header />
       <div className="pt-16">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-gray-50 min-h-screen pb-20"
+          className="min-h-screen pb-20"
         >
           {/* Challenge Header */}
           <div 
@@ -243,7 +243,7 @@ const handleAddChallenge = async (challengeId) => {
               backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url(${challenge.image})` 
             }}
           >
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="container mx-auto px-4 text-center text-white">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 max-w-4xl mx-auto">
                   {challenge.title}
@@ -282,7 +282,7 @@ const handleAddChallenge = async (challengeId) => {
             
             <Button 
               variant="ghost" 
-              className="top-4 left-4 text-white hover:bg-white/20"
+              className="top-4 left-4 text-white hover:bg-white/20 z-10 pointer-events-auto"
               onClick={() => navigate('/challenges')}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -292,11 +292,11 @@ const handleAddChallenge = async (challengeId) => {
           
           {/* Main Content */}
           <div className="container mx-auto px-4 mt-10">
-            <div className="bg-white rounded-t-xl shadow-lg">
+            <div className="bg-card rounded-t-xl border border-border shadow-lg">
               {/* Organizer and Action Row */}
-              <div className="p-6 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200">
+              <div className="p-6 flex flex-col md:flex-row md:items-center justify-between border-b border-border">
                 <div className="flex items-center mb-4 md:mb-0">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex-shrink-0 mr-4 overflow-hidden">
+                  <div className="w-12 h-12 rounded-full bg-muted flex-shrink-0 mr-4 overflow-hidden">
                     {challenge.organizerLogo ? (
                       <img 
                         src={challenge.organizerLogo} 
@@ -304,31 +304,31 @@ const handleAddChallenge = async (challengeId) => {
                         className="w-full h-full object-contain"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold">
+                      <div className="w-full h-full flex items-center justify-center bg-accent/10 text-accent font-bold">
                         {challenge.organizer.charAt(0)}
                       </div>
                     )}
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Organized by</p>
-                    <h2 className="font-semibold">{challenge.organizer}</h2>
+                    <p className="text-sm text-muted-foreground">Organized by</p>
+                    <h2 className="font-semibold text-foreground">{challenge.organizer}</h2>
                   </div>
                 </div>
                 
                 <div className="flex flex-wrap gap-3">
-                  <Button variant="outline" size="sm" className="gap-1.5">
+                  <Button variant="outline" size="sm" className="gap-1.5 border-border hover:bg-accent/5 text-foreground hover:text-accent">
                     <Share2 className="h-4 w-4" />
                     Share
                   </Button>
                   <Button 
                     size="sm" 
-                    className="gap-1.5"
+                    className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={() => {handleAddChallenge(challenge.id)}}
                     disabled={isJoining || challenge.daysLeft <= 0}
                   >
                     {isJoining ? (
                       <>
-                        <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></span>
+                        <span className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-1"></span>
                         Joining...
                       </>
                     ) : challenge.daysLeft > 0 ? (
@@ -340,35 +340,35 @@ const handleAddChallenge = async (challengeId) => {
               
               {/* Tabs Navigation */}
               <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <div className="px-6 border-b border-gray-200">
+                <div className="px-6 border-b border-border">
                   <TabsList className="h-14 justify-start bg-transparent border-b-0 p-0 gap-6">
                     <TabsTrigger 
                       value="overview"
-                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none"
+                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-accent"
                     >
                       Overview
                     </TabsTrigger>
                     <TabsTrigger 
                       value="details"
-                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none"
+                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-accent"
                     >
                       Details & Criteria
                     </TabsTrigger>
                     <TabsTrigger 
                       value="timeline"
-                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none"
+                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-accent"
                     >
                       Timeline
                     </TabsTrigger>
                     <TabsTrigger 
                       value="prizes"
-                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none"
+                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-accent"
                     >
                       Prizes
                     </TabsTrigger>
                     <TabsTrigger 
                       value="resources"
-                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none data-[state=active]:shadow-none"
+                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-accent"
                     >
                       Resources
                     </TabsTrigger>
@@ -404,13 +404,13 @@ const handleAddChallenge = async (challengeId) => {
                     </div>
                     
                     <div className="space-y-6">
-                      <div className="bg-gray-50 rounded-lg p-6">
-                        <h4 className="text-lg font-semibold mb-4">Challenge Details</h4>
+                      <div className="bg-muted/20 rounded-lg p-6 border border-border">
+                        <h4 className="text-lg font-semibold mb-4 text-foreground">Challenge Details</h4>
                         <div className="space-y-4">
                           <div>
-                            <p className="text-sm text-gray-500">Submission Deadline</p>
-                            <p className="font-medium flex items-center">
-                              <CalendarDays className="w-4 h-4 mr-2 text-primary" />
+                            <p className="text-sm text-muted-foreground">Submission Deadline</p>
+                            <p className="font-medium flex items-center text-foreground">
+                              <CalendarDays className="w-4 h-4 mr-2 text-accent" />
                               {challenge.deadline && isValid(new Date(challenge.deadline))
                                 ? format(new Date(challenge.deadline), 'MMMM d, yyyy') 
                                 : 'Not specified'}
@@ -418,9 +418,9 @@ const handleAddChallenge = async (challengeId) => {
                           </div>
                           
                           <div>
-                            <p className="text-sm text-gray-500">Prize</p>
-                            <p className="font-medium flex items-center">
-                              <Trophy className="w-4 h-4 mr-2 text-primary" />
+                            <p className="text-sm text-muted-foreground">Prize</p>
+                            <p className="font-medium flex items-center text-foreground">
+                              <Trophy className="w-4 h-4 mr-2 text-accent" />
                               {challenge.total_prize > 0 
                                 ? `$${challenge.total_prize.toLocaleString()}` 
                                 : challenge.prize}
@@ -428,9 +428,9 @@ const handleAddChallenge = async (challengeId) => {
                           </div>
                           
                           <div>
-                            <p className="text-sm text-gray-500">Participation</p>
-                            <p className="font-medium flex items-center">
-                              <Users className="w-4 h-4 mr-2 text-primary" />
+                            <p className="text-sm text-muted-foreground">Participation</p>
+                            <p className="font-medium flex items-center text-foreground">
+                              <Users className="w-4 h-4 mr-2 text-accent" />
                               {challenge.allowTeams 
                                 ? `Teams of up to ${challenge.maxTeamSize} allowed` 
                                 : 'Individual participation only'}
@@ -438,9 +438,9 @@ const handleAddChallenge = async (challengeId) => {
                           </div>
                           
                           <div>
-                            <p className="text-sm text-gray-500">Status</p>
-                            <p className="font-medium flex items-center">
-                              <Clock className="w-4 h-4 mr-2 text-primary" />
+                            <p className="text-sm text-muted-foreground">Status</p>
+                            <p className="font-medium flex items-center text-foreground">
+                              <Clock className="w-4 h-4 mr-2 text-accent" />
                               {challenge.daysLeft > 0 
                                 ? `${challenge.daysLeft} days remaining` 
                                 : 'Challenge ended'}
@@ -448,12 +448,12 @@ const handleAddChallenge = async (challengeId) => {
                           </div>
                           
                           <div>
-                            <p className="text-sm text-gray-500">Categories</p>
+                            <p className="text-sm text-muted-foreground">Categories</p>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {challenge.categories.map(category => (
-                                <Badge key={category} variant="secondary">
+                                <span key={category} className="px-2 py-1 rounded-md bg-accent/10 text-accent text-xs font-medium">
                                   {category}
-                                </Badge>
+                                </span>
                               ))}
                             </div>
                           </div>
@@ -494,15 +494,15 @@ const handleAddChallenge = async (challengeId) => {
                           <h3 className="text-xl font-semibold mb-4">Judges</h3>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {challenge.judges.map((judge, index) => (
-                              <div key={index} className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
+                              <div key={index} className="flex items-start space-x-3 p-4 bg-muted/20 rounded-lg border border-border">
                                 <Avatar className="h-10 w-10">
-                                  <AvatarFallback>{judge.name ? judge.name.charAt(0) : '?'}</AvatarFallback>
+                                  <AvatarFallback className="bg-accent/10 text-accent">{judge.name ? judge.name.charAt(0) : '?'}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                  <h4 className="font-medium">{judge.name || 'Unknown Judge'}</h4>
-                                  <p className="text-sm text-gray-500">{judge.title || ''}</p>
+                                  <h4 className="font-medium text-foreground">{judge.name || 'Unknown Judge'}</h4>
+                                  <p className="text-sm text-muted-foreground">{judge.title || ''}</p>
                                   {judge.organization && (
-                                    <p className="text-xs text-gray-500 mt-1">{judge.organization}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">{judge.organization}</p>
                                   )}
                                 </div>
                               </div>
@@ -514,9 +514,9 @@ const handleAddChallenge = async (challengeId) => {
                     
                     <div>
                       {challenge.termsAndConditions && (
-                        <div className="bg-gray-50 rounded-lg p-6">
-                          <h4 className="text-lg font-semibold mb-4">Terms & Conditions</h4>
-                          <div className="text-sm text-gray-600 prose max-w-none">
+                        <div className="bg-muted/20 rounded-lg p-6 border border-border">
+                          <h4 className="text-lg font-semibold mb-4 text-foreground">Terms & Conditions</h4>
+                          <div className="text-sm text-muted-foreground prose max-w-none">
                             <p>{challenge.termsAndConditions}</p>
                           </div>
                         </div>
@@ -590,12 +590,12 @@ const handleAddChallenge = async (challengeId) => {
                       )}
                     </div>
                     
-                    <div className="bg-gray-50 rounded-lg p-6">
-                      <h4 className="text-lg font-semibold mb-4">Important Dates</h4>
+                    <div className="bg-muted/20 rounded-lg p-6 border border-border">
+                      <h4 className="text-lg font-semibold mb-4 text-foreground">Important Dates</h4>
                       <div className="space-y-4">                        
                         <div>
-                          <p className="text-sm text-gray-500">Submission Deadline</p>
-                          <p className="font-medium">
+                          <p className="text-sm text-muted-foreground">Submission Deadline</p>
+                          <p className="font-medium text-foreground">
                             {challenge.deadline && isValid(new Date(challenge.deadline))
                               ? format(new Date(challenge.deadline), 'MMMM d, yyyy') 
                               : 'Not specified'}
@@ -604,14 +604,14 @@ const handleAddChallenge = async (challengeId) => {
                         
                         {challenge.timeline && challenge.timeline.map((phase, index) => (
                           <div key={index}>
-                            <p className="text-sm text-gray-500">{phase.phase}</p>
+                            <p className="text-sm text-muted-foreground">{phase.phase}</p>
                             {phase.startDate && phase.endDate && 
                              isValid(new Date(phase.startDate)) && isValid(new Date(phase.endDate)) ? (
-                              <p className="font-medium">
+                              <p className="font-medium text-foreground">
                                 {format(new Date(phase.startDate), 'MMM d')} - {format(new Date(phase.endDate), 'MMM d, yyyy')}
                               </p>
                             ) : (
-                              <p className="font-medium">Date TBD</p>
+                              <p className="font-medium text-foreground">Date TBD</p>
                             )}
                           </div>
                         ))}
@@ -628,34 +628,34 @@ const handleAddChallenge = async (challengeId) => {
                       {/* Visual Prize Distribution */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                         {/* 1st Place */}
-                        <div className="bg-gradient-to-b from-amber-50 to-amber-100 p-6 rounded-lg border border-amber-200 text-center">
-                          <div className="mx-auto w-16 h-16 bg-amber-400 rounded-full flex items-center justify-center mb-4">
+                        <div className="bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 p-6 rounded-lg border border-amber-200 dark:border-amber-800/30 text-center">
+                          <div className="mx-auto w-16 h-16 bg-amber-400 dark:bg-amber-600 rounded-full flex items-center justify-center mb-4">
                             <Trophy className="h-8 w-8 text-white" />
                           </div>
-                          <h4 className="font-bold text-lg mb-1">1st Place</h4>
-                          <p className="text-amber-800 font-bold text-xl">
+                          <h4 className="font-bold text-lg mb-1 text-foreground">1st Place</h4>
+                          <p className="text-amber-800 dark:text-amber-300 font-bold text-xl">
                             ${challenge.prizeDistribution?.first}
                           </p>
                         </div>
                         
                         {/* 2nd Place */}
-                        <div className="bg-gradient-to-b from-gray-50 to-gray-100 p-6 rounded-lg border border-gray-200 text-center">
-                          <div className="mx-auto w-16 h-16 bg-gray-400 rounded-full flex items-center justify-center mb-4">
+                        <div className="bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/50 p-6 rounded-lg border border-gray-200 dark:border-gray-700 text-center">
+                          <div className="mx-auto w-16 h-16 bg-gray-400 dark:bg-gray-500 rounded-full flex items-center justify-center mb-4">
                             <Award className="h-8 w-8 text-white" />
                           </div>
-                          <h4 className="font-bold text-lg mb-1">2nd Place</h4>
-                          <p className="text-gray-800 font-bold text-xl">
+                          <h4 className="font-bold text-lg mb-1 text-foreground">2nd Place</h4>
+                          <p className="text-gray-800 dark:text-gray-200 font-bold text-xl">
                             ${challenge.prizeDistribution?.second}
                           </p>
                         </div>
                         
                         {/* 3rd Place */}
-                        <div className="bg-gradient-to-b from-amber-50/70 to-amber-100/70 p-6 rounded-lg border border-amber-200/70 text-center">
-                          <div className="mx-auto w-16 h-16 bg-amber-700 rounded-full flex items-center justify-center mb-4">
+                        <div className="bg-gradient-to-b from-amber-50/70 to-amber-100/70 dark:from-amber-900/10 dark:to-amber-800/10 p-6 rounded-lg border border-amber-200/70 dark:border-amber-800/20 text-center">
+                          <div className="mx-auto w-16 h-16 bg-amber-700 dark:bg-amber-500 rounded-full flex items-center justify-center mb-4">
                             <Award className="h-8 w-8 text-white" />
                           </div>
-                          <h4 className="font-bold text-lg mb-1">3rd Place</h4>
-                          <p className="text-amber-800 font-bold text-xl">
+                          <h4 className="font-bold text-lg mb-1 text-foreground">3rd Place</h4>
+                          <p className="text-amber-800 dark:text-amber-300 font-bold text-xl">
                             ${challenge.prizeDistribution?.third}
                           </p>
                         </div>
@@ -667,14 +667,14 @@ const handleAddChallenge = async (challengeId) => {
                           <h4 className="text-lg font-semibold mb-4">Special Prizes</h4>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {challenge.prizeDistribution.additional.map((prize, index) => (
-                              <div key={index} className="flex justify-between items-center bg-white shadow-sm border border-gray-100 p-4 rounded-lg">
+                              <div key={index} className="flex justify-between items-center bg-card shadow-sm border border-border p-4 rounded-lg">
                                 <div className="flex items-center">
-                                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+                                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent mr-3">
                                     <Award className="h-5 w-5" />
                                   </div>
-                                  <span className="font-medium">{prize.name || 'Special Prize'}</span>
+                                  <span className="font-medium text-foreground">{prize.name || 'Special Prize'}</span>
                                 </div>
-                                <span className="text-primary font-bold text-lg">${Number(prize.amount || 0).toLocaleString()}</span>
+                                <span className="text-accent font-bold text-lg">${Number(prize.amount || 0).toLocaleString()}</span>
                               </div>
                             ))}
                           </div>
@@ -683,31 +683,31 @@ const handleAddChallenge = async (challengeId) => {
                       
                       {/* Non-monetary benefits */}
                       {challenge.prize && (
-                        <div className="mt-8 bg-blue-50 p-6 rounded-lg">
-                          <h4 className="text-lg font-semibold mb-3 flex items-center">
-                            <BriefcaseBusiness className="h-5 w-5 mr-2 text-blue-500" />
+                        <div className="mt-8 bg-accent/5 p-6 rounded-lg border border-accent/20">
+                          <h4 className="text-lg font-semibold mb-3 flex items-center text-foreground">
+                            <BriefcaseBusiness className="h-5 w-5 mr-2 text-accent" />
                             Additional Opportunities
                           </h4>
                         <div className="flex items-center">
-                            <svg className="h-4 w-4 text-blue-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <svg className="h-4 w-4 text-accent mr-2" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                             </svg>
-                            <p className="text-gray-700">{challenge.prize}</p>
+                            <p className="text-muted-foreground">{challenge.prize}</p>
                         </div>
                         </div>
                       )}
                     </div>
                     
                     <div>
-                      <div className="bg-gray-50 rounded-lg p-6">
-                        <h4 className="text-lg font-semibold mb-4">Total Prize Pool</h4>
-                        <p className="text-3xl font-bold text-primary">
+                      <div className="bg-muted/20 rounded-lg p-6 border border-border">
+                        <h4 className="text-lg font-semibold mb-4 text-foreground">Total Prize Pool</h4>
+                        <p className="text-3xl font-bold text-accent">
                           ${challenge.total_prize.toLocaleString()}
                         </p>
                         
-                        <div className="mt-6 pt-6 border-t border-gray-200">
-                          <h4 className="font-medium mb-3">How prizes are awarded</h4>
-                          <p className="text-sm text-gray-600 mb-4">
+                        <div className="mt-6 pt-6 border-t border-border">
+                          <h4 className="font-medium mb-3 text-foreground">How prizes are awarded</h4>
+                          <p className="text-sm text-muted-foreground mb-4">
                             Winners will be selected based on the evaluation criteria. 
                             Prizes will be distributed within 30 days of the winners announcement.
                           </p>
@@ -715,21 +715,21 @@ const handleAddChallenge = async (challengeId) => {
                       </div>
                       
                       {challenge.deadline && isValid(new Date(challenge.deadline)) && (
-                        <div className="mt-6 bg-gray-50 rounded-lg p-6">
-                          <h4 className="text-lg font-semibold mb-3">Submission Deadline</h4>
-                          <div className="flex items-center text-gray-700">
-                            <CalendarDays className="h-5 w-5 mr-2 text-primary" />
+                        <div className="mt-6 bg-muted/20 rounded-lg p-6 border border-border">
+                          <h4 className="text-lg font-semibold mb-3 text-foreground">Submission Deadline</h4>
+                          <div className="flex items-center text-foreground">
+                            <CalendarDays className="h-5 w-5 mr-2 text-accent" />
                             <p className="font-medium">
                               {format(new Date(challenge.deadline), 'MMMM d, yyyy')}
                             </p>
                           </div>
                           {challenge.daysLeft > 0 ? (
-                            <div className="mt-2 bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full inline-flex items-center">
+                            <div className="mt-2 bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 text-sm font-medium px-3 py-1 rounded-full inline-flex items-center">
                               <Clock className="h-3.5 w-3.5 mr-1" />
                               {challenge.daysLeft} days left to submit
                             </div>
                           ) : (
-                            <div className="mt-2 bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1 rounded-full inline-flex items-center">
+                            <div className="mt-2 bg-muted text-muted-foreground text-sm font-medium px-3 py-1 rounded-full inline-flex items-center">
                               <Clock className="h-3.5 w-3.5 mr-1" />
                               Submission period ended
                             </div>
@@ -748,18 +748,18 @@ const handleAddChallenge = async (challengeId) => {
                       {challenge.resources && challenge.resources.length > 0 ? (
                         <div className="space-y-4">
                           {challenge.resources.map((resource, index) => (
-                            <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                            <div key={index} className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
                               <div className="flex items-center">
                                 {resource.type === 'link' ? (
-                                  <Link2 className="h-5 w-5 mr-3 text-blue-500" />
+                                  <Link2 className="h-5 w-5 mr-3 text-accent" />
                                 ) : resource.type === 'api' ? (
-                                  <Copy className="h-5 w-5 mr-3 text-green-500" />
+                                  <Copy className="h-5 w-5 mr-3 text-accent" />
                                 ) : (
-                                    <Download className="h-5 w-5 mr-3 text-green-500" />
+                                    <Download className="h-5 w-5 mr-3 text-accent" />
                                 )}
                                 <div>
-                                  <h4 className="font-medium">{resource.title}</h4>
-                                  <p className="text-sm text-gray-500">{resource.type === 'link' ? 'External link' : resource.type === 'api' ? 'API key' : 'API key'}</p>
+                                  <h4 className="font-medium text-foreground">{resource.title}</h4>
+                                  <p className="text-sm text-muted-foreground">{resource.type === 'link' ? 'External link' : resource.type === 'api' ? 'API key' : 'API key'}</p>
                                 </div>
                               </div>
                               {resource.type === 'link' && (<Button variant="outline" size="sm" onClick={() => window.open(resource.link, '_blank')}>
@@ -783,9 +783,9 @@ const handleAddChallenge = async (challengeId) => {
                           <h3 className="text-xl font-semibold mb-6">Frequently Asked Questions</h3>
                           <div className="space-y-6">
                             {challenge.faq.map((item, index) => (
-                              <div key={index} className="bg-white border border-gray-200 rounded-lg p-5">
-                                <h4 className="font-semibold text-lg mb-2">{item.question}</h4>
-                                <p className="text-gray-600">{item.answer}</p>
+                              <div key={index} className="bg-card border border-border rounded-lg p-5">
+                                <h4 className="font-semibold text-lg mb-2 text-foreground">{item.question}</h4>
+                                <p className="text-muted-foreground">{item.answer}</p>
                               </div>
                             ))}
                           </div>
@@ -794,32 +794,32 @@ const handleAddChallenge = async (challengeId) => {
                     </div>
                     
                     <div>
-                      <div className="bg-gray-50 rounded-lg p-6">
-                        <h4 className="text-lg font-semibold mb-4">Need Help?</h4>
-                        <p className="text-gray-600 mb-6">
+                      <div className="bg-muted/20 rounded-lg p-6 border border-border">
+                        <h4 className="text-lg font-semibold mb-4 text-foreground">Need Help?</h4>
+                        <p className="text-muted-foreground mb-6">
                           Have questions about this challenge or need technical assistance? 
                           Get in touch with the challenge organizers.
                         </p>
-                        <Button variant="outline" className="w-full mb-3"
+                        <Button variant="outline" className="w-full mb-3 border-border hover:bg-accent/5 text-foreground hover:text-accent"
                           onClick={() => challenge.organizerWebsite && window.open(challenge.organizerWebsite, '_blank')}
                           disabled={!challenge.organizerWebsite}
                         >
                           <Globe className="h-4 w-4 mr-2" />
                           Visit Organizer Website
                         </Button>
-                        <Button variant="outline" className="w-full">
+                        <Button variant="outline" className="w-full border-border hover:bg-accent/5 text-foreground hover:text-accent">
                           Contact Support
                         </Button>
                       </div>
                       
                       {relatedChallenges.length > 0 && (
-                        <div className="mt-6 bg-gray-50 rounded-lg p-6">
-                          <h4 className="text-lg font-semibold mb-4">Similar Challenges</h4>
+                        <div className="mt-6 bg-muted/20 rounded-lg p-6 border border-border">
+                          <h4 className="text-lg font-semibold mb-4 text-foreground">Similar Challenges</h4>
                           <div className="space-y-4">
                             {relatedChallenges.map(related => (
                               <div 
                                 key={related.id} 
-                                className="flex items-start space-x-3 cursor-pointer"
+                                className="flex items-start space-x-3 cursor-pointer hover:bg-accent/5 p-2 rounded-lg transition-colors"
                                 onClick={() => navigate(`/challenges/${related.id}`)}
                               >
                                 <img 
@@ -828,11 +828,11 @@ const handleAddChallenge = async (challengeId) => {
                                   className="w-14 h-14 rounded-md object-cover"
                                 />
                                 <div>
-                                  <h5 className="font-medium text-sm hover:text-primary">
+                                  <h5 className="font-medium text-sm hover:text-accent transition-colors text-foreground">
                                     {related.title}
                                   </h5>
-                                  <p className="text-xs text-gray-500">{related.organizer}</p>
-                                  <p className="text-xs font-medium text-primary">{related.prize}</p>
+                                  <p className="text-xs text-muted-foreground">{related.organizer}</p>
+                                  <p className="text-xs font-medium text-accent">{related.prize}</p>
                                 </div>
                               </div>
                             ))}
@@ -855,7 +855,7 @@ const handleAddChallenge = async (challengeId) => {
 const ChallengeSkeleton = () => (
   <div className="pt-16"> {/* Add padding top to account for the fixed header */}
     {/* Header skeleton */}
-    <div className="w-full h-40 md:h-72 bg-gray-300 animate-pulse relative mb-10">
+    <div className="w-full h-40 md:h-72 bg-muted/50 animate-pulse relative mb-10">
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="container mx-auto px-4 text-center">
           <Skeleton className="h-12 w-3/4 max-w-2xl mx-auto mb-4" />
@@ -875,8 +875,8 @@ const ChallengeSkeleton = () => (
     
     {/* Content skeleton */}
     <div className="container mx-auto px-4 mt-10">
-      <div className="bg-white rounded-t-xl shadow-lg">
-        <div className="p-6 border-b border-gray-200">
+      <div className="bg-card rounded-t-xl border border-border shadow-lg">
+        <div className="p-6 border-b border-border">
           <div className="flex justify-between">
             <div className="flex items-center">
               <Skeleton className="w-12 h-12 rounded-full mr-4" />
@@ -893,7 +893,7 @@ const ChallengeSkeleton = () => (
           </div>
         </div>
         
-        <div className="px-6 border-b border-gray-200">
+        <div className="px-6 border-b border-border">
           <div className="flex gap-6 py-4">
             <Skeleton className="h-6 w-20" />
             <Skeleton className="h-6 w-32" />
@@ -935,7 +935,7 @@ const ChallengeSkeleton = () => (
     </div>
     
     {/* Bottom Action Bar Skeleton */}
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex justify-center z-10">
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 flex justify-center z-10">
       <div className="container flex justify-between items-center">
         <Skeleton className="h-6 w-48" />
         <Skeleton className="h-10 w-36" />

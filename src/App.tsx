@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { toast, Toaster } from 'sonner';
 import { useEffect } from 'react';
 import PartnerDashboard from '@/pages/PartnerDashboard';
@@ -59,47 +60,49 @@ const ParticipantRoute = ({ children }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/challenges" element={<Challenges />} />
-          <Route path="/challenges/:id" element={<ChallengeView />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/community" element={<Community />} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ParticipantRoute>
-                <Dashboard />
-              </ParticipantRoute>
-            }
-          />
-          <Route path="/partner-pending" element={<PartnerPending />} />
-          <Route 
-            path="/partner-dashboard" 
-            element={
-              <PartnerRoute>
-                <PartnerDashboard />
-              </PartnerRoute>
-            } 
-          />
-          <Route 
-            path="/admin/dashboard" 
-            element={
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            }
-          />
-        </Routes>
-        <Toaster />
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/challenges" element={<Challenges />} />
+            <Route path="/challenge/:id" element={<ChallengeView />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/community" element={<Community />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ParticipantRoute>
+                  <Dashboard />
+                </ParticipantRoute>
+              }
+            />
+            <Route path="/partner-pending" element={<PartnerPending />} />
+            <Route 
+              path="/partner-dashboard" 
+              element={
+                <PartnerRoute>
+                  <PartnerDashboard />
+                </PartnerRoute>
+              } 
+            />
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              }
+            />
+          </Routes>
+          <Toaster />
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

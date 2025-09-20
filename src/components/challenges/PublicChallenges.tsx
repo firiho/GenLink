@@ -193,7 +193,7 @@ export default function PublicChallenges() {
 
   // Challenge card skeleton for loading state
   const ChallengeSkeletonCard = () => (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="flex flex-col md:flex-row">
         <Skeleton className="w-full md:w-64 h-48 md:h-full" />
         <div className="p-5 flex-1 space-y-4">
@@ -224,9 +224,9 @@ export default function PublicChallenges() {
   const SearchHeader = () => (
     <div className="mb-8">
       <div className="relative w-full">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
         <Input
-          className="pl-10 pr-4 py-3 w-full text-base"
+          className="pl-10 pr-4 py-3 w-full text-base border-border focus:border-accent"
           placeholder="Search challenges, technologies, keywords..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -254,9 +254,9 @@ export default function PublicChallenges() {
 
   // Left sidebar with filters
   const FilterSidebar = ({ className = "" }) => (
-    <div className={`bg-white rounded-lg shadow-sm p-5 space-y-6 ${className}`}>
-      <div className="pb-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold mb-3">Sort By</h3>
+    <div className={`bg-card rounded-lg border border-border p-5 space-y-6 ${className}`}>
+      <div className="pb-4 border-b border-border">
+        <h3 className="text-lg font-semibold mb-3 text-foreground">Sort By</h3>
         <div className="space-y-2">
           {['newest', 'prize', 'deadline'].map((option) => (
             <div key={option} className="flex items-center">
@@ -385,7 +385,7 @@ export default function PublicChallenges() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-white rounded-lg shadow hover:shadow-md transition-all duration-300 overflow-hidden"
+      className="bg-card rounded-lg border border-border hover:bg-accent/5 transition-all duration-300 overflow-hidden"
     >
       <div className="flex flex-col md:flex-row h-full">
         <div className="relative md:w-64 flex-shrink-0">
@@ -468,12 +468,12 @@ export default function PublicChallenges() {
             {challenge.skills.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-4">
                 {challenge.skills.slice(0, 4).map(skill => (
-                  <span key={skill} className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">
+                  <span key={skill} className="text-xs px-2 py-0.5 bg-accent/10 text-accent rounded-full">
                     {skill}
                   </span>
                 ))}
                 {challenge.skills.length > 4 && (
-                  <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">
+                  <span className="text-xs px-2 py-0.5 bg-accent/10 text-accent rounded-full">
                     +{challenge.skills.length - 4} more
                   </span>
                 )}
@@ -485,7 +485,7 @@ export default function PublicChallenges() {
             <div className="text-primary font-semibold">
               {challenge.total_prize > 0 ? `$${challenge.total_prize.toLocaleString()}` : challenge.prize}
             </div>
-            <Link to={`/challenges/${challenge.id}`}>
+            <Link to={`/challenge/${challenge.id}`}>
               <Button size="sm" className="group">
                 View Challenge
                 <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -502,9 +502,9 @@ export default function PublicChallenges() {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="text-center py-16 bg-white rounded-lg shadow-sm"
+      className="text-center py-16 bg-card rounded-lg border border-border"
     >
-      <div className="mx-auto w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+      <div className="mx-auto w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4">
         <Search className="h-8 w-8 text-gray-400" />
       </div>
       <h3 className="text-xl font-semibold mb-2">No challenges found</h3>
@@ -529,7 +529,7 @@ export default function PublicChallenges() {
   );
 
   return (
-    <section className="py-12 md:py-16 bg-gray-50 min-h-screen">
+    <section className="py-12 md:py-16 bg-background min-h-screen">
       <div className="container mx-auto px-4">
         <SearchHeader />
         <MobileFiltersToggle />

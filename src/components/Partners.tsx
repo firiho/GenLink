@@ -1,22 +1,24 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Building2 } from 'lucide-react';
 
-// Single marquee row
+// Clean marquee row with minimal styling
 function MarqueeRow({ partners, speed = 20, reverse = false }) {
-  // Duplicate the array to ensure a seamless effect
-  const fullPartners = [...partners, ...partners];
+  // Triple the array for seamless effect
+  const fullPartners = [...partners, ...partners, ...partners];
 
-  // If reverse is true, we flip the direction
-  // We basically go from 0 to -100% for normal,
-  // and from -100% to 0 for reverse.
+  // Animation direction
   const animationProps = reverse
     ? { x: ['-100%', '0%'] }
     : { x: ['0%', '-100%'] };
 
   return (
-    <div className="relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-white via-transparent to-white pointer-events-none z-10" />
+    <div className="relative overflow-hidden py-4">
+      {/* Gradient masks */}
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent via-transparent to-background pointer-events-none z-20" />
+      <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-background to-transparent pointer-events-none z-20" />
+      <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-background to-transparent pointer-events-none z-20" />
+      
       <motion.div
         className="flex gap-8 py-4"
         animate={animationProps}
@@ -24,7 +26,7 @@ function MarqueeRow({ partners, speed = 20, reverse = false }) {
           x: {
             repeat: Infinity,
             repeatType: 'loop',
-            duration: speed, // Adjust speed to taste
+            duration: speed,
             ease: 'linear',
           },
         }}
@@ -32,29 +34,17 @@ function MarqueeRow({ partners, speed = 20, reverse = false }) {
         {fullPartners.map((partner, idx) => (
           <motion.div
             key={`${partner.name}-${idx}-${reverse ? 'reverse' : 'normal'}`}
-            whileHover={{ y: -5 }}
-            className="relative group"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="flex-shrink-0 group"
           >
-            <div className="w-60 bg-white rounded-2xl shadow-lg shadow-black/[0.03] border border-gray-100 
-                            flex flex-col items-center justify-center px-4 py-3
-                            hover:border-primary/20 transition-colors duration-300"
-            >
-              <span
-                className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text 
-                           text-transparent group-hover:from-primary group-hover:to-primary/80 
-                           transition-all duration-300 truncate w-full text-center group-hover:translate-y--3"
-                title={partner.name}
-              >
+            <div className="px-6 py-4 rounded-lg border border-border bg-card hover:bg-accent/5 transition-all duration-200 min-w-[200px] text-center">
+              <div className="text-lg font-semibold text-foreground group-hover:text-accent transition-colors">
                 {partner.name}
-              </span>
-              <span
-                className="text-xs text-gray-500 mt-2 opacity-0 group-hover:opacity-100 
-                           transition-all duration-300 truncate w-full text-center absolute 
-                           transform translate-y-2 group-hover:translate-y-2"
-                title={partner.type}
-              >
+              </div>
+              <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wide">
                 {partner.type}
-              </span>
+              </div>
             </div>
           </motion.div>
         ))}
@@ -75,46 +65,46 @@ export function Partners() {
   ];
 
   return (
-    <section className="relative py-16 overflow-hidden">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-white to-white" />
+    <section className="relative py-20 overflow-hidden">
+      {/* Clean Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-tech-grid opacity-[0.01]" />
+      </div>
 
-      {/* Animated Dots Pattern */}
-      <div 
-        className="absolute inset-0 opacity-[0.015]"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle at center, currentColor 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }}
-      />
-
-      <div className="container mx-auto px-4 relative">
-        {/* Header */}
+      {/* Header */}
+      <div className="container mx-auto px-4 relative z-10 mb-12">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-2xl mx-auto text-center mb-10"
+          transition={{ duration: 0.6 }}
+          className="max-w-3xl mx-auto text-center"
         >
-          <div className="inline-flex items-center gap-2 mb-4 p-1.5 pl-2 pr-3 rounded-full bg-primary/5 text-primary">
-            <Trophy className="w-4 h-4" />
-            <span className="text-sm font-medium">Trusted Partners</span>
+          <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-accent/10 text-accent border border-accent/20 text-sm font-medium">
+            <Building2 className="w-4 h-4" />
+            Strategic Partners
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
-            Backed by Rwanda's Leading Organizations
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">
+            <span className="gradient-text">Powered by Africa's</span>
+            <br />
+            <span className="gradient-text-primary">Innovation Leaders</span>
           </h2>
-          <p className="text-gray-600 text-lg">
-            Collaborating with top institutions to drive innovation across East Africa
+          <p className="text-lg text-muted-foreground leading-relaxed text-pretty">
+            Collaborating with visionary organizations to build the future of technology across East Africa and beyond
           </p>
         </motion.div>
-
-        {/* Marquee Rows */}
-        <div className="space-y-4">
-          <MarqueeRow partners={partners} speed={25} reverse={false} />
-          <MarqueeRow partners={partners} speed={18} reverse={true} />
-        </div>
       </div>
+
+      {/* Marquee */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="relative z-10"
+      >
+        <MarqueeRow partners={partners} speed={45} reverse={false} />
+      </motion.div>
     </section>
   );
 }

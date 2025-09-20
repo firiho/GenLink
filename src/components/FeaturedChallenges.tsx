@@ -1,8 +1,7 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Star } from 'lucide-react';
+import { ArrowRight, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
 import { HackathonCard } from '@/components/HackathonCard';
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
@@ -58,58 +57,74 @@ export default function FeaturedChallenges() {
   }, []);
 
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-50/50 to-white pointer-events-none" />
+    <section className="py-24 bg-background relative">
+      {/* Minimal Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-tech-grid opacity-[0.01]" />
+      </div>
+      
       <div className="container mx-auto px-4 relative">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="flex justify-between items-center mb-12"
+          transition={{ duration: 0.6 }}
+          className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-16 text-center lg:text-left"
         >
-          <div className="flex flex-col sm:flex-row sm:justify-between items-center w-full gap-4 mt-4 sm:mt-0">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="w-5 h-5 text-yellow-500" />
-                <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700">
-                  Featured
-                </Badge>
-              </div>
-              <h2 className="text-3xl font-bold mb-2">Featured Challenges</h2>
-              <p className="text-gray-600">Explore our most popular innovation challenges</p>
+          <div className="flex-1 mb-8 lg:mb-0">
+            <div className="flex justify-center lg:justify-start items-center gap-2 mb-6">
+              <Code className="w-5 h-5 text-accent" />
+              <span className="px-3 py-1 rounded-full bg-accent/10 text-accent border border-accent/20 text-sm font-medium">
+                Featured Challenges
+              </span>
             </div>
-            <Link to="/challenges" className="w-full sm:w-auto">
-              <Button variant="ghost" className="group w-full sm:w-auto">
-                View all challenges
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">
+              <span className="gradient-text">Innovation at Its</span>
+              <br />
+              <span className="gradient-text-primary">Peak</span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl text-pretty">
+              Join the most exciting challenges where visionary minds compete to build tomorrow's solutions
+            </p>
+          </div>
+          <Link to="/challenges" className="w-full lg:w-auto">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button 
+                variant="outline"
+                className="border-border hover:bg-accent/5 text-foreground font-medium px-6 py-3 rounded-lg transition-all duration-200 group w-full lg:w-auto"
+              >
+                Explore All Challenges
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
-            </Link>
-          </div>
+            </motion.div>
+          </Link>
         </motion.div>
         
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {loading ? (
-            // Loading skeletons
+            // Clean Loading Skeletons
             [...Array(3)].map((_, index) => (
               <motion.div
                 key={`skeleton-${index}`}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.15, duration: 0.6 }}
+                className="group relative"
               >
-                <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                  <Skeleton className="h-48 w-full rounded-md mb-4" />
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2 mb-4" />
-                  <div className="flex justify-between items-center mt-4">
-                    <Skeleton className="h-4 w-16" />
-                    <Skeleton className="h-4 w-20" />
+                <div className="p-6 rounded-lg border border-border bg-card">
+                  <Skeleton className="h-48 w-full rounded-lg mb-6 bg-muted" />
+                  <Skeleton className="h-6 w-3/4 mb-3 bg-muted" />
+                  <Skeleton className="h-4 w-1/2 mb-6 bg-muted" />
+                  <div className="flex justify-between items-center">
+                    <Skeleton className="h-4 w-20 bg-muted" />
+                    <Skeleton className="h-4 w-24 bg-muted" />
                   </div>
                 </div>
               </motion.div>
@@ -118,11 +133,12 @@ export default function FeaturedChallenges() {
             hackathons.map((hackathon, index) => (
               <motion.div
                 key={hackathon.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
+                transition={{ delay: index * 0.15, duration: 0.6 }}
+                whileHover={{ y: -4, scale: 1.02 }}
+                className="transform transition-all duration-200"
               >
                 <HackathonCard {...hackathon} />
               </motion.div>

@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
+import { useTheme } from '@/contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 import {
   Shield,
   Key,
@@ -17,6 +19,7 @@ import {
 import { toast } from 'sonner';
 
 export default function Security() {
+  const { actualTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
     passwordMinLength: 12,
@@ -65,16 +68,25 @@ export default function Security() {
   return (
     <div className="space-y-6">
       {/* Password Policy */}
-      <Card className="p-6">
+      <Card className={cn(
+        "p-6",
+        actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+      )}>
         <div className="flex items-center gap-2 mb-6">
           <Lock className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Password Policy</h2>
+          <h2 className={cn(
+            "text-lg font-semibold",
+            actualTheme === 'dark' ? "text-white" : "text-gray-900"
+          )}>Password Policy</h2>
         </div>
         
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium mb-1.5 block">
+              <label className={cn(
+                "text-sm font-medium mb-1.5 block",
+                actualTheme === 'dark' ? "text-slate-300" : "text-gray-700"
+              )}>
                 Minimum Password Length
               </label>
               <Input
@@ -84,10 +96,14 @@ export default function Security() {
                   ...settings,
                   passwordMinLength: parseInt(e.target.value)
                 })}
+                className="w-full"
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1.5 block">
+              <label className={cn(
+                "text-sm font-medium mb-1.5 block",
+                actualTheme === 'dark' ? "text-slate-300" : "text-gray-700"
+              )}>
                 Maximum Login Attempts
               </label>
               <Input
@@ -97,6 +113,7 @@ export default function Security() {
                   ...settings,
                   maxLoginAttempts: parseInt(e.target.value)
                 })}
+                className="w-full"
               />
             </div>
           </div>
@@ -104,8 +121,14 @@ export default function Security() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Require Special Characters</p>
-                <p className="text-sm text-gray-500">Require at least one special character</p>
+                <p className={cn(
+                  "font-medium",
+                  actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                )}>Require Special Characters</p>
+                <p className={cn(
+                  "text-sm",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Require at least one special character</p>
               </div>
               <Switch
                 checked={settings.requireSpecialChars}
@@ -116,8 +139,14 @@ export default function Security() {
 
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Require Numbers</p>
-                <p className="text-sm text-gray-500">Require at least one number</p>
+                <p className={cn(
+                  "font-medium",
+                  actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                )}>Require Numbers</p>
+                <p className={cn(
+                  "text-sm",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Require at least one number</p>
               </div>
               <Switch
                 checked={settings.requireNumbers}
@@ -128,8 +157,14 @@ export default function Security() {
 
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Require Uppercase Letters</p>
-                <p className="text-sm text-gray-500">Require at least one uppercase letter</p>
+                <p className={cn(
+                  "font-medium",
+                  actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                )}>Require Uppercase Letters</p>
+                <p className={cn(
+                  "text-sm",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Require at least one uppercase letter</p>
               </div>
               <Switch
                 checked={settings.requireUppercase}
@@ -142,16 +177,28 @@ export default function Security() {
       </Card>
 
       {/* Two-Factor Authentication */}
-      <Card className="p-6">
+      <Card className={cn(
+        "p-6",
+        actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+      )}>
         <div className="flex items-center gap-2 mb-6">
           <Shield className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Two-Factor Authentication</h2>
+          <h2 className={cn(
+            "text-lg font-semibold",
+            actualTheme === 'dark' ? "text-white" : "text-gray-900"
+          )}>Two-Factor Authentication</h2>
         </div>
 
         <div className="flex items-center justify-between mb-6">
           <div>
-            <p className="font-medium">Enable Two-Factor Authentication</p>
-            <p className="text-sm text-gray-500">Require 2FA for all admin accounts</p>
+            <p className={cn(
+              "font-medium",
+              actualTheme === 'dark' ? "text-white" : "text-gray-900"
+            )}>Enable Two-Factor Authentication</p>
+            <p className={cn(
+              "text-sm",
+              actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+            )}>Require 2FA for all admin accounts</p>
           </div>
           <Switch
             checked={settings.twoFactorAuth}
@@ -162,15 +209,24 @@ export default function Security() {
       </Card>
 
       {/* IP Restrictions */}
-      <Card className="p-6">
+      <Card className={cn(
+        "p-6",
+        actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+      )}>
         <div className="flex items-center gap-2 mb-6">
           <Key className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">IP Restrictions</h2>
+          <h2 className={cn(
+            "text-lg font-semibold",
+            actualTheme === 'dark' ? "text-white" : "text-gray-900"
+          )}>IP Restrictions</h2>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-1.5 block">
+            <label className={cn(
+              "text-sm font-medium mb-1.5 block",
+              actualTheme === 'dark' ? "text-slate-300" : "text-gray-700"
+            )}>
               IP Whitelist (comma-separated)
             </label>
             <Input
@@ -182,8 +238,14 @@ export default function Security() {
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Restrict Admin Access by IP</p>
-              <p className="text-sm text-gray-500">Only allow admin access from whitelisted IPs</p>
+              <p className={cn(
+                "font-medium",
+                actualTheme === 'dark' ? "text-white" : "text-gray-900"
+              )}>Restrict Admin Access by IP</p>
+              <p className={cn(
+                "text-sm",
+                actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+              )}>Only allow admin access from whitelisted IPs</p>
             </div>
             <Switch
               checked={settings.adminIpRestriction}
@@ -195,10 +257,16 @@ export default function Security() {
       </Card>
 
       {/* Recent Security Activity */}
-      <Card className="p-6">
+      <Card className={cn(
+        "p-6",
+        actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+      )}>
         <div className="flex items-center gap-2 mb-6">
           <Activity className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Recent Security Activity</h2>
+          <h2 className={cn(
+            "text-lg font-semibold",
+            actualTheme === 'dark' ? "text-white" : "text-gray-900"
+          )}>Recent Security Activity</h2>
         </div>
 
         <div className="space-y-4">
@@ -207,11 +275,20 @@ export default function Security() {
               key={activity.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              className={cn(
+                "flex items-center justify-between p-4 rounded-lg",
+                actualTheme === 'dark' ? "bg-slate-700" : "bg-gray-50"
+              )}
             >
               <div>
-                <p className="font-medium">{activity.action}</p>
-                <p className="text-sm text-gray-500">
+                <p className={cn(
+                  "font-medium",
+                  actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                )}>{activity.action}</p>
+                <p className={cn(
+                  "text-sm",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>
                   {activity.ip} • {activity.location}
                 </p>
               </div>
@@ -221,7 +298,10 @@ export default function Security() {
                 }`}>
                   {activity.status}
                 </p>
-                <p className="text-sm text-gray-500">{activity.timestamp}</p>
+                <p className={cn(
+                  "text-sm",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>{activity.timestamp}</p>
               </div>
             </motion.div>
           ))}

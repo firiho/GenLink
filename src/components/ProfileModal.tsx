@@ -5,10 +5,10 @@ import {
   } from '@/components/ui/dialog';
 import {
     Award, Github, Twitter, Linkedin,
-    Mail, Globe, MapPinIcon, Phone
+    Mail, Globe, MapPinIcon, Phone, X
   } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { set } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selectedMember }) {
 
@@ -22,27 +22,33 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
 
   return (
     <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-        <DialogContent className="w-[95%] max-w-4xl max-h-[90vh] mt-10 overflow-y-auto scrollbar-hide fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+        <DialogContent className="w-[95%] max-w-4xl max-h-[85vh] p-0 overflow-hidden sm:max-w-5xl sm:max-h-[80vh] mt-16 sm:mt-20 !translate-y-0 !top-16 sm:!top-20">
           {selectedMember && (
-            <div className="mt-4 overflow-y-auto max-h-[80vh]">
+            <div className="flex flex-col h-full max-h-[85vh] sm:max-h-[80vh] relative">
+              {/* Custom Close Button */}
+              <button
+                onClick={() => setIsProfileOpen(false)}
+                className="absolute top-4 right-4 z-50 w-8 h-8 rounded-full bg-background/90 backdrop-blur-sm border border-border/50 flex items-center justify-center text-foreground hover:bg-accent/10 hover:border-accent/30 transition-all duration-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              
               {/* Cover Photo */}
-              <div className="relative">
-                <div className="h-40 relative">
-                  {selectedMember.coverPhoto ? (
-                    <img 
-                      src={selectedMember.coverPhoto} 
-                      alt="Cover" 
-                      className="h-full w-full object-cover rounded-t-lg"
-                    />
-                  ) : (
-                    <div className="h-40 bg-gradient-to-r from-blue-500 to-indigo-600 w-full rounded-t-lg"></div>
-                  )}
-                </div>
+              <div className="relative h-40 sm:h-56 flex-shrink-0">
+                {selectedMember.coverPhoto ? (
+                  <img 
+                    src={selectedMember.coverPhoto} 
+                    alt="Cover" 
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-gradient-to-br from-accent/20 via-primary/10 to-accent/30"></div>
+                )}
                 
                 {/* Profile Photo */}
-                <div className="absolute bottom-0 left-8 transform translate-y-1/2">
-                  <div className="rounded-full h-24 w-24 bg-white p-1 shadow">
-                    <div className="rounded-full h-full w-full bg-gray-200 flex items-center justify-center relative overflow-hidden">
+                <div className="absolute -bottom-10 left-4 sm:-bottom-12 sm:left-8">
+                  <div className="rounded-full h-24 w-24 sm:h-28 sm:w-28 bg-background p-1 shadow-lg ring-4 ring-background">
+                    <div className="rounded-full h-full w-full bg-muted flex items-center justify-center relative overflow-hidden">
                       {selectedMember.image ? (
                         <img 
                           src={selectedMember.image} 
@@ -50,8 +56,8 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="h-full w-full bg-blue-600 flex items-center justify-center">
-                          <span className="text-white text-xl font-semibold">
+                        <div className="h-full w-full bg-gradient-to-br from-accent to-primary flex items-center justify-center">
+                          <span className="text-white text-xl sm:text-2xl font-bold">
                             {selectedMember.name
                               .split(' ')
                               .map((n) => n[0])
@@ -66,27 +72,28 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
               </div>
               
               {/* Profile Content */}
-              <div className="pt-16 px-6 pb-6">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-6 min-h-0">
                 {/* Basic Details */}
-                <div className="mb-8">
-                  <div className="flex flex-col md:flex-row md:justify-between">
-                    <div className="md:w-2/3">
-                      <h2 className="text-2xl font-bold mb-1">{selectedMember.name}</h2>
-                      <p className="text-lg text-gray-600 mb-2">{selectedMember.role}</p>
+                <div className="pt-14 sm:pt-16 mb-8">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                    <div className="flex-1">
+                      <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-foreground">{selectedMember.name}</h2>
+                      <p className="text-lg text-muted-foreground mb-3">{selectedMember.role}</p>
                       {selectedMember.location && (
-                        <p className="text-sm text-gray-500 flex items-center mb-2">
-                          <MapPinIcon className="h-4 w-4 mr-1" />
+                        <p className="text-sm text-muted-foreground flex items-center mb-4">
+                          <MapPinIcon className="h-4 w-4 mr-2 text-accent" />
                           {selectedMember.location}
                         </p>
                       )}
                     </div>
                     
+                    {/* Contact Info */}
                     {(selectedMember.email || selectedMember.phone || selectedMember.website) && (
-                      <div className="md:w-1/3 mt-4 md:mt-0 space-y-2">
+                      <div className="flex flex-col sm:items-end space-y-2">
                         {selectedMember.email && (
                           <a 
                             href={`mailto:${selectedMember.email}`}
-                            className="flex items-center text-gray-600 hover:text-primary transition-colors"
+                            className="flex items-center text-muted-foreground hover:text-accent transition-colors text-sm"
                           >
                             <Mail className="h-4 w-4 mr-2" />
                             {selectedMember.email}
@@ -96,7 +103,7 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
                         {selectedMember.phone && (
                           <a 
                             href={`tel:${selectedMember.phone}`}
-                            className="flex items-center text-gray-600 hover:text-primary transition-colors"
+                            className="flex items-center text-muted-foreground hover:text-accent transition-colors text-sm"
                           >
                             <Phone className="h-4 w-4 mr-2" />
                             {selectedMember.phone}
@@ -108,7 +115,7 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
                             href={selectedMember.website}
                             target="_blank"
                             rel="noopener noreferrer" 
-                            className="flex items-center text-gray-600 hover:text-primary transition-colors"
+                            className="flex items-center text-muted-foreground hover:text-accent transition-colors text-sm"
                           >
                             <Globe className="h-4 w-4 mr-2" />
                             Website
@@ -122,16 +129,16 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
                 {/* Social Links */}
                 {selectedMember.social && Object.values(selectedMember.social).some(v => v) && (
                   <div className="mb-8">
-                    <h4 className="text-md font-medium mb-3">Social Media</h4>
+                    <h4 className="text-lg font-semibold mb-4 text-foreground">Social Media</h4>
                     <div className="flex items-center space-x-4">
                       {selectedMember.social.github && (
                         <a 
                           href={selectedMember.social.github} 
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-gray-500 hover:text-primary transition-colors"
+                          className="w-10 h-10 rounded-full bg-card/50 hover:bg-accent/10 border border-border/50 hover:border-accent/30 flex items-center justify-center text-muted-foreground hover:text-accent transition-all duration-200 group"
                         >
-                          <Github className="h-5 w-5" />
+                          <Github className="h-5 w-5 group-hover:text-accent" />
                         </a>
                       )}
                       
@@ -140,9 +147,9 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
                           href={selectedMember.social.twitter} 
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-gray-500 hover:text-primary transition-colors"
+                          className="w-10 h-10 rounded-full bg-card/50 hover:bg-accent/10 border border-border/50 hover:border-accent/30 flex items-center justify-center text-muted-foreground hover:text-accent transition-all duration-200 group"
                         >
-                          <Twitter className="h-5 w-5" />
+                          <Twitter className="h-5 w-5 group-hover:text-accent" />
                         </a>
                       )}
                       
@@ -151,9 +158,9 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
                           href={selectedMember.social.linkedin} 
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-gray-500 hover:text-primary transition-colors"
+                          className="w-10 h-10 rounded-full bg-card/50 hover:bg-accent/10 border border-border/50 hover:border-accent/30 flex items-center justify-center text-muted-foreground hover:text-accent transition-all duration-200 group"
                         >
-                          <Linkedin className="h-5 w-5" />
+                          <Linkedin className="h-5 w-5 group-hover:text-accent" />
                         </a>
                       )}
                     </div>
@@ -163,22 +170,22 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
                 {/* About Section */}
                 {selectedMember.about && (
                   <div className="mb-8">
-                    <h3 className="text-lg font-semibold mb-3 border-b pb-2">About</h3>
-                    <p className="text-gray-700">{selectedMember.about}</p>
+                    <h3 className="text-lg font-semibold mb-4 text-foreground border-b border-border pb-2">About</h3>
+                    <p className="text-muted-foreground leading-relaxed">{selectedMember.about}</p>
                   </div>
                 )}
                 
                 {/* Community Stats */}
                 <div className="mb-8">
-                  <h3 className="text-lg font-semibold mb-3 border-b pb-2">Community Stats</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-gray-500">Contributions</p>
-                      <p className="text-2xl font-bold text-primary">{selectedMember.contributions}</p>
+                  <h3 className="text-lg font-semibold mb-4 text-foreground border-b border-border pb-2">Community Stats</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-card/50 backdrop-blur-sm p-4 rounded-lg border border-border/50">
+                      <p className="text-muted-foreground text-sm">Contributions</p>
+                      <p className="text-2xl font-bold text-accent">{selectedMember.contributions}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-gray-500">Genlink Projects</p>
-                      <p className="text-2xl font-bold text-primary">{selectedMember.projects_count}</p>
+                    <div className="bg-card/50 backdrop-blur-sm p-4 rounded-lg border border-border/50">
+                      <p className="text-muted-foreground text-sm">Genlink Projects</p>
+                      <p className="text-2xl font-bold text-accent">{selectedMember.projects_count}</p>
                     </div>
                   </div>
                 </div>
@@ -186,10 +193,10 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
                 {/* Badges */}
                 {selectedMember.badges && selectedMember.badges.length > 0 && (
                   <div className="mb-8">
-                    <h3 className="text-lg font-semibold mb-3 border-b pb-2">Badges</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-foreground border-b border-border pb-2">Badges</h3>
                     <div className="flex flex-wrap gap-2">
                       {selectedMember.badges.map(badge => (
-                        <Badge key={badge} className="bg-primary/10 text-primary px-3 py-1">
+                        <Badge key={badge} className="bg-accent/10 text-accent px-3 py-1 border border-accent/20">
                           <Award className="w-4 h-4 mr-2" />
                           {badge}
                         </Badge>
@@ -201,10 +208,10 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
                 {/* Skills */}
                 {selectedMember.skills && selectedMember.skills.length > 0 && (
                   <div className="mb-8">
-                    <h3 className="text-lg font-semibold mb-3 border-b pb-2">Skills</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-foreground border-b border-border pb-2">Skills</h3>
                     <div className="flex flex-wrap gap-2">
                       {selectedMember.skills.map((skill, index) => (
-                        <Badge key={index} variant="outline" className="bg-gray-100">
+                        <Badge key={index} variant="outline" className="bg-card/50 text-foreground border-border/50 hover:border-accent/30 hover:bg-accent/5 transition-colors">
                           {skill}
                         </Badge>
                       ))}
@@ -215,17 +222,17 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
                 {/* Experience */}
                 {selectedMember.experience && selectedMember.experience.length > 0 && (
                   <div className="mb-8">
-                    <h3 className="text-lg font-semibold mb-3 border-b pb-2">Experience</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-foreground border-b border-border pb-2">Experience</h3>
                     <div className="space-y-4">
                       {selectedMember.experience.map((exp, index) => (
-                        <div key={index} className="border-l-2 border-primary/30 pl-4">
-                          <h4 className="font-medium">{exp.role}</h4>
-                          <p className="text-sm text-gray-600">{exp.company}</p>
-                          <p className="text-sm text-gray-500">
+                        <div key={index} className="border-l-2 border-accent/30 pl-4">
+                          <h4 className="font-medium text-foreground">{exp.role}</h4>
+                          <p className="text-sm text-muted-foreground">{exp.company}</p>
+                          <p className="text-sm text-muted-foreground">
                             {exp.startDate} - {exp.endDate || 'Present'}
                           </p>
                           {exp.description && (
-                            <p className="text-sm text-gray-600 mt-2">{exp.description}</p>
+                            <p className="text-sm text-muted-foreground mt-2">{exp.description}</p>
                           )}
                         </div>
                       ))}
@@ -236,13 +243,13 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
                 {/* Education */}
                 {selectedMember.education && selectedMember.education.length > 0 && (
                   <div className="mb-8">
-                    <h3 className="text-lg font-semibold mb-3 border-b pb-2">Education</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-foreground border-b border-border pb-2">Education</h3>
                     <div className="space-y-4">
                       {selectedMember.education.map((edu, index) => (
-                        <div key={index} className="border-l-2 border-primary/30 pl-4">
-                          <h4 className="font-medium">{edu.degree}</h4>
-                          <p className="text-sm text-gray-600">{edu.institution}</p>
-                          <p className="text-sm text-gray-500">
+                        <div key={index} className="border-l-2 border-accent/30 pl-4">
+                          <h4 className="font-medium text-foreground">{edu.degree}</h4>
+                          <p className="text-sm text-muted-foreground">{edu.institution}</p>
+                          <p className="text-sm text-muted-foreground">
                             {edu.startDate} - {edu.endDate || 'Present'}
                           </p>
                         </div>
@@ -250,35 +257,35 @@ export default function ProfileModal({ isProfileOpen, setIsProfileOpen, selected
                     </div>
                   </div>
                 )}
-              </div>
-              {/* Projects */}
-              {projects && projects.length > 0 && (
-                <div className="mb-8 px-6">
-                  <h3 className="text-lg font-semibold mb-3 border-b pb-2">Projects</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {projects.map((project) => (
-                      <div key={project.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <div className="flex justify-between items-start">
-                          <h4 className="font-medium text-primary">{project.name}</h4>
-                          <span className="text-xs bg-gray-200 rounded px-2 py-1">{project.year}</span>
+                
+                {/* Projects */}
+                {projects && projects.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold mb-4 text-foreground border-b border-border pb-2">Projects</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {projects.map((project) => (
+                        <div key={project.id} className="bg-card/50 backdrop-blur-sm rounded-lg p-4 border border-border/50">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-foreground">{project.name}</h4>
+                            <span className="text-xs bg-card/80 text-foreground border border-border/50 rounded px-2 py-1">{project.year}</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-3">{project.description}</p>
+                          {project.link && (
+                            <a 
+                              href={project.link}
+                              target="_blank"
+                              rel="noopener noreferrer" 
+                              className="inline-block text-sm text-accent hover:text-accent/80 transition-colors"
+                            >
+                              View Project →
+                            </a>
+                          )}
                         </div>
-                        <p className="text-sm text-gray-600 mt-2">{project.description}</p>
-                        {project.link && (
-                          <a 
-                            href={project.link}
-                            target="_blank"
-                            rel="noopener noreferrer" 
-                            className="mt-3 inline-block text-sm text-primary hover:underline"
-                          >
-                            View Project →
-                          </a>
-                        )}
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-              
+                )}
+              </div>
             </div>
           )}
         </DialogContent>

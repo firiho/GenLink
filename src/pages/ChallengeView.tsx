@@ -200,23 +200,23 @@ const handleAddChallenge = async (challengeId) => {
 };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <ChallengeSkeleton />
-      </div>
-    );
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <Header />
+      <ChallengeSkeleton />
+    </div>
+  );
   }
 
   if (!challenge) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
         <Header />
         <div className="container mx-auto px-4 py-12 text-center">
-          <h2 className="text-2xl font-bold text-foreground">Challenge not found</h2>
-          <p className="mt-2 text-muted-foreground">The challenge you're looking for doesn't exist or has been removed.</p>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Challenge not found</h2>
+          <p className="mt-2 text-slate-600 dark:text-slate-400">The challenge you're looking for doesn't exist or has been removed.</p>
           <Button 
-            className="mt-6"
+            className="mt-6 bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200"
             onClick={() => navigate('/challenges')}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -228,7 +228,7 @@ const handleAddChallenge = async (challengeId) => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <Header />
       <div className="pt-16">
         <motion.div
@@ -238,42 +238,52 @@ const handleAddChallenge = async (challengeId) => {
         >
           {/* Challenge Header */}
           <div 
-            className="w-full bg-cover bg-center h-40 md:h-72 relative"
+            className="w-full bg-cover bg-center h-48 sm:h-56 md:h-72 relative"
             style={{ 
               backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url(${challenge.image})` 
             }}
           >
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="container mx-auto px-4 text-center text-white">
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 max-w-4xl mx-auto">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 max-w-4xl mx-auto leading-tight">
                   {challenge.title}
                 </h1>
-                <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
                   {challenge.categories.map(category => (
-                    <Badge key={category} className="bg-white/20 text-white hover:bg-white/30">
+                    <Badge key={category} className="bg-white/20 text-white hover:bg-white/30 text-xs sm:text-sm">
                       {category}
                     </Badge>
                   ))}
                 </div>
-                <div className="flex flex-wrap justify-center gap-6 text-sm">
+                <div className="flex flex-wrap justify-center gap-3 sm:gap-6 text-xs sm:text-sm">
                   <div className="flex items-center">
-                    <Timer className="w-4 h-4 mr-2" />
-                    {challenge.daysLeft > 0 ? `${challenge.daysLeft} days left` : 'Challenge ended'}
+                    <Timer className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">{challenge.daysLeft > 0 ? `${challenge.daysLeft} days left` : 'Challenge ended'}</span>
+                    <span className="sm:hidden">{challenge.daysLeft > 0 ? `${challenge.daysLeft}d left` : 'Ended'}</span>
                   </div>
                   <div className="flex items-center">
-                    <Users className="w-4 h-4 mr-2" />
-                    {challenge.participants} participants
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">{challenge.participants} participants</span>
+                    <span className="sm:hidden">{challenge.participants}</span>
                   </div>
                   <div className="flex items-center">
-                    <Trophy className="w-4 h-4 mr-2" />
-                    {challenge.total_prize > 0 
-                      ? `$${challenge.total_prize.toLocaleString()} in prizes` 
-                      : challenge.prize}
+                    <Trophy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">
+                      {challenge.total_prize > 0 
+                        ? `$${challenge.total_prize.toLocaleString()} in prizes` 
+                        : challenge.prize}
+                    </span>
+                    <span className="sm:hidden">
+                      {challenge.total_prize > 0 
+                        ? `$${challenge.total_prize.toLocaleString()}` 
+                        : challenge.prize}
+                    </span>
                   </div>
                   {challenge.deadline && isValid(new Date(challenge.deadline)) && (
                     <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Deadline: {format(new Date(challenge.deadline), 'MMM d, yyyy')}
+                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Deadline: {format(new Date(challenge.deadline), 'MMM d, yyyy')}</span>
+                      <span className="sm:hidden">{format(new Date(challenge.deadline), 'MMM d')}</span>
                     </div>
                   )}
                 </div>
@@ -292,11 +302,11 @@ const handleAddChallenge = async (challengeId) => {
           
           {/* Main Content */}
           <div className="container mx-auto px-4 mt-10">
-            <div className="bg-card rounded-t-xl border border-border shadow-lg">
+            <div className="bg-white dark:bg-slate-900 rounded-t-xl border border-slate-200 dark:border-slate-800 shadow-lg">
               {/* Organizer and Action Row */}
-              <div className="p-6 flex flex-col md:flex-row md:items-center justify-between border-b border-border">
-                <div className="flex items-center mb-4 md:mb-0">
-                  <div className="w-12 h-12 rounded-full bg-muted flex-shrink-0 mr-4 overflow-hidden">
+              <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 dark:border-slate-700 gap-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex-shrink-0 mr-3 sm:mr-4 overflow-hidden">
                     {challenge.organizerLogo ? (
                       <img 
                         src={challenge.organizerLogo} 
@@ -304,35 +314,43 @@ const handleAddChallenge = async (challengeId) => {
                         className="w-full h-full object-contain"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-accent/10 text-accent font-bold">
+                      <div className="w-full h-full flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm sm:text-base">
                         {challenge.organizer.charAt(0)}
                       </div>
                     )}
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Organized by</p>
-                    <h2 className="font-semibold text-foreground">{challenge.organizer}</h2>
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Organized by</p>
+                    <h2 className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base">{challenge.organizer}</h2>
                   </div>
                 </div>
                 
-                <div className="flex flex-wrap gap-3">
-                  <Button variant="outline" size="sm" className="gap-1.5 border-border hover:bg-accent/5 text-foreground hover:text-accent">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-1.5 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex-1 sm:flex-none"
+                  >
                     <Share2 className="h-4 w-4" />
                     Share
                   </Button>
                   <Button 
                     size="sm" 
-                    className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
+                    className="gap-1.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-slate-100 dark:text-slate-900 flex-1 sm:flex-none"
                     onClick={() => {handleAddChallenge(challenge.id)}}
                     disabled={isJoining || challenge.daysLeft <= 0}
                   >
                     {isJoining ? (
                       <>
-                        <span className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-1"></span>
-                        Joining...
+                        <span className="h-4 w-4 border-2 border-slate-100 dark:border-slate-900 border-t-transparent rounded-full animate-spin mr-1"></span>
+                        <span className="hidden sm:inline">Joining...</span>
+                        <span className="sm:hidden">Joining...</span>
                       </>
                     ) : challenge.daysLeft > 0 ? (
-                      'Join Challenge'
+                      <>
+                        <span className="hidden sm:inline">Join Challenge</span>
+                        <span className="sm:hidden">Join</span>
+                      </>
                     ) : null}
                   </Button>
                 </div>
@@ -340,35 +358,36 @@ const handleAddChallenge = async (challengeId) => {
               
               {/* Tabs Navigation */}
               <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <div className="px-6 border-b border-border">
-                  <TabsList className="h-14 justify-start bg-transparent border-b-0 p-0 gap-6">
+                <div className="px-4 sm:px-6 border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
+                  <TabsList className="h-12 sm:h-14 justify-start bg-transparent border-b-0 p-0 gap-2 sm:gap-6 min-w-max">
                     <TabsTrigger 
                       value="overview"
-                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-accent"
+                      className="h-12 sm:h-14 px-2 sm:px-0 data-[state=active]:border-b-2 data-[state=active]:border-slate-900 dark:data-[state=active]:border-slate-100 rounded-none data-[state=active]:shadow-none text-slate-500 dark:text-slate-400 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap"
                     >
                       Overview
                     </TabsTrigger>
                     <TabsTrigger 
                       value="details"
-                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-accent"
+                      className="h-12 sm:h-14 px-2 sm:px-0 data-[state=active]:border-b-2 data-[state=active]:border-slate-900 dark:data-[state=active]:border-slate-100 rounded-none data-[state=active]:shadow-none text-slate-500 dark:text-slate-400 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap"
                     >
-                      Details & Criteria
+                      <span className="hidden sm:inline">Details & Criteria</span>
+                      <span className="sm:hidden">Details</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="timeline"
-                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-accent"
+                      className="h-12 sm:h-14 px-2 sm:px-0 data-[state=active]:border-b-2 data-[state=active]:border-slate-900 dark:data-[state=active]:border-slate-100 rounded-none data-[state=active]:shadow-none text-slate-500 dark:text-slate-400 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap"
                     >
                       Timeline
                     </TabsTrigger>
                     <TabsTrigger 
                       value="prizes"
-                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-accent"
+                      className="h-12 sm:h-14 px-2 sm:px-0 data-[state=active]:border-b-2 data-[state=active]:border-slate-900 dark:data-[state=active]:border-slate-100 rounded-none data-[state=active]:shadow-none text-slate-500 dark:text-slate-400 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap"
                     >
                       Prizes
                     </TabsTrigger>
                     <TabsTrigger 
                       value="resources"
-                      className="h-14 px-0 data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none data-[state=active]:shadow-none text-muted-foreground data-[state=active]:text-accent"
+                      className="h-12 sm:h-14 px-2 sm:px-0 data-[state=active]:border-b-2 data-[state=active]:border-slate-900 dark:data-[state=active]:border-slate-100 rounded-none data-[state=active]:shadow-none text-slate-500 dark:text-slate-400 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap"
                     >
                       Resources
                     </TabsTrigger>
@@ -376,24 +395,24 @@ const handleAddChallenge = async (challengeId) => {
                 </div>
                 
                 {/* Tab Contents */}
-                <TabsContent value="overview" className="p-6 pt-8">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <TabsContent value="overview" className="p-4 sm:p-6 pt-6 sm:pt-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                     <div className="lg:col-span-2 space-y-8">
                       <div>
-                        <h3 className="text-xl font-semibold mb-4">Challenge Overview</h3>
+                        <h3 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Challenge Overview</h3>
                         <div className="prose max-w-none">
                           {challenge.description.split('\n').map((paragraph, i) => (
-                            <p key={i} className="mb-4">{paragraph}</p>
+                            <p key={i} className="mb-4 text-slate-700 dark:text-slate-300">{paragraph}</p>
                           ))}
                         </div>
                       </div>
                       
                       {challenge.skills.length > 0 && (
                         <div>
-                          <h3 className="text-xl font-semibold mb-4">Skills Needed</h3>
+                          <h3 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Skills Needed</h3>
                           <div className="flex flex-wrap gap-2">
                             {challenge.skills.map(skill => (
-                              <Badge key={skill} variant="outline" className="px-3 py-1">
+                              <Badge key={skill} variant="outline" className="px-3 py-1 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
                                 <Tag className="w-3.5 h-3.5 mr-1.5" />
                                 {skill}
                               </Badge>
@@ -404,13 +423,13 @@ const handleAddChallenge = async (challengeId) => {
                     </div>
                     
                     <div className="space-y-6">
-                      <div className="bg-muted/20 rounded-lg p-6 border border-border">
-                        <h4 className="text-lg font-semibold mb-4 text-foreground">Challenge Details</h4>
+                      <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
+                        <h4 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Challenge Details</h4>
                         <div className="space-y-4">
                           <div>
-                            <p className="text-sm text-muted-foreground">Submission Deadline</p>
-                            <p className="font-medium flex items-center text-foreground">
-                              <CalendarDays className="w-4 h-4 mr-2 text-accent" />
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Submission Deadline</p>
+                            <p className="font-medium flex items-center text-slate-900 dark:text-white">
+                              <CalendarDays className="w-4 h-4 mr-2 text-slate-600 dark:text-slate-400" />
                               {challenge.deadline && isValid(new Date(challenge.deadline))
                                 ? format(new Date(challenge.deadline), 'MMMM d, yyyy') 
                                 : 'Not specified'}
@@ -418,9 +437,9 @@ const handleAddChallenge = async (challengeId) => {
                           </div>
                           
                           <div>
-                            <p className="text-sm text-muted-foreground">Prize</p>
-                            <p className="font-medium flex items-center text-foreground">
-                              <Trophy className="w-4 h-4 mr-2 text-accent" />
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Prize</p>
+                            <p className="font-medium flex items-center text-slate-900 dark:text-white">
+                              <Trophy className="w-4 h-4 mr-2 text-slate-600 dark:text-slate-400" />
                               {challenge.total_prize > 0 
                                 ? `$${challenge.total_prize.toLocaleString()}` 
                                 : challenge.prize}
@@ -428,9 +447,9 @@ const handleAddChallenge = async (challengeId) => {
                           </div>
                           
                           <div>
-                            <p className="text-sm text-muted-foreground">Participation</p>
-                            <p className="font-medium flex items-center text-foreground">
-                              <Users className="w-4 h-4 mr-2 text-accent" />
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Participation</p>
+                            <p className="font-medium flex items-center text-slate-900 dark:text-white">
+                              <Users className="w-4 h-4 mr-2 text-slate-600 dark:text-slate-400" />
                               {challenge.allowTeams 
                                 ? `Teams of up to ${challenge.maxTeamSize} allowed` 
                                 : 'Individual participation only'}
@@ -438,9 +457,9 @@ const handleAddChallenge = async (challengeId) => {
                           </div>
                           
                           <div>
-                            <p className="text-sm text-muted-foreground">Status</p>
-                            <p className="font-medium flex items-center text-foreground">
-                              <Clock className="w-4 h-4 mr-2 text-accent" />
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Status</p>
+                            <p className="font-medium flex items-center text-slate-900 dark:text-white">
+                              <Clock className="w-4 h-4 mr-2 text-slate-600 dark:text-slate-400" />
                               {challenge.daysLeft > 0 
                                 ? `${challenge.daysLeft} days remaining` 
                                 : 'Challenge ended'}
@@ -448,10 +467,10 @@ const handleAddChallenge = async (challengeId) => {
                           </div>
                           
                           <div>
-                            <p className="text-sm text-muted-foreground">Categories</p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Categories</p>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {challenge.categories.map(category => (
-                                <span key={category} className="px-2 py-1 rounded-md bg-accent/10 text-accent text-xs font-medium">
+                                <span key={category} className="px-2 py-1 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium">
                                   {category}
                                 </span>
                               ))}
@@ -464,8 +483,8 @@ const handleAddChallenge = async (challengeId) => {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="details" className="p-6 pt-8">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <TabsContent value="details" className="p-4 sm:p-6 pt-6 sm:pt-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                     <div className="lg:col-span-2 space-y-8">
                       {challenge.requirements && (
                         <div>
@@ -525,8 +544,8 @@ const handleAddChallenge = async (challengeId) => {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="timeline" className="p-6 pt-8">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <TabsContent value="timeline" className="p-4 sm:p-6 pt-6 sm:pt-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                     <div className="lg:col-span-2">
                       <h3 className="text-xl font-semibold mb-6">Challenge Timeline</h3>
                       
@@ -620,8 +639,8 @@ const handleAddChallenge = async (challengeId) => {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="prizes" className="p-6 pt-8">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <TabsContent value="prizes" className="p-4 sm:p-6 pt-6 sm:pt-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                     <div className="lg:col-span-2">
                       <h3 className="text-xl font-semibold mb-6">Prizes</h3>
                       
@@ -740,8 +759,8 @@ const handleAddChallenge = async (challengeId) => {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="resources" className="p-6 pt-8">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <TabsContent value="resources" className="p-4 sm:p-6 pt-6 sm:pt-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                     <div className="lg:col-span-2">
                       <h3 className="text-xl font-semibold mb-6">Resources</h3>
                       
@@ -855,19 +874,19 @@ const handleAddChallenge = async (challengeId) => {
 const ChallengeSkeleton = () => (
   <div className="pt-16"> {/* Add padding top to account for the fixed header */}
     {/* Header skeleton */}
-    <div className="w-full h-40 md:h-72 bg-muted/50 animate-pulse relative mb-10">
+    <div className="w-full h-48 sm:h-56 md:h-72 bg-slate-200 dark:bg-slate-800 animate-pulse relative mb-10">
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="container mx-auto px-4 text-center">
-          <Skeleton className="h-12 w-3/4 max-w-2xl mx-auto mb-4" />
-          <div className="flex justify-center gap-2 mb-6">
-            <Skeleton className="h-6 w-20" />
-            <Skeleton className="h-6 w-24" />
-            <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-8 sm:h-10 md:h-12 w-3/4 max-w-2xl mx-auto mb-4 bg-slate-300 dark:bg-slate-700" />
+          <div className="flex justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <Skeleton className="h-5 sm:h-6 w-16 sm:w-20 bg-slate-300 dark:bg-slate-700" />
+            <Skeleton className="h-5 sm:h-6 w-20 sm:w-24 bg-slate-300 dark:bg-slate-700" />
+            <Skeleton className="h-5 sm:h-6 w-12 sm:w-16 bg-slate-300 dark:bg-slate-700" />
           </div>
-          <div className="flex justify-center gap-4">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-4 w-40" />
+          <div className="flex justify-center gap-3 sm:gap-4">
+            <Skeleton className="h-3 sm:h-4 w-24 sm:w-32 bg-slate-300 dark:bg-slate-700" />
+            <Skeleton className="h-3 sm:h-4 w-20 sm:w-28 bg-slate-300 dark:bg-slate-700" />
+            <Skeleton className="h-3 sm:h-4 w-32 sm:w-40 bg-slate-300 dark:bg-slate-700" />
           </div>
         </div>
       </div>
@@ -876,37 +895,37 @@ const ChallengeSkeleton = () => (
     {/* Content skeleton */}
     <div className="container mx-auto px-4 mt-10">
       <div className="bg-card rounded-t-xl border border-border shadow-lg">
-        <div className="p-6 border-b border-border">
-          <div className="flex justify-between">
+        <div className="p-4 sm:p-6 border-b border-border">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center">
-              <Skeleton className="w-12 h-12 rounded-full mr-4" />
+              <Skeleton className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mr-3 sm:mr-4" />
               <div>
-                <Skeleton className="h-3 w-20 mb-1" />
-                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-3 w-16 sm:w-20 mb-1" />
+                <Skeleton className="h-4 sm:h-5 w-32 sm:w-40" />
               </div>
             </div>
-            <div className="flex gap-2">
-              <Skeleton className="h-9 w-24" />
-              <Skeleton className="h-9 w-24" />
-              <Skeleton className="h-9 w-32" />
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 w-full sm:w-auto">
+              <Skeleton className="h-9 w-full sm:w-24" />
+              <Skeleton className="h-9 w-full sm:w-24" />
+              <Skeleton className="h-9 w-full sm:w-32" />
             </div>
           </div>
         </div>
         
-        <div className="px-6 border-b border-border">
-          <div className="flex gap-6 py-4">
-            <Skeleton className="h-6 w-20" />
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-6 w-24" />
-            <Skeleton className="h-6 w-20" />
-            <Skeleton className="h-6 w-28" />
+        <div className="px-4 sm:px-6 border-b border-border">
+          <div className="flex gap-2 sm:gap-6 py-3 sm:py-4 overflow-x-auto">
+            <Skeleton className="h-6 sm:h-6 w-16 sm:w-20 flex-shrink-0" />
+            <Skeleton className="h-6 sm:h-6 w-20 sm:w-32 flex-shrink-0" />
+            <Skeleton className="h-6 sm:h-6 w-16 sm:w-24 flex-shrink-0" />
+            <Skeleton className="h-6 sm:h-6 w-16 sm:w-20 flex-shrink-0" />
+            <Skeleton className="h-6 sm:h-6 w-20 sm:w-28 flex-shrink-0" />
           </div>
         </div>
         
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             <div className="lg:col-span-2 space-y-6">
-              <Skeleton className="h-8 w-48 mb-4" />
+              <Skeleton className="h-6 sm:h-8 w-32 sm:w-48 mb-4" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
@@ -914,20 +933,20 @@ const ChallengeSkeleton = () => (
               <Skeleton className="h-4 w-5/6" />
               
               <div className="pt-4">
-                <Skeleton className="h-8 w-48 mb-4" />
+                <Skeleton className="h-6 sm:h-8 w-32 sm:w-48 mb-4" />
                 <div className="flex flex-wrap gap-2">
-                  <Skeleton className="h-8 w-20" />
-                  <Skeleton className="h-8 w-24" />
-                  <Skeleton className="h-8 w-28" />
-                  <Skeleton className="h-8 w-16" />
-                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-6 sm:h-8 w-16 sm:w-20" />
+                  <Skeleton className="h-6 sm:h-8 w-20 sm:w-24" />
+                  <Skeleton className="h-6 sm:h-8 w-24 sm:w-28" />
+                  <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
+                  <Skeleton className="h-6 sm:h-8 w-20 sm:w-24" />
                 </div>
               </div>
             </div>
             
             <div>
-              <Skeleton className="h-64 w-full rounded-lg mb-6" />
-              <Skeleton className="h-10 w-full rounded" />
+              <Skeleton className="h-48 sm:h-64 w-full rounded-lg mb-6" />
+              <Skeleton className="h-8 sm:h-10 w-full rounded" />
             </div>
           </div>
         </div>

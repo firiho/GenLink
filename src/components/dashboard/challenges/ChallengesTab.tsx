@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Trophy } from 'lucide-react';
+import { Trophy, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,12 +7,16 @@ import ChallengeCard from '@/components/dashboard/challenges/ChallengeCard';
 import SearchAndFilter from '@/components/dashboard/challenges/SearchAndFilter';
 import useChallenges from '@/components/dashboard/challenges/useChallenges';
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
+import { Button } from '@/components/ui/button';
 
 export default function ChallengesTab({setActiveView}) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('all');
     const [userChallenges, setUserChallenges] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(12);
     const { user } = useAuth();
 
     useEffect(() => {
@@ -88,49 +92,161 @@ export default function ChallengesTab({setActiveView}) {
     }, [user]);
     
     const filteredChallenges = useChallenges(userChallenges, searchQuery, selectedFilter);
+    
+    // Pagination logic
+    const totalPages = Math.ceil(filteredChallenges.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentChallenges = filteredChallenges.slice(startIndex, endIndex);
+    
+    // Reset to first page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, selectedFilter]);
 
     return (
-        <div className="space-y-4 sm:space-y-6 mt-5">
-            <div className="flex flex-col space-y-4">
+        <div className="space-y-6 sm:space-y-8">
+            <div className="flex flex-col space-y-6">
                 <WelcomeSection title="Your Challenges" subtitle="Manage and track your innovation challenges" />
-                <SearchAndFilter 
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    selectedFilter={selectedFilter}
-                    setSelectedFilter={setSelectedFilter}
-                />
+                
+                {/* Search, Filter, and View Controls */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                    <div className="flex-1 min-w-0">
+                        <SearchAndFilter 
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            selectedFilter={selectedFilter}
+                            setSelectedFilter={setSelectedFilter}
+                        />
+                    </div>
+                    
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-sm text-slate-600 dark:text-slate-400 hidden sm:block">View:</span>
+                        <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                            <Button
+                                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                                size="sm"
+                                onClick={() => setViewMode('grid')}
+                                className="h-8 w-8 p-0"
+                            >
+                                <Grid className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                                size="sm"
+                                onClick={() => setViewMode('list')}
+                                className="h-8 w-8 p-0"
+                            >
+                                <List className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {isLoading ? (
                 // Loading state
-                <div className="space-y-3">
-                    {[1, 2, 3].map((index) => (
-                        <div key={index} className="bg-white rounded-lg shadow p-4 animate-pulse">
-                            <div className="h-20 bg-gray-200 rounded w-3/4 mb-3"></div>
-                            <div className="h-10 bg-gray-200 rounded w-1/2 mb-2"></div>
-                            <div className="h-5 bg-gray-200 rounded w-1/4"></div>
+                <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6' : 'space-y-4'}>
+                    {Array.from({ length: itemsPerPage }).map((_, index) => (
+                        <div key={index} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 animate-pulse">
+                            <div className="flex items-start space-x-4">
+                                <div className="w-16 h-16 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+                                <div className="flex-1 space-y-3">
+                                    <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                                    <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/4"></div>
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>
             ) : (
-                <div className="space-y-3">
-                    {filteredChallenges.map((challenge, index) => (
-                        <ChallengeCard key={challenge.id} challenge={challenge} index={index} setActiveTab={setActiveView}/>
-                    ))}
-                </div>
+                <>
+                    {/* Challenges Display */}
+                    <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6' : 'space-y-4'}>
+                        {currentChallenges.map((challenge, index) => (
+                            <ChallengeCard 
+                                key={challenge.id} 
+                                challenge={challenge} 
+                                index={index} 
+                                setActiveTab={setActiveView}
+                                viewMode={viewMode}
+                            />
+                        ))}
+                    </div>
+                    
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between pt-6">
+                            <div className="text-sm text-slate-600 dark:text-slate-400">
+                                Showing {startIndex + 1} to {Math.min(endIndex, filteredChallenges.length)} of {filteredChallenges.length} challenges
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                                >
+                                    <ChevronLeft className="h-4 w-4 mr-1" />
+                                    Previous
+                                </Button>
+                                
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                        const pageNum = i + 1;
+                                        return (
+                                            <Button
+                                                key={pageNum}
+                                                variant={currentPage === pageNum ? 'default' : 'ghost'}
+                                                size="sm"
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className="h-8 w-8 p-0"
+                                            >
+                                                {pageNum}
+                                            </Button>
+                                        );
+                                    })}
+                                </div>
+                                
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                                >
+                                    Next
+                                    <ChevronRight className="h-4 w-4 ml-1" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
 
             {!isLoading && filteredChallenges.length === 0 && (
-                <div className="text-center py-8">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-4">
-                        <Trophy className="h-6 w-6 text-gray-400" />
+                <div className="text-center py-16">
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <Trophy className="h-10 w-10 text-slate-400 dark:text-slate-500" />
                     </div>
-                    <h3 className="text-lg font-medium mb-1">No challenges found</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No challenges found</h3>
+                    <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto">
                         {userChallenges.length === 0 
-                            ? "You haven't joined any challenges yet" 
-                            : "Try adjusting your search or filters"}
+                            ? "You haven't joined any challenges yet. Start your innovation journey today!" 
+                            : "Try adjusting your search or filters to find what you're looking for."}
                     </p>
+                    {userChallenges.length === 0 && (
+                        <Button 
+                            className="bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:shadow-lg"
+                            onClick={() => setActiveView('challenges')}
+                        >
+                            Browse Available Challenges
+                        </Button>
+                    )}
                 </div>
             )}
         </div>

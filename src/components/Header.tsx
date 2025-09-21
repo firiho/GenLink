@@ -249,7 +249,7 @@ export const Header = () => {
               <div className="pt-3 border-t border-border">
                 <div className="flex items-center justify-between px-4 py-2">
                   <span className="text-sm text-muted-foreground">Theme</span>
-                  <ThemeSwitcher />
+                  <ThemeSwitcher simpleToggle={true} />
                 </div>
               </div>
               {user ? (

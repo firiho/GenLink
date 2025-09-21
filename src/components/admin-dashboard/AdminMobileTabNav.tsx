@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useTheme } from '@/contexts/ThemeContext';
 import { 
   LayoutDashboard, 
   Building2, 
@@ -13,6 +14,8 @@ interface AdminMobileTabNavProps {
 }
 
 const AdminMobileTabNav = ({ activeView, setActiveView }: AdminMobileTabNavProps) => {
+  const { actualTheme } = useTheme();
+  
   const tabs = [
     {
       icon: LayoutDashboard,
@@ -42,7 +45,12 @@ const AdminMobileTabNav = ({ activeView, setActiveView }: AdminMobileTabNavProps
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900 border-t border-slate-800 lg:hidden">
+    <div className={cn(
+      "fixed bottom-0 left-0 right-0 z-50 border-t lg:hidden",
+      actualTheme === 'dark' 
+        ? "bg-slate-900 border-slate-800" 
+        : "bg-white border-gray-200"
+    )}>
       <div className="flex items-center justify-around">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -51,11 +59,14 @@ const AdminMobileTabNav = ({ activeView, setActiveView }: AdminMobileTabNavProps
               key={tab.value}
               onClick={() => setActiveView(tab.value)}
               className={cn(
-                "flex flex-col items-center justify-center py-2 px-4 min-w-[4rem]",
-                "transition-colors duration-200",
+                "flex flex-col items-center justify-center py-2 px-4 min-w-[4rem] rounded-lg transition-all duration-200",
                 activeView === tab.value 
-                  ? "text-primary" 
-                  : "text-slate-400 hover:text-slate-100"
+                  ? actualTheme === 'dark'
+                    ? "text-blue-400 bg-blue-500/20"
+                    : "text-primary bg-primary/10"
+                  : actualTheme === 'dark'
+                    ? "text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
               )}
             >
               <Icon className="h-5 w-5" />

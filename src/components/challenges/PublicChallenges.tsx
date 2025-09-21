@@ -280,8 +280,8 @@ export default function PublicChallenges() {
         </div>
       </div>
 
-      <div className="pb-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold mb-3">Status</h3>
+      <div className="pb-4 border-b border-border">
+        <h3 className="text-lg font-semibold mb-3 text-foreground">Status</h3>
         <div className="space-y-2">
           {Object.keys(filters.status).map((status) => (
             <div key={status} className="flex items-center">
@@ -291,7 +291,7 @@ export default function PublicChallenges() {
                 onCheckedChange={() => updateFilter('status', status)}
                 className="mr-2"
               />
-              <label htmlFor={`status-${status}`} className="text-sm cursor-pointer capitalize">
+              <label htmlFor={`status-${status}`} className="text-sm cursor-pointer capitalize text-foreground">
                 {status === 'active' ? 'Open for Submission' : status}
               </label>
             </div>
@@ -299,8 +299,8 @@ export default function PublicChallenges() {
         </div>
       </div>
 
-      <div className="pb-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold mb-3">Prize Range</h3>
+      <div className="pb-4 border-b border-border">
+        <h3 className="text-lg font-semibold mb-3 text-foreground">Prize Range</h3>
         <div className="space-y-2">
           {Object.keys(filters.prizeRange).map((range) => (
             <div key={range} className="flex items-center">
@@ -310,7 +310,7 @@ export default function PublicChallenges() {
                 onCheckedChange={() => updateFilter('prizeRange', range)}
                 className="mr-2"
               />
-              <label htmlFor={`prize-${range}`} className="text-sm cursor-pointer">
+              <label htmlFor={`prize-${range}`} className="text-sm cursor-pointer text-foreground">
                 {range === 'any' 
                   ? 'Any' 
                   : range === 'under1k' 
@@ -328,7 +328,7 @@ export default function PublicChallenges() {
 
       {availableCategories.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold mb-3">Categories</h3>
+          <h3 className="text-lg font-semibold mb-3 text-foreground">Categories</h3>
           <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
             <div className="flex items-center">
               <Checkbox
@@ -337,7 +337,7 @@ export default function PublicChallenges() {
                 onCheckedChange={() => setSelectedCategory('')}
                 className="mr-2"
               />
-              <label htmlFor="category-all" className="text-sm cursor-pointer">
+              <label htmlFor="category-all" className="text-sm cursor-pointer text-foreground">
                 All Categories
               </label>
             </div>
@@ -349,7 +349,7 @@ export default function PublicChallenges() {
                   onCheckedChange={() => setSelectedCategory(category === selectedCategory ? '' : category)}
                   className="mr-2"
                 />
-                <label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
+                <label htmlFor={`category-${category}`} className="text-sm cursor-pointer text-foreground">
                   {category}
                 </label>
               </div>

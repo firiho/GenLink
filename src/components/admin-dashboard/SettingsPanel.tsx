@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
+import { useTheme } from '@/contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 import {
   Settings,
   Shield,
@@ -19,6 +21,7 @@ import API from './settings-panel/API';
 import Appearance from './settings-panel/Appearance';
 
 export default function SettingsPanel() {
+  const { actualTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
     siteName: 'GenLink',
@@ -46,64 +49,85 @@ export default function SettingsPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        <Button onClick={handleSave} disabled={loading}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className={cn(
+          "text-2xl font-semibold",
+          actualTheme === 'dark' ? "text-white" : "text-gray-900"
+        )}>Settings</h1>
+        <Button onClick={handleSave} disabled={loading} className="w-full sm:w-auto">
           <Save className="mr-2 h-4 w-4" />
           {loading ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="bg-white p-1 rounded-lg shadow-sm">
-          <TabsTrigger value="general" className="space-x-2">
+        <TabsList className={cn(
+          "p-1 rounded-lg shadow-sm w-full overflow-x-auto",
+          actualTheme === 'dark' ? "bg-slate-800" : "bg-white"
+        )}>
+          <TabsTrigger value="general" className="space-x-2 flex-shrink-0">
             <Settings className="h-4 w-4" />
-            <span>General</span>
+            <span className="hidden sm:inline">General</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="space-x-2">
+          <TabsTrigger value="security" className="space-x-2 flex-shrink-0">
             <Shield className="h-4 w-4" />
-            <span>Security</span>
+            <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
-          <TabsTrigger value="email" className="space-x-2">
+          <TabsTrigger value="email" className="space-x-2 flex-shrink-0">
             <Mail className="h-4 w-4" />
-            <span>Email</span>
+            <span className="hidden sm:inline">Email</span>
           </TabsTrigger>
-          <TabsTrigger value="api" className="space-x-2">
+          <TabsTrigger value="api" className="space-x-2 flex-shrink-0">
             <Code className="h-4 w-4" />
-            <span>API</span>
+            <span className="hidden sm:inline">API</span>
           </TabsTrigger>
-          <TabsTrigger value="appearance" className="space-x-2">
+          <TabsTrigger value="appearance" className="space-x-2 flex-shrink-0">
             <Palette className="h-4 w-4" />
-            <span>Appearance</span>
+            <span className="hidden sm:inline">Appearance</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
-          <Card className="p-6">
+          <Card className={cn(
+            "p-6",
+            actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+          )}>
             <General settings={settings} setSettings={setSettings} />
           </Card>
         </TabsContent>
 
         <TabsContent value="security">
-          <Card className="p-6">
+          <Card className={cn(
+            "p-6",
+            actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+          )}>
             <Security />
           </Card>
         </TabsContent>
 
         <TabsContent value="email">
-          <Card className="p-6">
+          <Card className={cn(
+            "p-6",
+            actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+          )}>
             <Email />
           </Card>
         </TabsContent>
 
         <TabsContent value="api">
-          <Card className="p-6">
+          <Card className={cn(
+            "p-6",
+            actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+          )}>
             <API />
           </Card>
         </TabsContent>
 
         <TabsContent value="appearance">
-          <Card className="p-6">
+          <Card className={cn(
+            "p-6",
+            actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+          )}>
             <Appearance />
           </Card>
         </TabsContent>

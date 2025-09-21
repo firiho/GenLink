@@ -182,59 +182,78 @@ export default function OverviewTab({setActiveView, user}) {
     const displayedChallenges = showAllChallenges ? filteredChallenges : filteredChallenges.slice(0, 3);
 
     return (
-        <div className="space-y-5 sm:space-y-6 lg:space-y-8 mt-5">
-            <WelcomeSection title={`Welcome ${user?.fullName || 'User'}!`} subtitle={"Here's what's happening with your challenges"} />
+        <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+            <WelcomeSection title={`Welcome back, ${user?.fullName || 'User'}!`} subtitle={"Here's what's happening with your challenges and progress"} />
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                 {stats.map((stat, index) => (
                     <StatsCard key={stat.label} stat={stat} index={index} loading={loading} />
                 ))}
             </div>
 
             {/* Recent In-Progress Challenges Section */}
-            <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold">Recent In-Progress Challenges</h2>
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-primary hover:bg-primary/5"
-                        onClick={() => setActiveView('challenges')}
-                    >
-                        View All
-                        <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+                <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Active Challenges</h2>
+                            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">Your ongoing innovation projects</p>
+                        </div>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-all duration-200 group self-start sm:self-auto"
+                            onClick={() => setActiveView('challenges')}
+                        >
+                            View All
+                            <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-200" />
+                        </Button>
+                    </div>
                 </div>
 
-                {loading ? (
-                    // Loading skeleton for recent challenges
-                    <div className="space-y-2">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="flex items-center p-2 animate-pulse">
-                                <div className="w-10 h-10 bg-gray-200 rounded mr-3"></div>
-                                <div className="flex-1">
-                                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="p-4 sm:p-6">
+                    {loading ? (
+                        // Loading skeleton for recent challenges
+                        <div className="space-y-4">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="flex items-center p-4 animate-pulse">
+                                    <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-xl mr-4"></div>
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                                        <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                                        <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
+                                    </div>
+                                    <div className="w-20 h-6 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
                                 </div>
-                                <div className="w-20 h-6 bg-gray-200 rounded"></div>
+                            ))}
+                        </div>
+                    ) : recentChallenges.length > 0 ? (
+                        <div className="space-y-3">
+                            {recentChallenges.map((challenge) => (
+                                <RecentChallengeItem 
+                                    key={challenge.id} 
+                                    challenge={challenge} 
+                                    onClick={() => setActiveView('do-challenge', challenge.id)}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                <Trophy className="h-8 w-8 text-slate-400 dark:text-slate-500" />
                             </div>
-                        ))}
-                    </div>
-                ) : recentChallenges.length > 0 ? (
-                    <div className="divide-y divide-gray-100">
-                        {recentChallenges.map((challenge) => (
-                            <RecentChallengeItem 
-                                key={challenge.id} 
-                                challenge={challenge} 
-                                onClick={() => setActiveView('do-challenge', challenge.id)}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-6 text-gray-500">
-                        No in-progress challenges found
-                    </div>
-                )}
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">No active challenges</h3>
+                            <p className="text-slate-600 dark:text-slate-300 mb-4">Start your innovation journey by joining a challenge</p>
+                            <Button 
+                                onClick={() => setActiveView('challenges')}
+                                className="bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200"
+                            >
+                                Browse Challenges
+                            </Button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -244,14 +263,14 @@ export default function OverviewTab({setActiveView, user}) {
 function RecentChallengeItem({ challenge, onClick }) {
     return (
         <div 
-            className="flex items-center py-3 px-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+            className="group flex items-center p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition-all duration-200 border border-transparent hover:border-slate-200 dark:hover:border-slate-600/50"
             onClick={onClick}
         >
-            <div className="w-10 h-10 rounded-full overflow-hidden mr-3 flex-shrink-0">
+            <div className="w-12 h-12 rounded-xl overflow-hidden mr-4 flex-shrink-0 shadow-sm group-hover:shadow-md transition-shadow duration-200">
                 <img 
                     src={challenge.image}
                     alt={challenge.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                     onError={(e) => {
                         const img = e.target as HTMLImageElement;
                         img.onerror = null;
@@ -261,23 +280,37 @@ function RecentChallengeItem({ challenge, onClick }) {
             </div>
             
             <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between mb-1">
-                    <h3 className="font-medium text-sm text-gray-900 truncate">{challenge.title}</h3>
-                    <Badge variant="outline" className="ml-2 flex-shrink-0 text-xs">
+                <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-sm text-slate-900 dark:text-white truncate group-hover:text-slate-800 dark:group-hover:text-slate-100 transition-colors duration-200">{challenge.title}</h3>
+                    <Badge 
+                        variant="outline" 
+                        className={`ml-2 flex-shrink-0 text-xs ${
+                            challenge.daysLeft > 0 
+                                ? 'border-emerald-200 text-emerald-700 bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:bg-emerald-900/20' 
+                                : 'border-red-200 text-red-700 bg-red-50 dark:border-red-800 dark:text-red-300 dark:bg-red-900/20'
+                        }`}
+                    >
                         {challenge.daysLeft > 0 ? `${challenge.daysLeft} days left` : 'Ended'}
                     </Badge>
                 </div>
                 
-                <div className="flex items-center text-xs text-gray-500">
-                    <span className="truncate">{challenge.organization}</span>
-                    <span className="mx-1.5">•</span>
+                <div className="flex items-center text-xs text-slate-500 dark:text-slate-300 mb-3">
+                    <span className="truncate font-medium">{challenge.organization}</span>
+                    <span className="mx-2">•</span>
                     <div className="flex items-center">
-                        <span>{challenge.progress}% complete</span>
+                        <span className="font-medium">{challenge.progress}% complete</span>
                     </div>
                 </div>
                 
-                <div className="mt-1.5">
-                    <Progress value={challenge.progress} className="h-1" />
+                <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-slate-500 dark:text-slate-300">
+                        <span>Progress</span>
+                        <span>{challenge.progress}%</span>
+                    </div>
+                    <Progress 
+                        value={challenge.progress} 
+                        className="h-2 bg-slate-200 dark:bg-slate-700" 
+                    />
                 </div>
             </div>
         </div>

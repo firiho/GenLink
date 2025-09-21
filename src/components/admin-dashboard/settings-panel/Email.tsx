@@ -72,10 +72,10 @@ export default function Email() {
   return (
     <div className="space-y-6">
       {/* SMTP Settings */}
-      <Card className="p-6">
+      <Card className="p-6 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-2 mb-6">
-          <Settings className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">SMTP Configuration</h2>
+          <Settings className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">SMTP Configuration</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

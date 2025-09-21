@@ -10,7 +10,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const ThemeSwitcher: React.FC = () => {
+interface ThemeSwitcherProps {
+  simpleToggle?: boolean;
+}
+
+const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ simpleToggle = false }) => {
   const { theme, setTheme, actualTheme } = useTheme();
 
   const themes = [
@@ -36,6 +40,36 @@ const ThemeSwitcher: React.FC = () => {
 
   const currentTheme = themes.find(t => t.value === theme) || themes[2];
   const CurrentIcon = currentTheme.icon;
+
+  // Simple toggle functionality
+  const handleToggle = () => {
+    const currentIndex = themes.findIndex(t => t.value === theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    setTheme(themes[nextIndex].value);
+  };
+
+  // If simple toggle mode, return a simple button
+  if (simpleToggle) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleToggle}
+        className="h-9 w-9 p-0 rounded-lg border border-border hover:bg-accent/5 transition-all duration-200"
+        title={`Current: ${currentTheme.label}. Click to cycle themes.`}
+      >
+        <motion.div
+          key={theme}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.2 }}
+        >
+          <CurrentIcon className="h-4 w-4" />
+        </motion.div>
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    );
+  }
 
   return (
     <DropdownMenu>

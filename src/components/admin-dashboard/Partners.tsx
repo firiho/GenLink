@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useTheme } from '@/contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 import { collection, getDocs, doc, updateDoc, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
@@ -32,6 +34,7 @@ import PartnerDetailsModal from './partners/PartnerDetailsModal';
 
 
 const Partners = () => {
+  const { actualTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [partners, setPartners] = useState([]);
@@ -73,7 +76,9 @@ const Partners = () => {
 
   if (loading) return (
     <div className="flex justify-center items-center h-64">
-      <div className="text-gray-500">Loading...</div>
+      <div className={cn(
+        actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+      )}>Loading...</div>
     </div>
   );
 
@@ -156,7 +161,10 @@ const Partners = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Partner Management</h1>
+        <h1 className={cn(
+          "text-2xl font-semibold",
+          actualTheme === 'dark' ? "text-white" : "text-gray-900"
+        )}>Partner Management</h1>
         <Button>
           <Building2 className="mr-2 h-4 w-4" />
           Add Partner
@@ -166,7 +174,10 @@ const Partners = () => {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className={cn(
+            "absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4",
+            actualTheme === 'dark' ? "text-slate-400" : "text-gray-400"
+          )} />
           <Input
             placeholder="Search partners..."
             value={searchQuery}
@@ -190,19 +201,45 @@ const Partners = () => {
       </div>
 
       {/* Partners List */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className={cn(
+        "rounded-xl shadow-sm overflow-hidden",
+        actualTheme === 'dark' ? "bg-slate-800" : "bg-white"
+      )}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Partner</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Applied Date</th>
-                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <tr className={cn(
+                "border-b",
+                actualTheme === 'dark' 
+                  ? "border-slate-700 bg-slate-800" 
+                  : "border-gray-200 bg-gray-50"
+              )}>
+                <th className={cn(
+                  "px-6 py-4 text-left text-xs font-medium uppercase tracking-wider",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Partner</th>
+                <th className={cn(
+                  "px-6 py-4 text-left text-xs font-medium uppercase tracking-wider",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Type</th>
+                <th className={cn(
+                  "px-6 py-4 text-left text-xs font-medium uppercase tracking-wider",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Status</th>
+                <th className={cn(
+                  "px-6 py-4 text-left text-xs font-medium uppercase tracking-wider",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Applied Date</th>
+                <th className={cn(
+                  "px-6 py-4 text-right text-xs font-medium uppercase tracking-wider",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className={cn(
+              "divide-y",
+              actualTheme === 'dark' ? "divide-slate-700" : "divide-gray-200"
+            )}>
               {filteredPartners.map((partner) => {
                 const StatusIcon = statusIcons[partner.status];
                 return (
@@ -210,7 +247,10 @@ const Partners = () => {
                     key={partner.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="hover:bg-gray-50"
+                    className={cn(
+                      "hover:bg-opacity-50",
+                      actualTheme === 'dark' ? "hover:bg-slate-700" : "hover:bg-gray-50"
+                    )}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -218,19 +258,31 @@ const Partners = () => {
                           <span className="text-primary font-semibold">{partner.name[0]}</span>
                         </div>
                         <div className="ml-4">
-                          <div className="font-medium">{partner.name}</div>
-                          <div className="text-sm text-gray-500">{partner.email}</div>
+                          <div className={cn(
+                            "font-medium",
+                            actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                          )}>{partner.name}</div>
+                          <div className={cn(
+                            "text-sm",
+                            actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                          )}>{partner.email}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{partner.type}</td>
+                    <td className={cn(
+                      "px-6 py-4 whitespace-nowrap text-sm",
+                      actualTheme === 'dark' ? "text-slate-300" : "text-gray-700"
+                    )}>{partner.type}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[partner.status]}`}>
                         <StatusIcon className="mr-1 h-3 w-3" />
                         {partner.status.charAt(0).toUpperCase() + partner.status.slice(1)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className={cn(
+                      "px-6 py-4 whitespace-nowrap text-sm",
+                      actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                    )}>
                       {new Date(partner.appliedDate).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm">

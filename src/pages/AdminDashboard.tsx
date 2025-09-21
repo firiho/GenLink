@@ -8,6 +8,7 @@ import {
   MessagesSquare, BarChart, Building2
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from "@/lib/utils";
 import MobileHeader from '@/components/dashboard/MobileHeader';
 import LoadingScreen from '@/components/dashboard/LoadingScreen';
@@ -21,6 +22,7 @@ import AdminMobileTabNav from '@/components/admin-dashboard/AdminMobileTabNav';
 
 const AdminDashboard = () => {
   const { user: authUser, loading } = useAuth();
+  const { actualTheme } = useTheme();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState('overview');
 
@@ -107,24 +109,46 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className={cn(
+      "min-h-screen",
+      actualTheme === 'dark' ? "bg-slate-900" : "bg-gray-50/50"
+    )}>
       <MobileHeader 
         user={authUser}
         onSignOut={handleSignOut}
       />
 
       <aside className={cn(
-        "fixed left-0 top-0 h-screen bg-slate-900 border-r border-slate-800 z-50",
-        "w-72 hidden lg:block"
+        "fixed left-0 top-0 h-screen border-r z-50",
+        "w-72 hidden lg:block",
+        actualTheme === 'dark' 
+          ? "bg-slate-900 border-slate-800" 
+          : "bg-white border-gray-200"
       )}>
         <div className="flex flex-col h-full">
-          {/* Dark theme sidebar content */}
-          <div className="p-6 border-b border-slate-800">
+          {/* Sidebar header */}
+          <div className={cn(
+            "p-6 border-b",
+            actualTheme === 'dark' ? "border-slate-800" : "border-gray-200"
+          )}>
             <Link to="/" className="flex items-center space-x-2">
-              <div className="p-2 bg-primary/10 rounded-xl">
-                <Shield className="h-6 w-6 text-primary" />
+              <div className={cn(
+                "p-2 rounded-xl",
+                actualTheme === 'dark' 
+                  ? "bg-blue-500/20" 
+                  : "bg-primary/10"
+              )}>
+                <Shield className={cn(
+                  "h-6 w-6",
+                  actualTheme === 'dark' 
+                    ? "text-blue-400" 
+                    : "text-primary"
+                )} />
               </div>
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className={cn(
+                "text-2xl font-bold",
+                actualTheme === 'dark' ? "text-white" : "text-gray-900"
+              )}>
                 Admin Panel
               </h1>
             </Link>
@@ -134,7 +158,10 @@ const AdminDashboard = () => {
             <div className="space-y-6">
               {MENU_ITEMS.map((menu) => (
                 <div key={menu.label}>
-                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 mb-2">
+                  <div className={cn(
+                    "text-xs font-semibold uppercase tracking-wider px-4 mb-2",
+                    actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                  )}>
                     {menu.label}
                   </div>
                   {menu.items.map((item) => (
@@ -142,10 +169,14 @@ const AdminDashboard = () => {
                       key={item.text}
                       variant="ghost" 
                       className={cn(
-                        "w-full justify-start mb-1 rounded-xl",
+                        "w-full justify-start mb-1 rounded-xl transition-all duration-200",
                         activeView === item.text.toLowerCase() 
-                          ? 'text-primary bg-primary/10'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                          ? actualTheme === 'dark'
+                            ? 'text-blue-400 bg-blue-500/20 border border-blue-500/30'
+                            : 'text-primary bg-primary/10 border border-primary/20'
+                          : actualTheme === 'dark'
+                            ? 'text-slate-300 hover:text-white hover:bg-slate-800 hover:border-slate-700'
+                            : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:border-gray-200'
                       )}
                       onClick={item.action}
                     >
@@ -158,8 +189,14 @@ const AdminDashboard = () => {
             </div>
           </nav>
 
-          <div className="p-4 border-t border-slate-800">
-            <div className="bg-slate-800 rounded-xl p-4">
+          <div className={cn(
+            "p-4 border-t",
+            actualTheme === 'dark' ? "border-slate-800" : "border-gray-200"
+          )}>
+            <div className={cn(
+              "rounded-xl p-4",
+              actualTheme === 'dark' ? "bg-slate-800" : "bg-gray-50"
+            )}>
               {/* User profile section */}
               <div className="flex items-center space-x-3 mb-3">
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -168,8 +205,18 @@ const AdminDashboard = () => {
                   </span>
                 </div>
                 <div>
-                  <p className="font-medium text-white">{authUser?.fullName || 'Admin'}</p>
-                  <p className="text-sm text-slate-400">{authUser?.email}</p>
+                  <p className={cn(
+                    "font-medium",
+                    actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                  )}>
+                    {authUser?.fullName || 'Admin'}
+                  </p>
+                  <p className={cn(
+                    "text-sm",
+                    actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                  )}>
+                    {authUser?.email}
+                  </p>
                 </div>
               </div>
               <Button

@@ -120,62 +120,66 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <MobileHeader 
         user={authUser}
         onSignOut={handleSignOut}
       />
         <aside className={cn(
-          "fixed left-0 top-0 h-screen bg-white border-r border-gray-200 z-50",
+          "fixed left-0 top-0 h-screen bg-white/80 dark:bg-slate-950/90 backdrop-blur-xl border-r border-slate-200/50 dark:border-slate-800/50 z-50",
           "w-72 hidden lg:block"
         )}>
           <div className="flex flex-col h-full">
-            <Logo class_name="ml-4" />
+            <div className="p-6 border-b border-slate-200/50 dark:border-slate-800/50">
+              <Logo class_name="" />
+            </div>
             
-            <nav className="flex-1 p-4">
-              <div className="space-y-2">
+            <nav className="flex-1 p-6">
+              <div className="space-y-6">
                 {MENU_ITEMS.map((menu) => (
                   <div key={menu.label}>
-                    <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 mb-2">
+                    <div className="text-xs font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-wider px-3 mb-3">
                       {menu.label}
                     </div>
-                    {menu.items.map((item) => (
-                      <Button 
-                        key={item.text}
-                        variant="ghost" 
-                        className={`w-full justify-start ${
-                          activeView === item.text.toLowerCase() 
-                            ? 'text-primary bg-primary/5'
-                            : 'text-gray-600 hover:text-primary hover:bg-primary/5'
-                        } rounded-xl`}
-                        onClick={item.action}
-                      >
-                        <item.icon className="mr-3 h-5 w-5" />
-                        {item.text}
-                      </Button>
-                    ))}
+                    <div className="space-y-1">
+                      {menu.items.map((item) => (
+                        <Button 
+                          key={item.text}
+                          variant="ghost" 
+                          className={`w-full justify-start h-11 px-3 ${
+                            activeView === item.text.toLowerCase() 
+                              ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 shadow-sm'
+                              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                          } rounded-lg transition-all duration-200 group`}
+                          onClick={item.action}
+                        >
+                          <item.icon className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
+                          <span className="font-medium">{item.text}</span>
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
             </nav>
 
-            <div className="p-4 border-t border-gray-100">
-              <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-semibold">
+            <div className="p-6 border-t border-slate-200/50 dark:border-slate-800/50">
+              <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-sm border border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-600 dark:text-slate-300 font-semibold text-sm">
                       {authUser?.fullName?.[0] || 'A'}
                     </span>
                   </div>
-                  <div>
-                    <p className="font-medium">{authUser?.fullName || 'Admin User'}</p>
-                    <p className="text-sm text-gray-500">{authUser?.email}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">{authUser?.fullName || 'Admin User'}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{authUser?.email}</p>
                   </div>
                 </div>
                 <Button
                   onClick={handleSignOut}
                   variant="ghost"
-                  className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="w-full justify-start text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 h-9 text-sm"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
@@ -185,10 +189,10 @@ const Dashboard = () => {
           </div>
         </aside>
         <main className={cn(
-          "transition-all duration-200 ease-in-out",
+          "transition-all duration-300 ease-out",
           "lg:ml-72",
-          "px-3 sm:px-6 lg:px-8",
-          "pt-20 sm:pt-17 lg:pt-1 pb-20 lg:pb-12",
+          "px-3 sm:px-4 lg:px-6 xl:px-8",
+          "pt-16 sm:pt-20 lg:pt-6 pb-20 lg:pb-8",
         )}>
           <div className="max-w-7xl mx-auto">
             {renderMainContent()}

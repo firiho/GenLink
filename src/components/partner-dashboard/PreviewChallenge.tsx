@@ -8,11 +8,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
   if (!challenge) {
     return (
       <div className="flex flex-col items-center justify-center h-[500px]">
-        <FileText className="h-16 w-16 text-gray-300 mb-4" />
-        <h3 className="text-xl font-medium text-gray-500">Challenge not found</h3>
-        <p className="text-gray-400 mt-2">The requested challenge could not be loaded</p>
+        <FileText className="h-16 w-16 text-slate-300 dark:text-slate-600 mb-4" />
+        <h3 className="text-xl font-medium text-slate-500 dark:text-slate-400">Challenge not found</h3>
+        <p className="text-slate-400 dark:text-slate-500 mt-2">The requested challenge could not be loaded</p>
         <Button 
-          className="mt-6" 
+          className="mt-6 bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200" 
           onClick={() => setActiveView('challenges')}
         >
           Back to Challenges
@@ -46,10 +46,10 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
   };
 
   const statusColor = {
-    draft: "bg-yellow-100 text-yellow-700",
-    active: "bg-green-100 text-green-700",
-    completed: "bg-blue-100 text-blue-700",
-    archived: "bg-gray-100 text-gray-700"
+    draft: "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300",
+    active: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300",
+    completed: "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300",
+    archived: "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
   };
 
   return (
@@ -58,7 +58,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
       <div className="flex items-center justify-between">
         <Button 
           variant="ghost" 
-          className="flex items-center text-gray-600"
+          className="flex items-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
           onClick={() => setActiveView('challenges')}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -73,6 +73,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
           </Badge>
           <Button 
             variant="outline" 
+            className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
             onClick={() => setActiveView('create-challenge', { challenge, editMode: true })}
           >
             Edit Challenge
@@ -102,12 +103,12 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
             </div>
           </div>
         ) : (
-          <div className="bg-gradient-to-r from-primary/10 to-primary/20 p-6 h-48 flex flex-col justify-end">
-            <div className="p-3 bg-white inline-block rounded-lg mb-4 shadow-sm">
-              <FileText className="h-6 w-6 text-primary" />
+          <div className="bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 p-6 h-48 flex flex-col justify-end">
+            <div className="p-3 bg-white dark:bg-slate-900 inline-block rounded-lg mb-4 shadow-sm">
+              <FileText className="h-6 w-6 text-slate-600 dark:text-slate-400" />
             </div>
-            <h1 className="text-3xl font-bold">{challenge.title}</h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{challenge.title}</h1>
+            <p className="mt-2 text-slate-600 dark:text-slate-400">
               Hosted by {challenge.companyInfo?.name || 'Company Name'}
             </p>
           </div>
@@ -120,15 +121,15 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white p-4 rounded-xl shadow-sm"
+          className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
         >
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Award className="h-5 w-5 text-green-600" />
+            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
+              <Award className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Prize</p>
-              <p className="text-lg font-semibold">${challenge.total_prize?.toLocaleString() || '0'}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Total Prize</p>
+              <p className="text-lg font-semibold text-slate-900 dark:text-white">${challenge.total_prize?.toLocaleString() || '0'}</p>
             </div>
           </div>
         </motion.div>
@@ -137,15 +138,15 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white p-4 rounded-xl shadow-sm"
+          className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
         >
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Calendar className="h-5 w-5 text-blue-600" />
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+              <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Deadline</p>
-              <p className="text-lg font-semibold">{formattedDate(challenge.deadline)}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Deadline</p>
+              <p className="text-lg font-semibold text-slate-900 dark:text-white">{formattedDate(challenge.deadline)}</p>
             </div>
           </div>
         </motion.div>
@@ -154,15 +155,15 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white p-4 rounded-xl shadow-sm"
+          className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
         >
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Clock className="h-5 w-5 text-purple-600" />
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
+              <Clock className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Time Remaining</p>
-              <p className="text-lg font-semibold">{calculateDaysRemaining()}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Time Remaining</p>
+              <p className="text-lg font-semibold text-slate-900 dark:text-white">{calculateDaysRemaining()}</p>
             </div>
           </div>
         </motion.div>
@@ -173,23 +174,48 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
         {/* Main content */}
         <div className="md:col-span-2 space-y-6">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="w-full justify-start mb-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="resources">Resources</TabsTrigger>
-              <TabsTrigger value="faq">FAQ</TabsTrigger>
-              <TabsTrigger value="submission">Submission</TabsTrigger>
+            <TabsList className="w-full justify-start mb-6 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+              <TabsTrigger 
+                value="overview"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="details"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+              >
+                Details
+              </TabsTrigger>
+              <TabsTrigger 
+                value="resources"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+              >
+                Resources
+              </TabsTrigger>
+              <TabsTrigger 
+                value="faq"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+              >
+                FAQ
+              </TabsTrigger>
+              <TabsTrigger 
+                value="submission"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+              >
+                Submission
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white p-6 rounded-xl shadow-sm"
+                className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
               >
-                <h2 className="text-xl font-semibold mb-4">Challenge Description</h2>
+                <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Challenge Description</h2>
                 <div className="prose max-w-none">
-                  <p>{challenge.description}</p>
+                  <p className="text-slate-700 dark:text-slate-300">{challenge.description}</p>
                 </div>
               </motion.div>
 
@@ -197,30 +223,30 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white p-6 rounded-xl shadow-sm"
+                className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
               >
-                <h2 className="text-xl font-semibold mb-4">Prize Distribution</h2>
+                <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Prize Distribution</h2>
                 
                 {/* Total Prize Display */}
                 <div className="flex items-center mb-4">
-                  <div className="p-2 bg-green-100 rounded-lg mr-3">
-                    <Award className="h-5 w-5 text-green-600" />
+                  <div className="p-2 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg mr-3">
+                    <Award className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Total Prize Pool</p>
-                    <p className="text-xl font-semibold">${challenge.total_prize?.toLocaleString() || '0'}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Total Prize Pool</p>
+                    <p className="text-xl font-semibold text-slate-900 dark:text-white">${challenge.total_prize?.toLocaleString() || '0'}</p>
                   </div>
                 </div>
                 
                 {/* Prize Distribution Visualization */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
                   {/* 1st Place */}
-                  <div className="bg-gradient-to-b from-amber-50 to-amber-100 p-4 rounded-lg border border-amber-200 text-center">
-                    <div className="mx-auto w-10 h-10 bg-amber-400 rounded-full flex items-center justify-center mb-2">
+                  <div className="bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800 text-center">
+                    <div className="mx-auto w-10 h-10 bg-amber-400 dark:bg-amber-600 rounded-full flex items-center justify-center mb-2">
                       <Trophy className="h-5 w-5 text-white" />
                     </div>
-                    <h4 className="font-bold text-sm mb-1">1st Place</h4>
-                    <p className="text-amber-800 font-bold text-xl">
+                    <h4 className="font-bold text-sm mb-1 text-slate-900 dark:text-white">1st Place</h4>
+                    <p className="text-amber-800 dark:text-amber-300 font-bold text-xl">
                       ${(challenge.prizeDistribution?.first || 
                         Math.round((challenge.total_prize || 0) * 0.6)
                       ).toLocaleString()}
@@ -228,12 +254,12 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   </div>
                   
                   {/* 2nd Place */}
-                  <div className="bg-gradient-to-b from-gray-50 to-gray-100 p-4 rounded-lg border border-gray-200 text-center">
-                    <div className="mx-auto w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center mb-2">
+                  <div className="bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800/20 dark:to-slate-700/20 p-4 rounded-lg border border-slate-200 dark:border-slate-700 text-center">
+                    <div className="mx-auto w-10 h-10 bg-slate-400 dark:bg-slate-600 rounded-full flex items-center justify-center mb-2">
                       <Award className="h-5 w-5 text-white" />
                     </div>
-                    <h4 className="font-bold text-sm mb-1">2nd Place</h4>
-                    <p className="text-gray-800 font-bold text-xl">
+                    <h4 className="font-bold text-sm mb-1 text-slate-900 dark:text-white">2nd Place</h4>
+                    <p className="text-slate-800 dark:text-slate-200 font-bold text-xl">
                       ${(challenge.prizeDistribution?.second || 
                         Math.round((challenge.total_prize || 0) * 0.3)
                       ).toLocaleString()}
@@ -241,12 +267,12 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   </div>
                   
                   {/* 3rd Place */}
-                  <div className="bg-gradient-to-b from-amber-50/70 to-amber-100/70 p-4 rounded-lg border border-amber-200/70 text-center">
-                    <div className="mx-auto w-10 h-10 bg-amber-700 rounded-full flex items-center justify-center mb-2">
+                  <div className="bg-gradient-to-b from-amber-50/70 to-amber-100/70 dark:from-amber-900/10 dark:to-amber-800/10 p-4 rounded-lg border border-amber-200/70 dark:border-amber-800/50 text-center">
+                    <div className="mx-auto w-10 h-10 bg-amber-700 dark:bg-amber-600 rounded-full flex items-center justify-center mb-2">
                       <Award className="h-5 w-5 text-white" />
                     </div>
-                    <h4 className="font-bold text-sm mb-1">3rd Place</h4>
-                    <p className="text-amber-800 font-bold text-xl">
+                    <h4 className="font-bold text-sm mb-1 text-slate-900 dark:text-white">3rd Place</h4>
+                    <p className="text-amber-800 dark:text-amber-300 font-bold text-xl">
                       ${(challenge.prizeDistribution?.third || 
                         Math.round((challenge.total_prize || 0) * 0.1)
                       ).toLocaleString()}
@@ -257,17 +283,17 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                 {/* Additional Prizes */}
                 {challenge.prizeDistribution?.additional && challenge.prizeDistribution.additional.length > 0 && (
                   <div className="mt-6">
-                    <h3 className="text-base font-medium mb-3">Special Prizes</h3>
+                    <h3 className="text-base font-medium mb-3 text-slate-900 dark:text-white">Special Prizes</h3>
                     <div className="space-y-3">
                       {challenge.prizeDistribution.additional.map((prize, index) => (
-                        <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                        <div key={index} className="flex justify-between items-center bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
                           <div className="flex items-center">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3">
+                            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-400 mr-3">
                               <Award className="h-4 w-4" />
                             </div>
-                            <span className="font-medium">{prize.name || 'Special Prize'}</span>
+                            <span className="font-medium text-slate-900 dark:text-white">{prize.name || 'Special Prize'}</span>
                           </div>
-                          <span className="text-primary font-bold">${Number(prize.amount).toLocaleString()}</span>
+                          <span className="text-slate-900 dark:text-white font-bold">${Number(prize.amount).toLocaleString()}</span>
                         </div>
                       ))}
                     </div>
@@ -276,9 +302,9 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                 
                 {/* Non-monetary benefits */}
                 {challenge.prize && (
-                  <div className="mt-6 pt-4 border-t border-gray-100">
-                    <h3 className="text-base font-medium mb-3">Additional Benefits</h3>
-                    <div className="prose max-w-none text-gray-600">
+                  <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <h3 className="text-base font-medium mb-3 text-slate-900 dark:text-white">Additional Benefits</h3>
+                    <div className="prose max-w-none text-slate-600 dark:text-slate-400">
                       <p>{challenge.prize}</p>
                     </div>
                   </div>
@@ -290,15 +316,15 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-white p-6 rounded-xl shadow-sm"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
-                  <h2 className="text-xl font-semibold mb-4">Categories</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Categories</h2>
                   <div className="flex flex-wrap gap-2">
                     {challenge.categories.map((category) => (
                       <Badge 
                         key={category}
                         variant="secondary" 
-                        className="bg-primary/10 text-primary"
+                        className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
                       >
                         {category}
                       </Badge>
@@ -312,16 +338,16 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-white p-6 rounded-xl shadow-sm"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
-                  <h2 className="text-xl font-semibold mb-4">Timeline</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Timeline</h2>
                   <div className="space-y-4">
                     {challenge.timeline.map((phase, index) => (
                       <div key={index} className="flex items-start">
-                        <div className="w-4 h-4 mt-1 rounded-full bg-primary flex-shrink-0"></div>
+                        <div className="w-4 h-4 mt-1 rounded-full bg-slate-600 dark:bg-slate-400 flex-shrink-0"></div>
                         <div className="ml-4">
-                          <h3 className="font-medium">{phase.phase}</h3>
-                          <p className="text-sm text-gray-500">
+                          <h3 className="font-medium text-slate-900 dark:text-white">{phase.phase}</h3>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">
                             {phase.startDate && phase.endDate 
                               ? `${formattedDate(phase.startDate)} - ${formattedDate(phase.endDate)}`
                               : "Dates not set"}
@@ -339,11 +365,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-white p-6 rounded-xl shadow-sm"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
-                  <h2 className="text-xl font-semibold mb-4">Technical Requirements</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Technical Requirements</h2>
                   <div className="prose max-w-none">
-                    <p>{challenge.requirements}</p>
+                    <p className="text-slate-700 dark:text-slate-300">{challenge.requirements}</p>
                   </div>
                 </motion.div>
               )}
@@ -353,11 +379,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-white p-6 rounded-xl shadow-sm"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
-                  <h2 className="text-xl font-semibold mb-4">Evaluation Criteria</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Evaluation Criteria</h2>
                   <div className="prose max-w-none">
-                    <p>{challenge.evaluationCriteria}</p>
+                    <p className="text-slate-700 dark:text-slate-300">{challenge.evaluationCriteria}</p>
                   </div>
                 </motion.div>
               )}
@@ -367,15 +393,15 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-white p-6 rounded-xl shadow-sm"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
-                  <h2 className="text-xl font-semibold mb-4">Required Skills</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Required Skills</h2>
                   <div className="flex flex-wrap gap-2">
                     {challenge.skills.map((skill) => (
                       <Badge 
                         key={skill}
                         variant="outline" 
-                        className="border-gray-300"
+                        className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
                       >
                         {skill}
                       </Badge>
@@ -389,11 +415,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-white p-6 rounded-xl shadow-sm"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
-                  <h2 className="text-xl font-semibold mb-4">Terms and Conditions</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Terms and Conditions</h2>
                   <div className="prose max-w-none">
-                    <p>{challenge.termsAndConditions}</p>
+                    <p className="text-slate-700 dark:text-slate-300">{challenge.termsAndConditions}</p>
                   </div>
                 </motion.div>
               )}
@@ -404,22 +430,22 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-white p-6 rounded-xl shadow-sm"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
-                  <h2 className="text-xl font-semibold mb-4">Resources & Materials</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Resources & Materials</h2>
                   <div className="space-y-3">
                     {challenge.resources.map((resource, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <FileText className="h-5 w-5 text-blue-600" />
+                      <div key={index} className="flex items-center space-x-3 p-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800">
+                        <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                          <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div className="flex-grow">
-                          <h3 className="font-medium">{resource.title}</h3>
+                          <h3 className="font-medium text-slate-900 dark:text-white">{resource.title}</h3>
                         </div>
                         {resource.link && (
                           resource.type === 'api' ? (
                             // show it
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
                               API Key: {resource.link}
                             </p>
                           ) : (
@@ -427,7 +453,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                               href={resource.link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-primary hover:underline flex items-center"
+                              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:underline flex items-center"
                             >
                               <ExternalLink className="h-4 w-4 mr-1" />
                               Open
@@ -439,8 +465,8 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   </div>
                 </motion.div>
               ) : (
-                <div className="bg-white p-6 rounded-xl shadow-sm text-center">
-                  <p className="text-gray-500">No resources have been added for this challenge.</p>
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm text-center border border-slate-200 dark:border-slate-800">
+                  <p className="text-slate-500 dark:text-slate-400">No resources have been added for this challenge.</p>
                 </div>
               )}
             </TabsContent>
@@ -450,21 +476,21 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-white p-6 rounded-xl shadow-sm"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
-                  <h2 className="text-xl font-semibold mb-4">Frequently Asked Questions</h2>
+                  <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Frequently Asked Questions</h2>
                   <div className="space-y-4">
                     {challenge.faq.map((item, index) => (
-                      <div key={index} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-                        <h3 className="font-medium text-lg mb-2">{item.question}</h3>
-                        <p className="text-gray-600">{item.answer}</p>
+                      <div key={index} className="border-b border-slate-200 dark:border-slate-700 pb-4 last:border-0 last:pb-0">
+                        <h3 className="font-medium text-lg mb-2 text-slate-900 dark:text-white">{item.question}</h3>
+                        <p className="text-slate-600 dark:text-slate-400">{item.answer}</p>
                       </div>
                     ))}
                   </div>
                 </motion.div>
               ) : (
-                <div className="bg-white p-6 rounded-xl shadow-sm text-center">
-                  <p className="text-gray-500">No FAQs have been added for this challenge.</p>
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm text-center border border-slate-200 dark:border-slate-800">
+                  <p className="text-slate-500 dark:text-slate-400">No FAQs have been added for this challenge.</p>
                 </div>
               )}
             </TabsContent>
@@ -473,11 +499,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white p-6 rounded-xl shadow-sm"
+                className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
               >
-                <h2 className="text-xl font-semibold mb-4">Submission Format</h2>
+                <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Submission Format</h2>
                 <div className="prose max-w-none">
-                  <p>
+                  <p className="text-slate-700 dark:text-slate-300">
                     {challenge.submissionFormat === 'github' && 'Participants should submit a GitHub repository with their solution.'}
                     {challenge.submissionFormat === 'file' && 'Participants should upload their solution files directly.'}
                     {challenge.submissionFormat === 'url' && 'Participants should submit a URL to their deployed solution.'}
@@ -491,10 +517,10 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-white p-6 rounded-xl shadow-sm"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
-                  <h2 className="text-xl font-semibold mb-4">Participation Limit</h2>
-                  <p>This challenge is limited to {challenge.maxParticipants} participants.</p>
+                  <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Participation Limit</h2>
+                  <p className="text-slate-700 dark:text-slate-300">This challenge is limited to {challenge.maxParticipants} participants.</p>
                 </motion.div>
               )}
 
@@ -503,10 +529,10 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-white p-6 rounded-xl shadow-sm"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
-                  <h2 className="text-xl font-semibold mb-4">Team Information</h2>
-                  <p>This challenge allows team participation with up to {challenge.maxTeamSize || 'unlimited'} members per team.</p>
+                  <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Team Information</h2>
+                  <p className="text-slate-700 dark:text-slate-300">This challenge allows team participation with up to {challenge.maxTeamSize || 'unlimited'} members per team.</p>
                 </motion.div>
               )}
             </TabsContent>
@@ -519,9 +545,9 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white p-6 rounded-xl shadow-sm"
+            className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
           >
-            <h2 className="text-xl font-semibold mb-4">About the Organizer</h2>
+            <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">About the Organizer</h2>
             <div className="flex flex-col items-center text-center">
               {challenge.companyInfo?.logoUrl ? (
                 <img 
@@ -530,26 +556,26 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   className="w-24 h-24 object-contain mb-4"
                 />
               ) : (
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <span className="text-2xl font-bold text-gray-400">
+                <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-2xl font-bold text-slate-400 dark:text-slate-500">
                     {challenge.companyInfo?.name?.charAt(0) || 'C'}
                   </span>
                 </div>
               )}
-              <h3 className="font-medium text-lg">{challenge.companyInfo?.name}</h3>
+              <h3 className="font-medium text-lg text-slate-900 dark:text-white">{challenge.companyInfo?.name}</h3>
               {challenge.companyInfo?.website && (
                 <a 
                   href={challenge.companyInfo.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:underline mt-1 inline-flex items-center"
+                  className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:underline mt-1 inline-flex items-center"
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Visit Website
                 </a>
               )}
               {challenge.companyInfo?.contactEmail && (
-                <p className="text-gray-500 text-sm mt-2">
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
                   Contact: {challenge.companyInfo.contactEmail}
                 </p>
               )}
@@ -561,25 +587,25 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white p-6 rounded-xl shadow-sm"
+            className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
           >
-            <h2 className="text-xl font-semibold mb-4">Challenge Stats</h2>
+            <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Challenge Stats</h2>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Participants</span>
-                <span className="font-medium">{challenge.participants || 0}</span>
+                <span className="text-slate-600 dark:text-slate-400">Participants</span>
+                <span className="font-medium text-slate-900 dark:text-white">{challenge.participants || 0}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Submissions</span>
-                <span className="font-medium">{challenge.submissions || 0}</span>
+                <span className="text-slate-600 dark:text-slate-400">Submissions</span>
+                <span className="font-medium text-slate-900 dark:text-white">{challenge.submissions || 0}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Views</span>
-                <span className="font-medium">{challenge.views || 0}</span>
+                <span className="text-slate-600 dark:text-slate-400">Views</span>
+                <span className="font-medium text-slate-900 dark:text-white">{challenge.views || 0}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Created On</span>
-                <span className="font-medium">
+                <span className="text-slate-600 dark:text-slate-400">Created On</span>
+                <span className="font-medium text-slate-900 dark:text-white">
                   {challenge.createdAt 
                     ? (typeof challenge.createdAt.toDate === 'function' 
                         ? formattedDate(challenge.createdAt.toDate())
@@ -596,21 +622,21 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white p-6 rounded-xl shadow-sm"
+              className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
             >
-              <h2 className="text-xl font-semibold mb-4">Judges & Evaluators</h2>
+              <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Judges & Evaluators</h2>
               <div className="space-y-4">
                 {challenge.judges.map((judge, index) => (
                   <div key={index} className="flex items-start space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-semibold text-gray-500">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                         {judge.name.charAt(0)}
                       </span>
                     </div>
                     <div>
-                      <h3 className="font-medium">{judge.name}</h3>
-                      <p className="text-sm text-gray-500">{judge.title}</p>
-                      <p className="text-xs text-gray-400">{judge.organization}</p>
+                      <h3 className="font-medium text-slate-900 dark:text-white">{judge.name}</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{judge.title}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{judge.organization}</p>
                     </div>
                   </div>
                 ))}
@@ -623,10 +649,10 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white p-6 rounded-xl shadow-sm"
+            className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
           >
-            <h2 className="text-xl font-semibold mb-4">Share Challenge</h2>
-            <Button variant="outline" className="w-full flex items-center justify-center">
+            <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Share Challenge</h2>
+            <Button variant="outline" className="w-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700">
               <Share2 className="h-4 w-4 mr-2" />
               Copy Challenge Link
             </Button>

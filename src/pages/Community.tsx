@@ -175,14 +175,6 @@ const Community = () => {
                 <div className="text-3xl font-bold text-accent mb-2">500+</div>
                 <div className="text-muted-foreground">Events Hosted</div>
               </div>
-              <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-border/50">
-                <div className="text-3xl font-bold text-accent mb-2">50+</div>
-                <div className="text-muted-foreground">Partners</div>
-              </div>
-              <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-border/50">
-                <div className="text-3xl font-bold text-accent mb-2">24/7</div>
-                <div className="text-muted-foreground">Support</div>
-              </div>
             </motion.div>
           </div>
         </div>
@@ -274,7 +266,7 @@ const Community = () => {
                     <div className="p-6 -mt-16 relative">
                       <div className="flex flex-col items-center text-center">
                         {/* Avatar */}
-                        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-background shadow-lg mb-4">
+                        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-background shadow-lg mb-4 ring-2 ring-accent/20 dark:ring-accent/30">
                           {member.image ? (
                             <img 
                               src={member.image} 
@@ -341,12 +333,12 @@ const Community = () => {
                                 href={url.toString()}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-10 h-10 rounded-full bg-muted/50 hover:bg-accent/10 flex items-center justify-center text-muted-foreground hover:text-accent transition-all duration-200"
+                                className="w-10 h-10 rounded-full bg-card/50 hover:bg-accent/10 border border-border/50 hover:border-accent/30 flex items-center justify-center text-muted-foreground hover:text-accent transition-all duration-200 group"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                {platform === 'github' && <Github className="w-5 h-5" />}
-                                {platform === 'twitter' && <Twitter className="w-5 h-5" />}
-                                {platform === 'linkedin' && <Linkedin className="w-5 h-5" />}
+                                {platform === 'github' && <Github className="w-5 h-5 group-hover:text-accent" />}
+                                {platform === 'twitter' && <Twitter className="w-5 h-5 group-hover:text-accent" />}
+                                {platform === 'linkedin' && <Linkedin className="w-5 h-5 group-hover:text-accent" />}
                               </a>
                             )
                           ))}

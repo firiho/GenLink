@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useTheme } from '@/contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 import {
   MessageSquare,
   Search,
@@ -56,6 +58,7 @@ const MOCK_TICKETS = [
 ];
 
 const Support = () => {
+  const { actualTheme } = useTheme();
   const [tickets, setTickets] = useState(MOCK_TICKETS);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -113,7 +116,10 @@ const Support = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Support Dashboard</h1>
+        <h1 className={cn(
+          "text-2xl font-semibold",
+          actualTheme === 'dark' ? "text-white" : "text-gray-900"
+        )}>Support Dashboard</h1>
         <Button>
           <MessageCircle className="mr-2 h-4 w-4" />
           New Ticket
@@ -127,13 +133,25 @@ const Support = () => {
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-6 rounded-xl shadow-sm"
+            className={cn(
+              "p-6 rounded-xl shadow-sm",
+              actualTheme === 'dark' ? "bg-slate-800" : "bg-white"
+            )}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">{stat.label}</p>
-                <p className="text-2xl font-semibold mt-1">{stat.value}</p>
-                <p className="text-sm text-gray-500 mt-1">{stat.change}</p>
+                <p className={cn(
+                  "text-sm",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>{stat.label}</p>
+                <p className={cn(
+                  "text-2xl font-semibold mt-1",
+                  actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                )}>{stat.value}</p>
+                <p className={cn(
+                  "text-sm mt-1",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>{stat.change}</p>
               </div>
               <div className={`p-3 rounded-lg ${stat.bg}`}>
                 <stat.icon className={`h-6 w-6 ${stat.color}`} />
@@ -146,7 +164,10 @@ const Support = () => {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className={cn(
+            "absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4",
+            actualTheme === 'dark' ? "text-slate-400" : "text-gray-400"
+          )} />
           <Input
             placeholder="Search tickets..."
             value={searchQuery}
@@ -182,30 +203,65 @@ const Support = () => {
       </div>
 
       {/* Tickets Table */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className={cn(
+        "rounded-xl shadow-sm overflow-hidden",
+        actualTheme === 'dark' ? "bg-slate-800" : "bg-white"
+      )}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Update</th>
-                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <tr className={cn(
+                "border-b",
+                actualTheme === 'dark' 
+                  ? "border-slate-700 bg-slate-800" 
+                  : "border-gray-200 bg-gray-50"
+              )}>
+                <th className={cn(
+                  "px-6 py-4 text-left text-xs font-medium uppercase tracking-wider",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Ticket</th>
+                <th className={cn(
+                  "px-6 py-4 text-left text-xs font-medium uppercase tracking-wider",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Status</th>
+                <th className={cn(
+                  "px-6 py-4 text-left text-xs font-medium uppercase tracking-wider",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Priority</th>
+                <th className={cn(
+                  "px-6 py-4 text-left text-xs font-medium uppercase tracking-wider",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Last Update</th>
+                <th className={cn(
+                  "px-6 py-4 text-right text-xs font-medium uppercase tracking-wider",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className={cn(
+              "divide-y",
+              actualTheme === 'dark' ? "divide-slate-700" : "divide-gray-200"
+            )}>
               {tickets.map((ticket) => (
                 <motion.tr
                   key={ticket.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="hover:bg-gray-50"
+                  className={cn(
+                    "hover:bg-opacity-50",
+                    actualTheme === 'dark' ? "hover:bg-slate-700" : "hover:bg-gray-50"
+                  )}
                 >
                   <td className="px-6 py-4">
                     <div>
-                      <div className="font-medium">{ticket.subject}</div>
-                      <div className="text-sm text-gray-500">
+                      <div className={cn(
+                        "font-medium",
+                        actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                      )}>{ticket.subject}</div>
+                      <div className={cn(
+                        "text-sm",
+                        actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                      )}>
                         {ticket.user} • {ticket.email}
                       </div>
                     </div>
@@ -220,7 +276,10 @@ const Support = () => {
                       {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className={cn(
+                    "px-6 py-4 whitespace-nowrap text-sm",
+                    actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                  )}>
                     {new Date(ticket.lastUpdate).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm">

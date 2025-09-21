@@ -102,41 +102,46 @@ export const OverviewView = ({
   };
 
   return (
-    <div className="space-y-5 sm:space-y-6 lg:space-y-8 mt-5">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       <WelcomeSection title={orgName} subtitle={'Here is what\'s happening with your GenLink'} />
       {/* Stats Grid */}
       <Stats stats={stats} loading={loading}/>
 
       {/* Recent Sections - Updated for better mobile view */}
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {/* Recent Challenges Section */}
-        <div className="bg-white rounded-xl shadow-sm">
-          <div className="p-4 sm:p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Recent Challenges</h3>
-              <Button variant="ghost" size="sm" onClick={onViewAllChallenges}>
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+          <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Recent Challenges</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onViewAllChallenges}
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-all duration-200 group self-start sm:self-auto"
+              >
                 View All
-                <ChevronRight className="ml-2 h-4 w-4" />
+                <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-200" />
               </Button>
             </div>
           </div>
           <div className="p-4 sm:p-6">
-            <div className="space-y-4">
+            <div className="space-y-3">
               {recentChallenges.slice(0, 3).map((challenge) => (
                 <div
                   key={challenge.id}
                   onClick={() => setActiveView('preview-challenge', { challenge })}
-                  className="p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                  className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
                 >
                   <div className="flex items-start space-x-3">
-                    <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
-                      <Trophy className="h-5 w-5 text-primary" />
+                    <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg flex-shrink-0">
+                      <Trophy className="h-5 w-5 text-slate-600 dark:text-slate-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm mb-1 truncate">
+                      <h4 className="font-medium text-sm mb-1 truncate text-slate-900 dark:text-white">
                         {challenge.title}
                       </h4>
-                      <div className="flex items-center space-x-3 text-sm text-gray-500">
+                      <div className="flex items-center space-x-3 text-sm text-slate-500 dark:text-slate-400">
                         <span>{challenge.participants} participants</span>
                         <span>•</span>
                         <span>{challenge.daysLeft} days left</span>
@@ -147,8 +152,8 @@ export const OverviewView = ({
                       className={cn(
                         "rounded-full px-2 py-0.5 text-xs",
                         challenge.status === 'active' 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-blue-100 text-blue-700'
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' 
+                          : 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
                       )}
                     >
                       {challenge.status}
@@ -161,48 +166,51 @@ export const OverviewView = ({
         </div>
 
         {/* Recent Activity and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Recent Submissions */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm">
-          <div className="p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Recent Submissions</h3>
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+          <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Recent Submissions</h3>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setActiveView('submissions')}
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-all duration-200 group self-start sm:self-auto"
               >
-                View All <ChevronRight className="ml-2 h-4 w-4" />
+                View All <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-200" />
               </Button>
             </div>
           </div>
-          <div className="p-4">
+          <div className="p-4 sm:p-6">
             {recentSubmissions.length > 0 ? (
-              recentSubmissions.slice(0, 3).map((submission) => (
-                <div 
-                  key={submission.id} 
-                  className="flex items-start p-4 hover:bg-gray-50 rounded-lg cursor-pointer"
-                  onClick={() => {}}
-                >
-                  <div className="p-2 bg-primary/10 rounded-lg mr-4">
-                    <FileText className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">{submission.title}</p>
-                    <p className="text-sm text-gray-500 mt-1">{submission.participant.name}</p>
-                    <div className="flex items-center mt-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {submission.status}
-                      </Badge>
-                      <span className="text-xs text-gray-500 ml-2">
-                        {new Date(submission.submittedAt).toLocaleDateString()}
-                      </span>
+              <div className="space-y-3">
+                {recentSubmissions.slice(0, 3).map((submission) => (
+                  <div 
+                    key={submission.id} 
+                    className="flex items-start p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg cursor-pointer border border-slate-200 dark:border-slate-700 transition-colors duration-200"
+                    onClick={() => {}}
+                  >
+                    <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg mr-4">
+                      <FileText className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-slate-900 dark:text-white">{submission.title}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{submission.participant.name}</p>
+                      <div className="flex items-center mt-2">
+                        <Badge variant="secondary" className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                          {submission.status}
+                        </Badge>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
+                          {new Date(submission.submittedAt).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             ) : (
-              <div className="text-center py-6 text-gray-500">
+              <div className="text-center py-6 text-slate-500 dark:text-slate-400">
                 No submissions yet
               </div>
             )}
@@ -210,15 +218,15 @@ export const OverviewView = ({
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-xl shadow-sm">
-          <div className="p-6 border-b border-gray-100">
-            <h3 className="text-lg font-semibold">Quick Actions</h3>
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+          <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Quick Actions</h3>
           </div>
-          <div className="p-4">
+          <div className="p-4 sm:p-6">
             <div className="space-y-3">
               <Button 
                 onClick={() => setActiveView('create-challenge')}
-                className="w-full justify-start text-left"
+                className="w-full justify-start text-left text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
                 variant="outline"
               >
                 <Plus className="mr-2 h-5 w-5" />
@@ -226,7 +234,7 @@ export const OverviewView = ({
               </Button>
               <Button 
                 onClick={() => setActiveView('submissions')}
-                className="w-full justify-start text-left"
+                className="w-full justify-start text-left text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
                 variant="outline"
               >
                 <InboxIcon className="mr-2 h-5 w-5" />
@@ -234,7 +242,7 @@ export const OverviewView = ({
               </Button>
               <Button 
                 onClick={() => setActiveView('settings')}
-                className="w-full justify-start text-left"
+                className="w-full justify-start text-left text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
                 variant="outline"
               >
                 <Settings className="mr-2 h-5 w-5" />

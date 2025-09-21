@@ -222,10 +222,13 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
   if (!challenge || !submission) {
     return (
       <div className="flex flex-col items-center justify-center p-10">
-        <Info className="h-10 w-10 text-gray-400 mb-4" />
-        <h2 className="text-lg font-medium mb-2">Challenge not found</h2>
-        <p className="text-gray-500 mb-6">The challenge you're looking for doesn't exist or you haven't joined it.</p>
-        <Button onClick={() => onBack ? onBack() : navigate('/dashboard')}>
+        <Info className="h-10 w-10 text-slate-400 dark:text-slate-500 mb-4" />
+        <h2 className="text-lg font-medium mb-2 text-slate-900 dark:text-white">Challenge not found</h2>
+        <p className="text-slate-500 dark:text-slate-400 mb-6">The challenge you're looking for doesn't exist or you haven't joined it.</p>
+        <Button 
+          onClick={() => onBack ? onBack() : navigate('/dashboard')}
+          className="bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200"
+        >
           Back to challenges
         </Button>
       </div>
@@ -241,7 +244,7 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
       <div className="flex flex-col space-y-6">
         <Button 
           variant="ghost" 
-          className="flex items-center text-gray-500 hover:text-gray-900 self-start -ml-3" 
+          className="flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white self-start -ml-3" 
           onClick={() => onBack ? onBack() : navigate('/dashboard')}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -250,7 +253,7 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{challenge.title}</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{challenge.title}</h1>
             <div className="flex items-center mt-2">
               {challenge.organizationLogo && (<img 
                 src={challenge.organizationLogo} 
@@ -262,24 +265,24 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
                   imgElement.src = "/placeholder-logo.jpg";
                 }}
               />)}
-              <span className="text-sm text-gray-500">{challenge.organization}</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400">{challenge.organization}</span>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-3 items-center">
-            <Badge variant="outline" className="flex items-center gap-1">
+            <Badge variant="outline" className="flex items-center gap-1 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800">
               <Calendar className="h-3.5 w-3.5" />
               <span>{formatDate(challenge.deadline)}</span>
             </Badge>
-            <Badge variant="outline" className="flex items-center gap-1">
+            <Badge variant="outline" className="flex items-center gap-1 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800">
               <Clock className="h-3.5 w-3.5" />
               <span>{getDaysLeft()}</span>
             </Badge>
-            <Badge variant="outline" className="flex items-center gap-1">
+            <Badge variant="outline" className="flex items-center gap-1 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800">
               <Trophy className="h-3.5 w-3.5" />
               <span>{challenge.prize}</span>
             </Badge>
-            <Badge variant="outline" className="flex items-center gap-1">
+            <Badge variant="outline" className="flex items-center gap-1 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800">
               <Users className="h-3.5 w-3.5" />
               <span>{challenge.participants} Participants</span>
             </Badge>
@@ -291,19 +294,39 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="instructions">Instructions</TabsTrigger>
-              <TabsTrigger value="resources">Resources</TabsTrigger>
-              <TabsTrigger value="rules">Rules</TabsTrigger>
+            <TabsList className="mb-6 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+              <TabsTrigger 
+                value="overview" 
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="instructions"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+              >
+                Instructions
+              </TabsTrigger>
+              <TabsTrigger 
+                value="resources"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+              >
+                Resources
+              </TabsTrigger>
+              <TabsTrigger 
+                value="rules"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+              >
+                Rules
+              </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="overview" className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="aspect-video w-full mb-6 rounded-lg overflow-hidden">
+            <TabsContent value="overview" className="bg-white dark:bg-slate-900 rounded-xl p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+              <div className="aspect-video w-full mb-8 rounded-xl overflow-hidden shadow-lg">
                 <img 
                   src={challenge.coverImage} 
                   alt={challenge.title} 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
                     const imgElement = e.target as HTMLImageElement;
                     imgElement.onerror = null;
@@ -312,88 +335,134 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
                 />
               </div>
               
-              <h2 className="text-xl font-semibold mb-4">Challenge Description</h2>
-              <div className="prose max-w-none text-gray-700">
-                <p>{challenge.description}</p>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="instructions" className="bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-xl font-semibold mb-4">Instructions</h2>
-              <div className="prose max-w-none text-gray-700">
-                <p>{challenge.instructions}</p>
-              </div>
-              
-              <h2 className="text-xl font-semibold mt-8 mb-4">Requirements</h2>
-              <div className="prose max-w-none text-gray-700">
-                <p>{challenge.requirements}</p>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="resources" className="bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-xl font-semibold mb-4">Resources</h2>
-              {challenge.resources && challenge.resources.length > 0 ? (
-                <div className="space-y-4">
-                  {challenge.resources.map(resource => (
-                    <Card>
-                      <CardContent className="p-4 flex items-start">
-                        <div className="mr-4 mt-1">
-                          <FileText className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-medium">{resource.title}</h3>
-                          <p className="text-sm text-gray-500 mt-1">{resource.description}</p>
-                          {resource.type === 'link' ? (<a 
-                            href={resource.link} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-sm text-primary hover:underline mt-2 inline-flex items-center"
-                          >
-                            <Download className="h-3.5 w-3.5 mr-1" />
-                            Download Resource
-                          </a>) : resource.type === 'api' ? (
-                            <Button 
-                              variant="outline" 
-                              className="mt-2 text-sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(resource.link);
-                                toast.success('API URL copied to clipboard!');
-                              }}
-                            >
-                              <Download className="h-3.5 w-3.5 mr-1" />
-                              Copy API URL
-                            </Button>
-                          ) : (
-                            <a
-                            href={resource.link} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-sm text-primary hover:underline mt-2 inline-flex items-center"
-                          >
-                            <Download className="h-3.5 w-3.5 mr-1" />
-                            Download Resource
-                          </a>)}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-1 w-12 bg-slate-900 dark:bg-slate-100 rounded-full"></div>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Challenge Description</h2>
                 </div>
-              ) : (
-                <p className="text-gray-500">No resources available for this challenge.</p>
-              )}
+                <div className="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed">
+                  <p className="text-lg">{challenge.description}</p>
+                </div>
+              </div>
             </TabsContent>
             
-            <TabsContent value="rules" className="bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-xl font-semibold mb-4">Challenge Rules</h2>
-              <div className="prose max-w-none text-gray-700">
-                <p>{challenge.rules}</p>
+            <TabsContent value="instructions" className="bg-white dark:bg-slate-900 rounded-xl p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+              <div className="space-y-8">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="h-1 w-12 bg-slate-900 dark:bg-slate-100 rounded-full"></div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Instructions</h2>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6 border border-slate-200 dark:border-slate-600">
+                    <div className="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed">
+                      <p className="text-lg">{challenge.instructions}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="h-1 w-12 bg-slate-900 dark:bg-slate-100 rounded-full"></div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Requirements</h2>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6 border border-slate-200 dark:border-slate-600">
+                    <div className="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed">
+                      <p className="text-lg">{challenge.requirements}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="resources" className="bg-white dark:bg-slate-900 rounded-xl p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-1 w-12 bg-slate-900 dark:bg-slate-100 rounded-full"></div>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Resources</h2>
+                </div>
+                
+                {challenge.resources && challenge.resources.length > 0 ? (
+                  <div className="grid gap-4">
+                    {challenge.resources.map((resource, index) => (
+                      <Card key={index} className="bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 hover:shadow-md transition-shadow duration-200">
+                        <CardContent className="p-6">
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0 w-12 h-12 bg-slate-200 dark:bg-slate-600 rounded-xl flex items-center justify-center">
+                              <FileText className="h-6 w-6 text-slate-600 dark:text-slate-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-slate-900 dark:text-white text-lg mb-2">{resource.title}</h3>
+                              <p className="text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">{resource.description}</p>
+                              <div className="flex gap-3">
+                                {resource.type === 'link' ? (
+                                  <a 
+                                    href={resource.link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center px-4 py-2 bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-lg text-sm font-medium transition-colors duration-200"
+                                  >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Download Resource
+                                  </a>
+                                ) : resource.type === 'api' ? (
+                                  <Button 
+                                    variant="outline" 
+                                    className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-600"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(resource.link);
+                                      toast.success('API URL copied to clipboard!');
+                                    }}
+                                  >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Copy API URL
+                                  </Button>
+                                ) : (
+                                  <a
+                                    href={resource.link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center px-4 py-2 bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-lg text-sm font-medium transition-colors duration-200"
+                                  >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Download Resource
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center">
+                      <FileText className="h-8 w-8 text-slate-400 dark:text-slate-500" />
+                    </div>
+                    <p className="text-slate-500 dark:text-slate-400 text-lg">No resources available for this challenge.</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="rules" className="bg-white dark:bg-slate-900 rounded-xl p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-1 w-12 bg-slate-900 dark:bg-slate-100 rounded-full"></div>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Challenge Rules</h2>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-8 border border-slate-200 dark:border-slate-600">
+                  <div className="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 leading-relaxed">
+                    <p className="text-lg">{challenge.rules}</p>
+                  </div>
+                </div>
               </div>
             </TabsContent>
           </Tabs>
         </div>
         
         <div>
-          <Card className="shadow-sm">
+          <Card className="shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
             <CardContent className="p-6 space-y-6">
               {!hasPublicProfile && (
                 <Alert variant="destructive" className="mb-4">
@@ -417,39 +486,39 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
               {!isSubmitted ? (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Submit Your Work</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Submit Your Work</h3>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="submissionUrl">Submission URL</Label>
+                        <Label htmlFor="submissionUrl" className="text-slate-700 dark:text-slate-300">Submission URL</Label>
                         <Input 
                           id="submissionUrl" 
                           type="url" 
                           placeholder="https://github.com/yourusername/project" 
                           value={submissionUrl} 
                           onChange={(e) => setSubmissionUrl(e.target.value)}
-                          className="mt-1"
+                          className="mt-1 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white"
                           disabled={isSubmitted || submitting || !hasPublicProfile}
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           Link to your GitHub repository, demo, or other submission
                         </p>
                       </div>
                       
                       <div>
-                        <Label htmlFor="note">Submission Note</Label>
+                        <Label htmlFor="note" className="text-slate-700 dark:text-slate-300">Submission Note</Label>
                         <Textarea 
                           id="note" 
                           placeholder="Describe your approach and any special instructions..." 
                           value={submissionNote} 
                           onChange={(e) => setSubmissionNote(e.target.value)}
-                          className="mt-1 resize-none"
+                          className="mt-1 resize-none bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white"
                           disabled={isSubmitted || submitting || !hasPublicProfile}
                           rows={4}
                         />
                       </div>
                       
                       <Button 
-                        className="w-full" 
+                        className="w-full bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200" 
                         onClick={hasPublicProfile ? handleSubmission : () => setActiveView('profile')}
                         disabled={isSubmitted || submitting || !submissionUrl.trim() || isExpired || !hasPublicProfile}
                       >
@@ -464,7 +533,7 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
                       </Button>
                       
                       {isExpired && !isSubmitted && (
-                        <p className="text-xs text-red-500 text-center">
+                        <p className="text-xs text-red-500 dark:text-red-400 text-center">
                           This challenge has expired and can no longer be submitted.
                         </p>
                       )}
@@ -473,28 +542,28 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h3 className="text-green-800 font-medium mb-2 flex items-center">
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <h3 className="text-green-800 dark:text-green-300 font-medium mb-2 flex items-center">
                       <Trophy className="h-4 w-4 mr-2" />
                       Submission Complete
                     </h3>
-                    <p className="text-sm text-green-700">
+                    <p className="text-sm text-green-700 dark:text-green-300">
                       You have successfully submitted your work for this challenge. 
                       The organizers will review your submission and provide feedback soon.
                     </p>
                   </div>
                   
                   <div>
-                    <h3 className="text-lg font-semibold mb-3">Your Submission</h3>
+                    <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-white">Your Submission</h3>
                     
                     <div className="space-y-3">
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700">Submission URL</h4>
+                        <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">Submission URL</h4>
                         <a 
                           href={submission.submissionUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-primary hover:underline"
+                          className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:underline"
                         >
                           {submission.submissionUrl}
                         </a>
@@ -502,14 +571,14 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
                       
                       {submission.note && (
                         <div>
-                          <h4 className="text-sm font-medium text-gray-700">Submission Note</h4>
-                          <p className="text-sm text-gray-600">{submission.note}</p>
+                          <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">Submission Note</h4>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">{submission.note}</p>
                         </div>
                       )}
                       
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700">Submitted On</h4>
-                        <p className="text-sm text-gray-600">
+                        <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">Submitted On</h4>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
                           {formatDate(submission.updatedAt)}
                         </p>
                       </div>
@@ -518,16 +587,16 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
                   
                   {submission.feedback && (
                     <div>
-                      <h3 className="text-lg font-semibold mb-3">Feedback</h3>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-white">Feedback</h3>
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                         <div className="flex items-start">
-                          <MessageSquare className="h-4 w-4 text-blue-500 mt-0.5 mr-2" />
+                          <MessageSquare className="h-4 w-4 text-blue-500 dark:text-blue-400 mt-0.5 mr-2" />
                           <div>
-                            <p className="text-sm text-blue-800">{submission.feedback}</p>
+                            <p className="text-sm text-blue-800 dark:text-blue-300">{submission.feedback}</p>
                             {submission.score && (
                               <div className="mt-2">
-                                <span className="text-sm font-medium text-blue-800">Score: </span>
-                                <span className="text-sm text-blue-800">{submission.score}/100</span>
+                                <span className="text-sm font-medium text-blue-800 dark:text-blue-300">Score: </span>
+                                <span className="text-sm text-blue-800 dark:text-blue-300">{submission.score}/100</span>
                               </div>
                             )}
                           </div>
@@ -549,38 +618,38 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
 const ChallengeSkeleton = () => (
   <div className="container mx-auto px-4 py-6 space-y-8 animate-pulse">
     <div className="flex flex-col space-y-6">
-      <div className="h-8 w-32 bg-gray-200 rounded"></div>
+      <div className="h-8 w-32 bg-slate-200 dark:bg-slate-700 rounded"></div>
       <div className="space-y-2">
-        <div className="h-8 w-3/4 bg-gray-200 rounded"></div>
-        <div className="h-6 w-1/3 bg-gray-200 rounded"></div>
+        <div className="h-8 w-3/4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+        <div className="h-6 w-1/3 bg-slate-200 dark:bg-slate-700 rounded"></div>
       </div>
     </div>
     
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2">
-        <div className="h-10 w-full bg-gray-200 rounded mb-6"></div>
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <div className="aspect-video w-full mb-6 bg-gray-200 rounded-lg"></div>
-          <div className="h-6 w-1/3 bg-gray-200 rounded mb-4"></div>
+        <div className="h-10 w-full bg-slate-200 dark:bg-slate-700 rounded mb-6"></div>
+        <div className="bg-white dark:bg-slate-900 rounded-lg p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+          <div className="aspect-video w-full mb-6 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+          <div className="h-6 w-1/3 bg-slate-200 dark:bg-slate-700 rounded mb-4"></div>
           <div className="space-y-2">
-            <div className="h-4 w-full bg-gray-200 rounded"></div>
-            <div className="h-4 w-full bg-gray-200 rounded"></div>
-            <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
+            <div className="h-4 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
+            <div className="h-4 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
+            <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-700 rounded"></div>
           </div>
         </div>
       </div>
       
       <div>
-        <div className="bg-white rounded-lg p-6 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-slate-900 rounded-lg p-6 shadow-sm space-y-6 border border-slate-200 dark:border-slate-800">
           <div className="space-y-2">
-            <div className="h-6 w-1/2 bg-gray-200 rounded"></div>
-            <div className="h-2 w-full bg-gray-200 rounded"></div>
+            <div className="h-6 w-1/2 bg-slate-200 dark:bg-slate-700 rounded"></div>
+            <div className="h-2 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
           </div>
-          <div className="h-1 w-full bg-gray-200 rounded"></div>
+          <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
           <div className="space-y-2">
-            <div className="h-6 w-1/2 bg-gray-200 rounded"></div>
-            <div className="h-9 w-full bg-gray-200 rounded"></div>
-            <div className="h-9 w-full bg-gray-200 rounded"></div>
+            <div className="h-6 w-1/2 bg-slate-200 dark:bg-slate-700 rounded"></div>
+            <div className="h-9 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
+            <div className="h-9 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
           </div>
         </div>
       </div>

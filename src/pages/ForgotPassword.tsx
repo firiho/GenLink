@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Sparkles, Mail, ArrowRight, KeyRound, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Mail, ArrowRight, KeyRound, ShieldCheck, RefreshCw } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -46,10 +47,10 @@ const ForgotPassword = () => {
   ];
 
   return (
-    <div className="h-screen bg-gray-50/50 grid lg:grid-cols-2 overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 grid lg:grid-cols-2 overflow-hidden">
       {/* Left Side - Form */}
       <div className="relative flex items-center justify-center p-8 overflow-y-auto">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-100/50 dark:from-slate-800/50 to-transparent" />
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -57,14 +58,9 @@ const ForgotPassword = () => {
           className="w-full max-w-md z-10 my-auto"
         >
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 mb-12">
-            <div className="p-2 bg-primary/10 rounded-xl">
-              <Sparkles className="h-6 w-6 text-primary" />
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-              GenLink
-            </h1>
-          </Link>
+          <div className="mb-12">
+            <Logo class_name="text-slate-900 dark:text-white" />
+          </div>
 
           {isEmailSent ? (
             <motion.div
@@ -72,17 +68,17 @@ const ForgotPassword = () => {
               animate={{ opacity: 1, scale: 1 }}
               className="text-center"
             >
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Mail className="h-8 w-8 text-primary" />
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Mail className="h-8 w-8 text-slate-600 dark:text-slate-400" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Check your email</h2>
-              <p className="text-gray-600 mb-8">
+              <h2 className="text-2xl font-bold mb-2 text-slate-900 dark:text-white">Check your email</h2>
+              <p className="text-slate-600 dark:text-slate-400 mb-8">
                 We've sent password reset instructions to your email
               </p>
               <Button
                 onClick={() => setIsEmailSent(false)}
                 variant="outline"
-                className="w-full rounded-xl"
+                className="w-full rounded-xl border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Try another email
@@ -92,8 +88,8 @@ const ForgotPassword = () => {
             <>
               {/* Welcome Text */}
               <div className="mb-8">
-                <h2 className="text-3xl font-bold mb-2">Forgot password?</h2>
-                <p className="text-gray-600">
+                <h2 className="text-3xl font-bold mb-2 text-slate-900 dark:text-white">Forgot password?</h2>
+                <p className="text-slate-600 dark:text-slate-400">
                   No worries, we'll help you reset it
                 </p>
               </div>
@@ -101,12 +97,12 @@ const ForgotPassword = () => {
               {/* Reset Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                     Email address
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
+                      <Mail className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                     </div>
                     <Input
                       id="email"
@@ -114,7 +110,7 @@ const ForgotPassword = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="pl-10 bg-white"
+                      className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
                       placeholder="Enter your email"
                     />
                   </div>
@@ -122,12 +118,12 @@ const ForgotPassword = () => {
 
                 <Button
                   type="submit"
-                  className="w-full bg-primary text-white hover:bg-primary/90 transition-colors rounded-xl h-11"
+                  className="w-full bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors rounded-xl h-11"
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <div className="flex items-center">
-                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                      <div className="h-4 w-4 border-2 border-slate-100/30 dark:border-slate-900/30 border-t-slate-100 dark:border-t-slate-900 rounded-full animate-spin mr-2" />
                       Sending instructions...
                     </div>
                   ) : (
@@ -138,11 +134,11 @@ const ForgotPassword = () => {
                   )}
                 </Button>
 
-                <p className="text-center text-sm text-gray-600">
+                <p className="text-center text-sm text-slate-600 dark:text-slate-400">
                   Remember your password?{' '}
                   <Link
                     to="/signin"
-                    className="text-primary hover:text-primary/80 transition-colors font-medium"
+                    className="text-slate-900 dark:text-white hover:text-slate-700 dark:hover:text-slate-300 transition-colors font-medium"
                   >
                     Sign in
                   </Link>
@@ -180,7 +176,9 @@ const ForgotPassword = () => {
               transition={{ delay: 0.3 }}
               className="text-white max-w-md"
             >
-              <Sparkles className="h-12 w-12 mb-6 text-primary" />
+              <div className="mb-6">
+                <Logo class_name="text-white" />
+              </div>
               <h2 className="text-3xl font-bold mb-8">
                 Password Reset Process
               </h2>
@@ -193,14 +191,14 @@ const ForgotPassword = () => {
                     transition={{ delay: 0.5 + index * 0.1 }}
                     className="flex items-start space-x-4"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <step.icon className="h-5 w-5 text-primary" />
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+                      <step.icon className="h-5 w-5 text-white" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg mb-1">
                         {step.title}
                       </h3>
-                      <p className="text-gray-400">
+                      <p className="text-slate-300">
                         {step.description}
                       </p>
                     </div>

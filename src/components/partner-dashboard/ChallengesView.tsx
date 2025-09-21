@@ -98,22 +98,22 @@ export const ChallengesView = ({
   }, [challenges, searchQuery, selectedFilter]);
 
   return (
-    <div className="space-y-5 sm:space-y-6 lg:space-y-8 mt-5">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       <WelcomeSection title={'Challenge Management'} subtitle={'Create and manage your innovation challenges'} />
 
-      <div className="flex items-center space-x-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6">
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
           <Input
             placeholder="Search challenges..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
           />
         </div>
         <Button 
           onClick={() => setActiveView('create-challenge')}
-          className="bg-primary text-white whitespace-nowrap"
+          className="bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 whitespace-nowrap"
           size="sm"
         >
           <Plus className="mr-2 h-3.5 w-3.5" />
@@ -122,11 +122,31 @@ export const ChallengesView = ({
       </div>
 
       <Tabs defaultValue="all" className="w-full" onValueChange={setSelectedFilter}>
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="all" className="flex-1">All Challenges</TabsTrigger>
-          <TabsTrigger value="active" className="flex-1">Active</TabsTrigger>
-          <TabsTrigger value="draft" className="flex-1">Drafts</TabsTrigger>
-          <TabsTrigger value="completed" className="flex-1">Completed</TabsTrigger>
+        <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 w-full justify-start">
+          <TabsTrigger 
+            value="all" 
+            className="flex-1 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+          >
+            All Challenges
+          </TabsTrigger>
+          <TabsTrigger 
+            value="active" 
+            className="flex-1 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+          >
+            Active
+          </TabsTrigger>
+          <TabsTrigger 
+            value="draft" 
+            className="flex-1 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+          >
+            Drafts
+          </TabsTrigger>
+          <TabsTrigger 
+            value="completed" 
+            className="flex-1 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+          >
+            Completed
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-6">
@@ -212,18 +232,18 @@ const ChallengeCard = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all"
+      className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-200 dark:border-slate-800"
     >
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-4">
-          <div className="p-3 bg-primary/10 rounded-xl">
-            <FileText className="h-5 w-5 text-primary" />
+          <div className="p-3 bg-slate-100 dark:bg-slate-700 rounded-xl">
+            <FileText className="h-5 w-5 text-slate-600 dark:text-slate-400" />
           </div>
-          <div>
-            <h3 className="font-medium text-lg group-hover:text-primary transition-colors">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-lg text-slate-900 dark:text-white group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
               {challenge.title}
             </h3>
-            <p className="text-gray-600 text-sm mb-3">
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-3 line-clamp-2">
               {challenge.description}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -231,7 +251,7 @@ const ChallengeCard = ({
                 <Badge 
                   key={category}
                   variant="secondary" 
-                  className="bg-primary/10 text-primary"
+                  className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
                 >
                   {category}
                 </Badge>
@@ -244,52 +264,72 @@ const ChallengeCard = ({
             variant="secondary"
             className={`${
               challenge.status === 'active' 
-                ? 'bg-green-100 text-green-700' 
+                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' 
                 : challenge.status === 'draft'
-                ? 'bg-yellow-100 text-yellow-700'
-                : 'bg-gray-100 text-gray-700'
+                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
+                : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
             } rounded-lg px-3 py-1`}
           >
             {challenge.status.charAt(0).toUpperCase() + challenge.status.slice(1)}
           </Badge>
-          <p className="text-primary font-semibold">
+          <p className="text-slate-900 dark:text-white font-semibold">
             ${challenge.total_prize}
           </p>
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="grid grid-cols-3 gap-6">
+      <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="grid grid-cols-3 gap-4 sm:gap-6">
             <div>
-              <p className="text-sm text-gray-500">Participants</p>
-              <p className="font-medium">{challenge.participants}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Participants</p>
+              <p className="font-semibold text-slate-900 dark:text-white">{challenge.participants}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Submissions</p>
-              <p className="font-medium">{challenge.submissions}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Submissions</p>
+              <p className="font-semibold text-slate-900 dark:text-white">{challenge.submissions}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Time Left</p>
-              <p className="font-medium">{challenge.daysLeft} days</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Time Left</p>
+              <p className="font-semibold text-slate-900 dark:text-white">{challenge.daysLeft} days</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" onClick={onView}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onView}
+              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
+            >
               <Eye className="h-4 w-4 mr-1" />
               View
             </Button>
-            <Button variant="ghost" size="sm" onClick={onEdit}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onEdit}
+              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
+            >
               <PenTool className="h-4 w-4 mr-1" />
               Edit
             </Button>
             {challenge.status === 'draft' ? (
-              <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700" onClick={onPublish}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20" 
+                onClick={onPublish}
+              >
                 <Play className="h-4 w-4 mr-1" />
                 Publish
               </Button>
             ) : challenge.status !== 'completed' ? (
-              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={onArchive}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20" 
+                onClick={onArchive}
+              >
                 <Archive className="h-4 w-4 mr-1" />
                 Archive
               </Button>

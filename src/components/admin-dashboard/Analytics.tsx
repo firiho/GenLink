@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useTheme } from '@/contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 import {
   BarChart as BarChartIcon,
   TrendingUp,
@@ -45,6 +47,7 @@ const mockData = {
 };
 
 export default function Analytics() {
+  const { actualTheme } = useTheme();
   const [timeRange, setTimeRange] = useState('3m');
 
   const stats = [
@@ -81,7 +84,10 @@ export default function Analytics() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Analytics Dashboard</h1>
+        <h1 className={cn(
+          "text-2xl font-semibold",
+          actualTheme === 'dark' ? "text-white" : "text-gray-900"
+        )}>Analytics Dashboard</h1>
         <div className="flex items-center space-x-4">
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-[150px]">
@@ -109,12 +115,21 @@ export default function Analytics() {
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-6 rounded-xl shadow-sm"
+            className={cn(
+              "p-6 rounded-xl shadow-sm",
+              actualTheme === 'dark' ? "bg-slate-800" : "bg-white"
+            )}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">{stat.label}</p>
-                <p className="text-2xl font-semibold mt-1">{stat.value}</p>
+                <p className={cn(
+                  "text-sm",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>{stat.label}</p>
+                <p className={cn(
+                  "text-2xl font-semibold mt-1",
+                  actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                )}>{stat.value}</p>
                 <div className={`flex items-center mt-1 ${
                   stat.trend === 'up' ? 'text-green-500' : 'text-red-500'
                 }`}>
@@ -137,15 +152,27 @@ export default function Analytics() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* User Growth Chart */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">User Growth</h3>
+        <Card className={cn(
+          "p-6",
+          actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+        )}>
+          <h3 className={cn(
+            "text-lg font-semibold mb-4",
+            actualTheme === 'dark' ? "text-white" : "text-gray-900"
+          )}>User Growth</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={mockData.userGrowth}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke={actualTheme === 'dark' ? '#374151' : '#e5e7eb'} />
+                <XAxis dataKey="date" stroke={actualTheme === 'dark' ? '#9ca3af' : '#6b7280'} />
+                <YAxis stroke={actualTheme === 'dark' ? '#9ca3af' : '#6b7280'} />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: actualTheme === 'dark' ? '#1f2937' : '#ffffff',
+                    border: actualTheme === 'dark' ? '1px solid #374151' : '1px solid #e5e7eb',
+                    color: actualTheme === 'dark' ? '#ffffff' : '#000000'
+                  }}
+                />
                 <Area
                   type="monotone"
                   dataKey="users"
@@ -166,15 +193,27 @@ export default function Analytics() {
         </Card>
 
         {/* Revenue Chart */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Revenue Overview</h3>
+        <Card className={cn(
+          "p-6",
+          actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+        )}>
+          <h3 className={cn(
+            "text-lg font-semibold mb-4",
+            actualTheme === 'dark' ? "text-white" : "text-gray-900"
+          )}>Revenue Overview</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={mockData.revenue}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" stroke={actualTheme === 'dark' ? '#374151' : '#e5e7eb'} />
+                <XAxis dataKey="month" stroke={actualTheme === 'dark' ? '#9ca3af' : '#6b7280'} />
+                <YAxis stroke={actualTheme === 'dark' ? '#9ca3af' : '#6b7280'} />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: actualTheme === 'dark' ? '#1f2937' : '#ffffff',
+                    border: actualTheme === 'dark' ? '1px solid #374151' : '1px solid #e5e7eb',
+                    color: actualTheme === 'dark' ? '#ffffff' : '#000000'
+                  }}
+                />
                 <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

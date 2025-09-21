@@ -1,4 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useTheme } from '@/contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 import { Partner } from "@/types/user";
 
 interface PartnerDetailsModalProps {
@@ -9,49 +11,93 @@ interface PartnerDetailsModalProps {
 }
 
 const PartnerDetailsModal = ({ partner, isOpen, onClose, statusColors }: PartnerDetailsModalProps) => {
+  const { actualTheme } = useTheme();
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Partner Details - {partner.name}</DialogTitle>
+          <DialogTitle className={cn(
+            actualTheme === 'dark' ? "text-white" : "text-gray-900"
+          )}>Partner Details - {partner.name}</DialogTitle>
         </DialogHeader>
         
         <div className="grid gap-4">
           {/* Basic Info */}
-          <div className="p-4 border rounded-lg">
-            <h3 className="font-semibold mb-2">Organization Information</h3>
+          <div className={cn(
+            "p-4 border rounded-lg",
+            actualTheme === 'dark' ? "border-slate-700" : "border-gray-200"
+          )}>
+            <h3 className={cn(
+              "font-semibold mb-2",
+              actualTheme === 'dark' ? "text-white" : "text-gray-900"
+            )}>Organization Information</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-500">Name</label>
-                <p>{partner.name}</p>
+                <label className={cn(
+                  "text-sm",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Name</label>
+                <p className={cn(
+                  actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                )}>{partner.name}</p>
               </div>
               <div>
-                <label className="text-sm text-gray-500">Email</label>
-                <p>{partner.email}</p>
+                <label className={cn(
+                  "text-sm",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Email</label>
+                <p className={cn(
+                  actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                )}>{partner.email}</p>
               </div>
               <div>
-                <label className="text-sm text-gray-500">Type</label>
-                <p>{partner.type}</p>
+                <label className={cn(
+                  "text-sm",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Type</label>
+                <p className={cn(
+                  actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                )}>{partner.type}</p>
               </div>
               <div>
-                <label className="text-sm text-gray-500">Location</label>
-                <p>{partner.location}</p>
+                <label className={cn(
+                  "text-sm",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>Location</label>
+                <p className={cn(
+                  actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                )}>{partner.location}</p>
               </div>
             </div>
           </div>
 
           {/* Status */}
-          <div className="p-4 border rounded-lg">
-            <h3 className="font-semibold mb-2">Status</h3>
+          <div className={cn(
+            "p-4 border rounded-lg",
+            actualTheme === 'dark' ? "border-slate-700" : "border-gray-200"
+          )}>
+            <h3 className={cn(
+              "font-semibold mb-2",
+              actualTheme === 'dark' ? "text-white" : "text-gray-900"
+            )}>Status</h3>
             <span className={`inline-flex px-2.5 py-1 rounded-full text-sm ${statusColors[partner.status]}`}>
               {partner.status}
             </span>
           </div>
 
           {/* Description */}
-          <div className="p-4 border rounded-lg">
-            <h3 className="font-semibold mb-2">Description</h3>
-            <p className="text-gray-600">{partner.description}</p>
+          <div className={cn(
+            "p-4 border rounded-lg",
+            actualTheme === 'dark' ? "border-slate-700" : "border-gray-200"
+          )}>
+            <h3 className={cn(
+              "font-semibold mb-2",
+              actualTheme === 'dark' ? "text-white" : "text-gray-900"
+            )}>Description</h3>
+            <p className={cn(
+              actualTheme === 'dark' ? "text-slate-300" : "text-gray-600"
+            )}>{partner.description}</p>
           </div>
         </div>
       </DialogContent>

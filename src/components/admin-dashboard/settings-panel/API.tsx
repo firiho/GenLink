@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
+import { useTheme } from '@/contexts/ThemeContext';
+import { cn } from '@/lib/utils';
 import {
   Key,
   RefreshCcw,
@@ -16,6 +18,7 @@ import {
 import { toast } from 'sonner';
 
 export default function API() {
+  const { actualTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
     apiKey: 'sk_test_51ABC123XYZ...',
@@ -53,10 +56,16 @@ export default function API() {
   return (
     <div className="space-y-6">
       {/* API Key Management */}
-      <Card className="p-6">
+      <Card className={cn(
+        "p-6",
+        actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+      )}>
         <div className="flex items-center gap-2 mb-6">
           <Key className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">API Key Management</h2>
+          <h2 className={cn(
+            "text-lg font-semibold",
+            actualTheme === 'dark' ? "text-white" : "text-gray-900"
+          )}>API Key Management</h2>
         </div>
 
         <div className="space-y-4">
@@ -82,24 +91,39 @@ export default function API() {
               Regenerate
             </Button>
           </div>
-          <p className="text-sm text-gray-500">
+          <p className={cn(
+            "text-sm",
+            actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+          )}>
             Keep this key secure. Regenerate it if compromised.
           </p>
         </div>
       </Card>
 
       {/* Rate Limiting */}
-      <Card className="p-6">
+      <Card className={cn(
+        "p-6",
+        actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+      )}>
         <div className="flex items-center gap-2 mb-6">
           <Clock className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Rate Limiting</h2>
+          <h2 className={cn(
+            "text-lg font-semibold",
+            actualTheme === 'dark' ? "text-white" : "text-gray-900"
+          )}>Rate Limiting</h2>
         </div>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Enable Rate Limiting</p>
-              <p className="text-sm text-gray-500">Limit API requests per interval</p>
+              <p className={cn(
+                "font-medium",
+                actualTheme === 'dark' ? "text-white" : "text-gray-900"
+              )}>Enable Rate Limiting</p>
+              <p className={cn(
+                "text-sm",
+                actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+              )}>Limit API requests per interval</p>
             </div>
             <Switch
               checked={settings.enableRateLimit}
@@ -108,9 +132,12 @@ export default function API() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium mb-1.5 block">
+              <label className={cn(
+                "text-sm font-medium mb-1.5 block",
+                actualTheme === 'dark' ? "text-slate-300" : "text-gray-700"
+              )}>
                 Requests Limit
               </label>
               <Input
@@ -120,10 +147,14 @@ export default function API() {
                   ...settings,
                   rateLimitRequests: parseInt(e.target.value)
                 })}
+                className="w-full"
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1.5 block">
+              <label className={cn(
+                "text-sm font-medium mb-1.5 block",
+                actualTheme === 'dark' ? "text-slate-300" : "text-gray-700"
+              )}>
                 Time Interval (seconds)
               </label>
               <Input
@@ -133,6 +164,7 @@ export default function API() {
                   ...settings,
                   rateLimitInterval: parseInt(e.target.value)
                 })}
+                className="w-full"
               />
             </div>
           </div>
@@ -140,10 +172,16 @@ export default function API() {
       </Card>
 
       {/* API Usage */}
-      <Card className="p-6">
+      <Card className={cn(
+        "p-6",
+        actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+      )}>
         <div className="flex items-center gap-2 mb-6">
           <BarChart className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">API Usage</h2>
+          <h2 className={cn(
+            "text-lg font-semibold",
+            actualTheme === 'dark' ? "text-white" : "text-gray-900"
+          )}>API Usage</h2>
         </div>
 
         <div className="space-y-4">
@@ -152,11 +190,17 @@ export default function API() {
               key={index}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              className={cn(
+                "flex items-center justify-between p-4 rounded-lg",
+                actualTheme === 'dark' ? "bg-slate-700" : "bg-gray-50"
+              )}
             >
               <div>
                 <p className="font-mono text-sm">{stat.endpoint}</p>
-                <p className="text-sm text-gray-500">
+                <p className={cn(
+                  "text-sm",
+                  actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                )}>
                   {stat.calls.toLocaleString()} calls
                 </p>
               </div>
@@ -172,11 +216,17 @@ export default function API() {
       </Card>
 
       {/* Documentation */}
-      <Card className="p-6">
+      <Card className={cn(
+        "p-6",
+        actualTheme === 'dark' ? "bg-slate-800 border-slate-700" : "bg-white"
+      )}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ExternalLink className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">API Documentation</h2>
+            <h2 className={cn(
+              "text-lg font-semibold",
+              actualTheme === 'dark' ? "text-white" : "text-gray-900"
+            )}>API Documentation</h2>
           </div>
           <Button variant="outline">
             <ExternalLink className="h-4 w-4 mr-2" />

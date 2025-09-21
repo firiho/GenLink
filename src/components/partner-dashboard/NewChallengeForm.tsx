@@ -12,6 +12,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { query, collection, where, getDocs } from 'firebase/firestore';
+import LoadingScreen from '@/components/dashboard/LoadingScreen';
 
 export const NewChallengeForm = ({setActiveView, editMode=false, existingChallenge = null}) => {
 
@@ -394,22 +395,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
 
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <div className="relative">
-          <div className="h-24 w-24 rounded-full border-t-4 border-b-4 border-primary animate-spin"></div>
-          <div className="absolute top-0 left-0 h-24 w-24 rounded-full border-r-4 border-l-4 border-indigo-300 animate-pulse"></div>
-        </div>
-        <div className="text-center space-y-3">
-          <h3 className="text-2xl font-bold text-primary animate-pulse">
-            Preparing Your Challenge Canvas
-          </h3>
-          <p className="text-gray-500 max-w-md">
-            Setting up the perfect environment for your next challenge...
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -421,35 +407,65 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
               subtitle={editMode ? "Update your challenge details below." : "Fill in the details below to create a new challenge."} 
             />
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-5 mb-6">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="details">Challenge Details</TabsTrigger>
-              <TabsTrigger value="requirements">Requirements</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
-              <TabsTrigger value="additional">Additional Options</TabsTrigger>
+            <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-6 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 gap-1 overflow-x-auto">
+              <TabsTrigger 
+                value="basic"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg text-xs sm:text-sm"
+              >
+                <span className="hidden sm:inline">Basic Info</span>
+                <span className="sm:hidden">Basic</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="details"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg text-xs sm:text-sm"
+              >
+                <span className="hidden sm:inline">Challenge Details</span>
+                <span className="sm:hidden">Details</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="requirements"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg text-xs sm:text-sm"
+              >
+                <span className="hidden sm:inline">Requirements</span>
+                <span className="sm:hidden">Reqs</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="timeline"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg text-xs sm:text-sm"
+              >
+                Timeline
+              </TabsTrigger>
+              <TabsTrigger 
+                value="additional"
+                className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg text-xs sm:text-sm"
+              >
+                <span className="hidden sm:inline">Additional Options</span>
+                <span className="sm:hidden">More</span>
+              </TabsTrigger>
             </TabsList>
             
             {/* Basic Info Tab */}
             <TabsContent value="basic" className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Left Column */}
                 <div className="space-y-4">
                   {/* Title */}
                   <div>
-                    <label className="block text-sm font-medium mb-1">Challenge Title*</label>
+                    <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Challenge Title*</label>
                     <Input
                       value={challengeData.title}
                       onChange={(e) => setChallengeData({ ...challengeData, title: e.target.value })}
                       placeholder="Enter challenge title"
+                      className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
                       required
                     />
                   </div>
                   
                   {/* Description */}
                   <div>
-                    <label className="block text-sm font-medium mb-1">Challenge Description*</label>
+                    <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Challenge Description*</label>
                     <textarea
-                      className="w-full min-h-[150px] rounded-md border border-gray-200 p-2"
+                      className="w-full min-h-[150px] rounded-md border border-slate-200 dark:border-slate-700 p-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400"
                       value={challengeData.description}
                       onChange={(e) => setChallengeData({ ...challengeData, description: e.target.value })}
                       placeholder="Describe your challenge in detail"
@@ -460,9 +476,9 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                   {/* Prize Distribution Section */}
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Total Prize Amount*</label>
+                      <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Total Prize Amount*</label>
                       <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400">$</span>
                         <Input
                           type="number"
                           min="0"
@@ -482,26 +498,26 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                             });
                           }}
                           placeholder="0.00"
-                          className="pl-8"
+                          className="pl-8 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
                           required
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Enter the total prize pool amount</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Enter the total prize pool amount</p>
                     </div>
                   
                     <div>
-                      <label className="block text-sm font-medium mb-3">Prize Distribution</label>
-                      <div className="space-y-3 border border-gray-100 rounded-md p-4 bg-gray-50">
+                      <label className="block text-sm font-medium mb-3 text-slate-700 dark:text-slate-300">Prize Distribution</label>
+                      <div className="space-y-3 border border-slate-200 dark:border-slate-700 rounded-md p-4 bg-slate-50 dark:bg-slate-800">
                         {/* First place */}
                         <div className="grid grid-cols-5 gap-2 items-center">
                           <div className="col-span-2 flex items-center gap-2">
                             <div className="w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center text-white font-bold">
                               1
                             </div>
-                            <label className="text-sm font-medium">First Place</label>
+                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">First Place</label>
                           </div>
                           <div className="col-span-3 relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400">$</span>
                             <Input
                               type="number"
                               min="0"
@@ -513,7 +529,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                                   first: parseFloat(e.target.value) || 0
                                 }
                               })}
-                              className="pl-8"
+                              className="pl-8 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
                             />
                           </div>
                         </div>
@@ -521,13 +537,13 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                         {/* Second place */}
                         <div className="grid grid-cols-5 gap-2 items-center">
                           <div className="col-span-2 flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
+                            <div className="w-6 h-6 rounded-full bg-slate-300 dark:bg-slate-600 flex items-center justify-center text-white font-bold">
                               2
                             </div>
                             <label className="text-sm font-medium">Second Place</label>
                           </div>
                           <div className="col-span-3 relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400">$</span>
                             <Input
                               type="number"
                               min="0"
@@ -553,7 +569,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                             <label className="text-sm font-medium">Third Place</label>
                           </div>
                           <div className="col-span-3 relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400">$</span>
                             <Input
                               type="number"
                               min="0"
@@ -591,7 +607,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                               />
                             </div>
                             <div className="col-span-2 relative">
-                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400">$</span>
                               <Input
                                 type="number"
                                 min="0"
@@ -659,7 +675,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                         </Button>
                   
                         {/* Summary */}
-                        <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
+                        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
                           <span className="text-sm font-medium">Total Allocated:</span>
                           <span className="font-bold">
                             ${calculateTotalAllocated(challengeData.prizeDistribution).toLocaleString()}
@@ -681,7 +697,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                     <div>
                       <label className="block text-sm font-medium mb-1">Additional Prize Details</label>
                       <textarea
-                        className="w-full min-h-[100px] rounded-md border border-gray-200 p-2"
+                        className="w-full min-h-[100px] rounded-md border border-slate-200 dark:border-slate-700 p-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                         value={challengeData.prize}
                         onChange={(e) => setChallengeData({ ...challengeData, prize: e.target.value })}
                         placeholder="Describe any additional prizes, benefits, or opportunities for winners (e.g., mentorship, interviews, etc.)"
@@ -706,7 +722,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                   {/* Cover Image */}
                   <div>
                     <label className="block text-sm font-medium mb-1">Cover Image</label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center">
+                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-md p-6 text-center">
                       {challengeData.coverImage ? (
                         <div className="space-y-2">
                           <p>{challengeData.coverImage.name}</p>
@@ -756,8 +772,8 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                          <p className="text-sm text-gray-500">
+                          <Upload className="mx-auto h-12 w-12 text-slate-400 dark:text-slate-500" />
+                          <p className="text-sm text-slate-500 dark:text-slate-400">
                             Drag and drop an image, or click to select
                           </p>
                           <Input
@@ -769,14 +785,14 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                           />
                           <label 
                             htmlFor="cover-image-upload" 
-                            className="inline-block px-4 py-2 bg-gray-100 rounded-md text-sm cursor-pointer"
+                            className="inline-block px-4 py-2 bg-slate-100 dark:bg-slate-700 rounded-md text-sm cursor-pointer text-slate-700 dark:text-slate-300"
                           >
                             Select Image
                           </label>
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">Recommended size: 1200x630px</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Recommended size: 1200x630px</p>
                   </div>
                   
                   {/* Company Info */}
@@ -784,7 +800,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                     <label className="block text-sm font-medium">Company Information</label>
                     
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Company Name*</label>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Company Name*</label>
                       <Input
                         value={challengeData.companyInfo.name}
                         onChange={(e) => setChallengeData({ 
@@ -797,7 +813,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                     </div>
                     
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Company Website</label>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Company Website</label>
                       <Input
                         type="url"
                         value={challengeData.companyInfo.website}
@@ -810,7 +826,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                     </div>
                     
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Contact Email*</label>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Contact Email*</label>
                       <Input
                         type="email"
                         value={challengeData.companyInfo.contactEmail}
@@ -857,13 +873,13 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                         {challengeData.categories.map((category) => (
                           <div 
                             key={category} 
-                            className="flex items-center space-x-1 px-2 py-1 bg-gray-100 rounded-full text-sm"
+                            className="flex items-center space-x-1 px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-sm text-slate-700 dark:text-slate-300"
                           >
                             <span>{category}</span>
                             <button 
                               type="button" 
                               onClick={() => handleRemoveCategory(category)}
-                              className="text-gray-500 hover:text-red-500"
+                              className="text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400"
                             >
                               <X className="h-3 w-3" />
                             </button>
@@ -871,7 +887,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500 italic">No categories added yet</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 italic">No categories added yet</p>
                     )}
                   </div>
                   
@@ -900,13 +916,13 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                         {challengeData.skills.map((skill) => (
                           <div 
                             key={skill} 
-                            className="flex items-center space-x-1 px-2 py-1 bg-gray-100 rounded-full text-sm"
+                            className="flex items-center space-x-1 px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-sm text-slate-700 dark:text-slate-300"
                           >
                             <span>{skill}</span>
                             <button 
                               type="button" 
                               onClick={() => handleRemoveSkill(skill)}
-                              className="text-gray-500 hover:text-red-500"
+                              className="text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400"
                             >
                               <X className="h-3 w-3" />
                             </button>
@@ -914,7 +930,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500 italic">No skills added yet</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 italic">No skills added yet</p>
                     )}
                   </div>
                 </div>
@@ -925,7 +941,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                   <div>
                     <label className="block text-sm font-medium mb-1">Submission Format*</label>
                     <select
-                      className="w-full rounded-md border border-gray-200 p-2"
+                      className="w-full rounded-md border border-slate-200 dark:border-slate-700 p-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                       value={challengeData.submissionFormat}
                       onChange={(e) => setChallengeData({ ...challengeData, submissionFormat: e.target.value })}
                       required
@@ -947,14 +963,14 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                       onChange={(e) => setChallengeData({ ...challengeData, maxParticipants: e.target.value })}
                       placeholder="Leave blank for unlimited"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Leave blank for unlimited participants</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Leave blank for unlimited participants</p>
                   </div>
                   
                   {/* Evaluation Criteria */}
                   <div>
                     <label className="block text-sm font-medium mb-1">Evaluation Criteria*</label>
                     <textarea
-                      className="w-full min-h-[100px] rounded-md border border-gray-200 p-2"
+                      className="w-full min-h-[100px] rounded-md border border-slate-200 dark:border-slate-700 p-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                       value={challengeData.evaluationCriteria}
                       onChange={(e) => setChallengeData({ ...challengeData, evaluationCriteria: e.target.value })}
                       placeholder="Explain how submissions will be evaluated"
@@ -971,7 +987,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
               <div>
                 <label className="block text-sm font-medium mb-1">Technical Requirements</label>
                 <textarea
-                  className="w-full min-h-[200px] rounded-md border border-gray-200 p-2"
+                  className="w-full min-h-[200px] rounded-md border border-slate-200 dark:border-slate-700 p-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                   value={challengeData.requirements}
                   onChange={(e) => setChallengeData({ ...challengeData, requirements: e.target.value })}
                   placeholder="Describe any technical requirements or constraints for the challenge"
@@ -993,7 +1009,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                 </div>
                 
                 {challengeData.resources.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">No resources added yet</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 italic">No resources added yet</p>
                 ) : (
                   <div className="space-y-3">
                     {challengeData.resources.map((resource, index) => (
@@ -1014,7 +1030,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                         </div>
                         <div className="col-span-1">
                           <select
-                            className="w-full rounded-md border border-gray-200 p-2"
+                            className="w-full rounded-md border border-slate-200 dark:border-slate-700 p-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                             value={resource.type}
                             onChange={(e) => updateResource(index, 'type', e.target.value)}
                           >
@@ -1060,13 +1076,13 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                 </div>
                 
                 {challengeData.faq.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">No FAQs added yet</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 italic">No FAQs added yet</p>
                 ) : (
                   <div className="space-y-4">
                     {challengeData.faq.map((faq, index) => (
-                      <div key={index} className="space-y-2 p-3 border border-gray-200 rounded-md">
+                      <div key={index} className="space-y-2 p-3 border border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-800">
                         <div className="flex justify-between">
-                          <label className="block text-xs text-gray-500">Question</label>
+                          <label className="block text-xs text-slate-500 dark:text-slate-400">Question</label>
                           <Button 
                             type="button" 
                             variant="ghost" 
@@ -1076,7 +1092,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                               setChallengeData({ ...challengeData, faq: updatedFaqs });
                             }}
                             size="icon"
-                            className="h-6 w-6 text-gray-400"
+                            className="h-6 w-6 text-slate-400 dark:text-slate-500"
                           >
                             ×
                           </Button>
@@ -1086,9 +1102,9 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                           onChange={(e) => updateFaq(index, 'question', e.target.value)}
                           placeholder="Enter question"
                         />
-                        <label className="block text-xs text-gray-500 mt-2">Answer</label>
+                        <label className="block text-xs text-slate-500 dark:text-slate-400 mt-2">Answer</label>
                         <textarea
-                          className="w-full min-h-[80px] rounded-md border border-gray-200 p-2"
+                          className="w-full min-h-[80px] rounded-md border border-slate-200 dark:border-slate-700 p-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                           value={faq.answer}
                           onChange={(e) => updateFaq(index, 'answer', e.target.value)}
                           placeholder="Enter answer"
@@ -1151,7 +1167,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                 </div>
                 
                 {challengeData.judges.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">No judges added yet</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 italic">No judges added yet</p>
                 ) : (
                   <div className="space-y-3">
                     {challengeData.judges.map((judge, index) => (
@@ -1300,7 +1316,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                   <div>
                     <label className="block text-sm font-medium mb-1">Terms and Conditions*</label>
                     <textarea
-                      className="w-full min-h-[200px] rounded-md border border-gray-200 p-2"
+                      className="w-full min-h-[200px] rounded-md border border-slate-200 dark:border-slate-700 p-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                       value={challengeData.termsAndConditions}
                       onChange={(e) => setChallengeData({ ...challengeData, termsAndConditions: e.target.value })}
                       placeholder="Enter terms and conditions that participants must agree to"
@@ -1313,13 +1329,13 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
           </Tabs>
 
           {/* Form Actions */}
-          <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-4 border-t border-slate-200 dark:border-slate-700 space-y-3 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
               <Button 
                 type="button" 
                 variant="outline"
                 onClick={() => setActiveView('preview-challenge', { challenge: challengeData })}
-                className="mr-2"
+                className="w-full sm:w-auto"
                 disabled={isSubmitting}
               >
                 Preview
@@ -1329,22 +1345,24 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                 variant="outline"
                 onClick={onSaveDraft}
                 disabled={isSubmitting}
+                className="w-full sm:w-auto text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 {isSubmitting ? 'Saving...' : 'Save as Draft'}
               </Button>
             </div>
-            <div className="space-x-3">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
               <Button 
                 type="button" 
                 variant="outline"
                 onClick={onCancel}
                 disabled={isSubmitting}
+                className="w-full sm:w-auto text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 Cancel
               </Button>
               <Button 
                 type="submit" 
-                className="bg-primary text-white"
+                className="w-full sm:w-auto bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200"
                 disabled={isSubmitting}
               >
                 {isSubmitting 

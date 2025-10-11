@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { HackathonCard } from '@/components/HackathonCard';
 import { useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -16,23 +16,25 @@ export default function FeaturedChallenges() {
     const fetchFeaturedChallenges = async () => {
       try {
         const challengesRef = collection(db, 'challenges');
+        // Fetch only active and public challenges
         const featuredQuery = query(
           challengesRef,
-          orderBy('participants', 'desc'),
-          limit(3)
+          where('status', '==', 'active'),
+          where('visibility', '==', 'public'),
+          orderBy('createdAt', 'desc')
         );
         
         const querySnapshot = await getDocs(featuredQuery);
-        const featuredHackathons = querySnapshot.docs.map(doc => {
+        const allChallenges = querySnapshot.docs.map(doc => {
           const data = doc.data();
-          
+
           // Calculate days left based on deadline
           const deadline = data.deadline ? new Date(data.deadline) : null;
           const today = new Date();
-          const daysLeft = deadline ? 
-            Math.max(0, Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))) : 
+          const daysLeft = deadline ?
+            Math.max(0, Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))) :
             30; // Default if no deadline
-          
+
           return {
             id: doc.id,
             challengeId: doc.id,
@@ -41,9 +43,17 @@ export default function FeaturedChallenges() {
             prize: data.total_prize ? `$${data.total_prize.toLocaleString()}` : 'No prize',
             participants: data.participants || 0,
             daysLeft: daysLeft,
-            image: data.coverImageUrl || '/placeholder-challenge.jpg'
+            image: data.coverImageUrl || '/placeholder-challenge.jpg',
+            deadline: deadline,
+            hasDeadlinePassed: deadline ? deadline < today : false
           };
         });
+
+        // Filter out challenges where deadline has passed, then sort by participants and take top 3
+        const activeChallenges = allChallenges.filter(challenge => !challenge.hasDeadlinePassed);
+        const featuredHackathons = activeChallenges
+          .sort((a, b) => b.participants - a.participants)
+          .slice(0, 3);
         
         setHackathons(featuredHackathons);
         setLoading(false);
@@ -55,6 +65,11 @@ export default function FeaturedChallenges() {
 
     fetchFeaturedChallenges();
   }, []);
+
+  // Don't render section if there are no challenges and loading is complete
+  if (!loading && hackathons.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-24 bg-background relative">

@@ -35,7 +35,7 @@ const SignIn = () => {
           await signOut();
           navigate('/partner-pending');
         } else {
-          navigate('/partner-dashboard');
+          navigate('/partner/dashboard');
         }
       } else {
         navigate('/dashboard');

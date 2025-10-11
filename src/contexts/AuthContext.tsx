@@ -27,8 +27,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log("AuthProvider mounted");
     
+    let isFirstAuthState = true;
+    let currentUserUid: string | null = null;
+    
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('Auth state changed:', { firebaseUser });
+      console.log('Auth state changed:', { firebaseUser, isFirstAuthState });
+      
+      // Prevent unnecessary updates if the user hasn't changed
+      if (firebaseUser && currentUserUid === firebaseUser.uid) {
+        console.log('User unchanged, skipping update');
+        return;
+      }
+      
+      currentUserUid = firebaseUser?.uid || null;
       
       try {
         if (firebaseUser) {
@@ -60,7 +71,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error('Auth error:', error);
         setUser(null);
       } finally {
-        setLoading(false);
+        // Only set loading to false on the first auth state change
+        if (isFirstAuthState) {
+          setLoading(false);
+          isFirstAuthState = false;
+        }
       }
     });
 
@@ -68,7 +83,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const value = { user, loading };
-  console.log("AuthProvider state:", value);
+  // Only log the final state, not intermediate states
+  if (!loading) {
+    console.log("AuthProvider state:", value);
+  }
 
   return (
     <AuthContext.Provider value={value}>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { signOut } from '@/services/auth';
 import { 
   LayoutDashboard, FileText, Users, Settings, LogOut
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from "@/lib/utils";
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingScreen from '@/components/dashboard/LoadingScreen';
+import AuthLoadingScreen from '@/components/ui/auth-loading-screen';
 import MobileHeader from '@/components/dashboard/MobileHeader';
 import MobileTabNav from '@/components/partner-dashboard/MobileTabNav';
 import Logo from '@/components/Logo';
@@ -19,17 +20,42 @@ import { NewChallengeForm } from '@/components/partner-dashboard/NewChallengeFor
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import PreviewChallenge from '@/components/partner-dashboard/PreviewChallenge';
+import { getPartnerTabFromPath, getPartnerRouteFromTab, type PartnerTab } from '@/lib/routing';
 
 const PartnerDashboard = () => {
-  const [activeView, setActiveView] = useState('overview');
   const navigate = useNavigate();
+  const location = useLocation();
   const { user: authUser, loading } = useAuth();
+  
+  // Initialize state from URL
+  const [activeView, setActiveView] = useState<PartnerTab>(() => 
+    getPartnerTabFromPath(location.pathname)
+  );
   const [challenges, setChallenges] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [fetchingChallenges, setFetchingChallenges] = useState(true);
   const [fetchingSubmissions, setFetchingSubmissions] = useState(true);
   const [viewData, setViewData] = useState(null);
   const previousView = useRef(activeView);
+
+  // Sync state with URL on mount and browser navigation
+  useEffect(() => {
+    // Set initial tab from URL
+    const initialTab = getPartnerTabFromPath(location.pathname);
+    setActiveView(initialTab);
+
+    // Handle browser back/forward buttons
+    const handlePopState = () => {
+      const newTab = getPartnerTabFromPath(window.location.pathname);
+      setActiveView(newTab);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []); // Only run once on mount
 
   // Extract the fetch function so we can reuse it
   const fetchChallenges = async () => {
@@ -209,12 +235,25 @@ const PartnerDashboard = () => {
     }
   };
 
-  const handleViewChange = (view, data = null) => {
+  const handleViewChange = (view: PartnerTab, data = null) => {
+    // Update local state
     setActiveView(view);
     setViewData(data);
+    
+    // Update URL without page reload
+    const route = getPartnerRouteFromTab(view);
+    if (route !== window.location.pathname) {
+      window.history.pushState(null, '', route);
+    }
   };
 
-  if (!authUser) {
+  // Show auth loading screen while authentication is being verified
+  if (loading) {
+    return <AuthLoadingScreen />;
+  }
+
+  // Only redirect to signin if we're not loading and there's no user
+  if (!loading && !authUser) {
     return <Navigate to="/signin" />;
   }
 
@@ -314,7 +353,7 @@ const PartnerDashboard = () => {
                         ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 shadow-sm'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
                     } rounded-lg transition-all duration-200 group`}
-                    onClick={() => setActiveView('overview')}
+                    onClick={() => handleViewChange('overview')}
                   >
                     <LayoutDashboard className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
                     <span className="font-medium">Overview</span>
@@ -326,7 +365,7 @@ const PartnerDashboard = () => {
                         ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 shadow-sm'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
                     } rounded-lg transition-all duration-200 group`}
-                    onClick={() => setActiveView('challenges')}
+                    onClick={() => handleViewChange('challenges')}
                   >
                     <FileText className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
                     <span className="font-medium">Challenges</span>
@@ -338,7 +377,7 @@ const PartnerDashboard = () => {
                         ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 shadow-sm'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
                     } rounded-lg transition-all duration-200 group`}
-                    onClick={() => setActiveView('submissions')}
+                    onClick={() => handleViewChange('submissions')}
                   >
                     <Users className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
                     <span className="font-medium">Submissions</span>
@@ -358,7 +397,7 @@ const PartnerDashboard = () => {
                         ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 shadow-sm'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
                     } rounded-lg transition-all duration-200 group`}
-                    onClick={() => setActiveView('settings')}
+                    onClick={() => handleViewChange('settings')}
                   >
                     <Settings className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
                     <span className="font-medium">Settings</span>
@@ -410,7 +449,7 @@ const PartnerDashboard = () => {
       )}  
       </main>
       {/* Rest of the component render code */}
-      <MobileTabNav activeView={activeView} setActiveView={setActiveView} />
+      <MobileTabNav activeView={activeView} setActiveView={handleViewChange} />
     </div>
   );
 };

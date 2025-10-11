@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Trophy, Calendar, Users, Timer, Award, Clock, Link2, Download, Globe, Copy,
- BarChart2, Share2, BriefcaseBusiness, CalendarDays, Tag
+ BarChart2, Share2, BriefcaseBusiness, CalendarDays, Tag, UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,8 @@ import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Header } from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
+import { TeamService } from '@/services/teamService';
+import { Team } from '@/types/team';
 
 export default function ChallengeView() {
   const { id } = useParams();
@@ -25,7 +27,9 @@ export default function ChallengeView() {
   const [relatedChallenges, setRelatedChallenges] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [isJoining, setIsJoining] = useState(false);
-    const { user } = useAuth();
+  const [userTeams, setUserTeams] = useState<Team[]>([]);
+  const [showTeamJoinModal, setShowTeamJoinModal] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchChallenge = async () => {
@@ -46,6 +50,16 @@ export default function ChallengeView() {
         }
         
         const data = challengeSnap.data();
+        
+        // Fetch user teams if user is a participant
+        if (user && user.userType === 'participant') {
+          try {
+            const teams = await TeamService.getUserTeams(user.uid);
+            setUserTeams(teams);
+          } catch (error) {
+            console.error('Error fetching user teams:', error);
+          }
+        }
         
         // Convert timestamps and calculate days left
         const createdAt = data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date();
@@ -159,7 +173,14 @@ const handleAddChallenge = async (challengeId) => {
     
     if (submissionSnap.exists()) {
       toast.info('You have already joined this challenge');
-      navigate('/dashboard');
+      // Navigate to appropriate dashboard based on user role
+      if (user?.role === 'partner') {
+        navigate('/partner/dashboard');
+      } else if (user?.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
       return;
     }
     
@@ -185,15 +206,49 @@ const handleAddChallenge = async (challengeId) => {
     });
 
     const publicProfileRef = doc(db, 'public_profiles', user.uid);
-        await updateDoc(publicProfileRef, {
-            total_active_challenges: increment(1)
-        });
+    await setDoc(publicProfileRef, {
+        total_active_challenges: increment(1)
+    }, { merge: true });
     
     toast.success('Challenge added to your dashboard successfully!');
-    navigate('/dashboard');
+    // Navigate to appropriate dashboard based on user role
+    if (user?.role === 'partner') {
+      navigate('/partner/dashboard');
+    } else if (user?.role === 'admin') {
+      navigate('/admin/dashboard');
+    } else {
+      navigate('/dashboard');
+    }
   } catch (error) {
     console.error("Error joining challenge:", error);
     toast.error('Error joining challenge: ' + error.message);
+  } finally {
+    setIsJoining(false);
+  }
+};
+
+const handleJoinAsTeam = async (teamId: string) => {
+  try {
+    setIsJoining(true);
+    
+    // Check if team can join (size limits, etc.)
+    const team = await TeamService.getTeam(teamId);
+    if (!team || team.currentMembers >= team.maxMembers) {
+      toast.error('Team is full or unavailable');
+      return;
+    }
+    
+    // Create team challenge participation
+    await TeamService.joinChallengeAsTeam(teamId, id!);
+    
+    toast.success('Team joined challenge successfully!');
+    setShowTeamJoinModal(false);
+    
+    // Navigate to dashboard
+    navigate('/dashboard');
+  } catch (error) {
+    console.error('Error joining challenge as team:', error);
+    toast.error('Failed to join challenge as team');
   } finally {
     setIsJoining(false);
   }
@@ -353,6 +408,21 @@ const handleAddChallenge = async (challengeId) => {
                       </>
                     ) : null}
                   </Button>
+                  
+                  {/* Team Join Button */}
+                  {user && user.userType === 'participant' && userTeams.length > 0 && challenge.allowTeams && (
+                    <Button 
+                      onClick={() => setShowTeamJoinModal(true)}
+                      disabled={isJoining || challenge.daysLeft <= 0}
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex-1 sm:flex-none"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      <span className="hidden sm:inline">Join as Team</span>
+                      <span className="sm:hidden">Team</span>
+                    </Button>
+                  )}
                 </div>
               </div>
               
@@ -866,6 +936,52 @@ const handleAddChallenge = async (challengeId) => {
           </div>
         </motion.div>
       </div>
+      
+      {/* Team Join Modal */}
+      {showTeamJoinModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+              Join Challenge as Team
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+              Select a team to join this challenge together.
+            </p>
+            
+            <div className="space-y-3 mb-6">
+              {userTeams.map(team => (
+                <div 
+                  key={team.id}
+                  className="p-3 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800"
+                  onClick={() => handleJoinAsTeam(team.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-slate-900 dark:text-white">{team.name}</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        {team.currentMembers}/{team.maxMembers} members
+                      </p>
+                    </div>
+                    <Button size="sm" disabled={isJoining}>
+                      {isJoining ? 'Joining...' : 'Join'}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowTeamJoinModal(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

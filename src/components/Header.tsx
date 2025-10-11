@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, ChevronDown, Menu, ArrowRight, LogOut, LayoutDashboard, Code, Sparkles, X, Folder } from 'lucide-react';
+import { User, ChevronDown, Menu, ArrowRight, LogOut, LayoutDashboard, Code, Sparkles, X, Folder, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
@@ -20,6 +20,7 @@ import ThemeSwitcher from './ThemeSwitcher';
 const navItems = [
   { label: 'Challenges', path: '/challenges', icon: Code },
   { label: 'Projects', path: '/projects', icon: Folder },
+  //{ label: 'Teams', path: '/teams/discover', icon: Users },
   { label: 'Community', path: '/community', icon: User },
 ];
 
@@ -53,7 +54,7 @@ export const Header = () => {
 
   const handleDashboardClick = () => {
     if (user?.role === 'partner') {
-      navigate('/partner-dashboard');
+      navigate('/partner/dashboard');
     } else if (user?.role === 'admin') {
       navigate('/admin/dashboard');
     } else {

@@ -32,6 +32,11 @@ export interface Challenge {
   requirements?: string[];
   createdAt: string;
   updatedAt: string;
+  
+  // Team-related fields
+  allowTeams?: boolean; // Whether teams are allowed for this challenge
+  maxTeamSize?: number; // Maximum team members (if teams allowed)
+  teamSubmissions?: number; // Count of team submissions
 } 
 
 export interface Partner {

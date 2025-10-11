@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { toast, Toaster } from 'sonner';
 import { useEffect } from 'react';
+import AuthLoadingScreen from '@/components/ui/auth-loading-screen';
 import PartnerDashboard from '@/pages/PartnerDashboard';
 import SignIn from '@/pages/SignIn';
 import SignUp from '@/pages/SignUp';
@@ -18,42 +19,54 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import ChallengeView from '@/pages/ChallengeView';
 
 const PartnerRoute = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user || user.role !== 'partner') {
+    if (!loading && (!user || user.role !== 'partner')) {
       toast.error('You are not registed as a partner!');
       navigate('/signin');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return <AuthLoadingScreen />;
+  }
 
   return user?.role === 'partner' ? children : null;
 };
 
 const AdminRoute = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
+    if (!loading && (!user || user.role !== 'admin')) {
       navigate('/signin');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return <AuthLoadingScreen />;
+  }
 
   return user?.role === 'admin' ? children : null;
 }
 
 const ParticipantRoute = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user || user.role !== 'participant') {
+    if (!loading && (!user || user.role !== 'participant')) {
       toast.error('You are not registed as a participant!');
       navigate('/signin');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return <AuthLoadingScreen />;
+  }
 
   return user?.role === 'participant' ? children : null;
 }
@@ -62,7 +75,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/signin" element={<SignIn />} />
@@ -73,8 +86,9 @@ function App() {
             <Route path="/challenge/:id" element={<ChallengeView />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/community" element={<Community />} />
+            {/* Dashboard routes with wildcards for deep linking */}
             <Route 
-              path="/dashboard" 
+              path="/dashboard/*" 
               element={
                 <ParticipantRoute>
                   <Dashboard />
@@ -83,7 +97,7 @@ function App() {
             />
             <Route path="/partner-pending" element={<PartnerPending />} />
             <Route 
-              path="/partner-dashboard" 
+              path="/partner/dashboard/*" 
               element={
                 <PartnerRoute>
                   <PartnerDashboard />
@@ -91,7 +105,7 @@ function App() {
               } 
             />
             <Route 
-              path="/admin/dashboard" 
+              path="/admin/dashboard/*" 
               element={
                 <AdminRoute>
                   <AdminDashboard />

@@ -3,12 +3,13 @@ import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import NotificationsDropdown from '@/components/dashboard/NotificationsDropdown';
 import { PencilIcon, CheckIcon, X,
   Github, Twitter, Linkedin, Award, Layers as LayersIcon, MessageCircle
- } from 'lucide-react';
+} from 'lucide-react';
 import { storage } from '@/lib/firebase';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { db } from '@/lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProfileTab({ user }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -167,15 +168,190 @@ export default function ProfileTab({ user }) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 sm:space-y-6 mt-5">
-        <WelcomeSection title="Profile" subtitle="Your Public Profile" />
-        <div className="p-8 flex flex-col items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading your profile...</p>
-          <div className="w-full max-w-md mt-8">
-        <div className="h-4 bg-gray-200 rounded animate-pulse mb-4"></div>
-        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4 mb-4"></div>
-        <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+      <div className="space-y-6 sm:space-y-8">
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <Skeleton className="h-8 w-32 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <div className="flex-shrink-0">
+              <Skeleton className="h-12 w-32" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          {/* Cover Photo Skeleton */}
+          <div className="relative">
+            <Skeleton className="h-48 w-full" />
+            
+            {/* Profile Photo Skeleton */}
+            <div className="absolute bottom-0 left-8 transform translate-y-1/2">
+              <div className="rounded-full h-24 w-24 bg-white dark:bg-slate-900 p-1 shadow-lg border-2 border-white dark:border-slate-800">
+                <Skeleton className="rounded-full h-full w-full" />
+              </div>
+            </div>
+          </div>
+
+          {/* Profile Content Skeleton */}
+          <div className="pt-20 px-8 pb-8">
+            {/* Basic Details Skeleton */}
+            <div className="mb-8">
+              <div className="flex flex-col lg:flex-row lg:justify-between gap-8">
+                <div className="lg:w-2/3 space-y-4">
+                  <Skeleton className="h-8 w-48" />
+                  <Skeleton className="h-6 w-36" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+                
+                <div className="lg:w-1/3">
+                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6">
+                    <Skeleton className="h-4 w-32 mb-4" />
+                    <div className="space-y-4">
+                      <div>
+                        <Skeleton className="h-3 w-12 mb-1" />
+                        <Skeleton className="h-8 w-full" />
+                      </div>
+                      <div>
+                        <Skeleton className="h-3 w-16 mb-1" />
+                        <Skeleton className="h-8 w-full" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Social Links Skeleton */}
+            <div className="mb-8">
+              <Skeleton className="h-6 w-32 mb-4" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center space-x-3 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                    <Skeleton className="h-5 w-5" />
+                    <Skeleton className="h-4 flex-1" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* About Section Skeleton */}
+            <div className="mb-8">
+              <Skeleton className="h-6 w-20 mb-4" />
+              <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6">
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            </div>
+
+            {/* Community Profile Section Skeleton */}
+            <div className="mb-8">
+              <Skeleton className="h-6 w-48 mb-6" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6">
+                  <Skeleton className="h-5 w-24 mb-4" />
+                  <div className="space-y-4">
+                    {[1, 2].map((i) => (
+                      <div key={i} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-lg">
+                        <div className="flex items-center">
+                          <Skeleton className="h-5 w-5 mr-3" />
+                          <Skeleton className="h-4 w-24" />
+                        </div>
+                        <Skeleton className="h-6 w-8" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6">
+                  <Skeleton className="h-5 w-16 mb-4" />
+                  <div className="flex flex-wrap gap-2">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-6 w-16 rounded-full" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Experience Section Skeleton */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-6">
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-8 w-32" />
+              </div>
+              <div className="space-y-6">
+                {[1, 2].map((i) => (
+                  <div key={i} className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6">
+                    <div className="space-y-3">
+                      <Skeleton className="h-6 w-48" />
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Education Section Skeleton */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-6">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-8 w-28" />
+              </div>
+              <div className="space-y-6">
+                {[1, 2].map((i) => (
+                  <div key={i} className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6">
+                    <div className="space-y-3">
+                      <Skeleton className="h-6 w-48" />
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Skills Section Skeleton */}
+            <div className="mb-8">
+              <Skeleton className="h-6 w-16 mb-6" />
+              <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6">
+                <div className="flex flex-wrap gap-2">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <Skeleton key={i} className="h-8 w-20 rounded-full" />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Projects Section Skeleton */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-6">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-8 w-28" />
+              </div>
+              <div className="space-y-6">
+                {[1, 2].map((i) => (
+                  <div key={i} className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <Skeleton className="h-6 w-48" />
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </div>
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

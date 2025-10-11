@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { query, collection, where, getDocs } from 'firebase/firestore';
 import LoadingScreen from '@/components/dashboard/LoadingScreen';
+import { useNavigate } from 'react-router-dom';
 
 export const NewChallengeForm = ({setActiveView, editMode=false, existingChallenge = null}) => {
 
@@ -96,6 +97,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('basic');
+  const navigate = useNavigate();
 
   const { user } = useAuth();
 
@@ -368,6 +370,8 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
       
       // Here you would typically redirect to the challenge page
       console.log('Challenge created:', challengeWithImages);
+
+      navigate(`/partner/dashboard/challenges`);
     } catch (error) {
       toast.error('Error creating challenge. Please try again.');
     }

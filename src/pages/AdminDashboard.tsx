@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { signOut } from '@/services/auth';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { 
   LayoutDashboard, Users, Shield, Settings, LogOut, 
@@ -12,6 +12,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from "@/lib/utils";
 import MobileHeader from '@/components/dashboard/MobileHeader';
 import LoadingScreen from '@/components/dashboard/LoadingScreen';
+import AuthLoadingScreen from '@/components/ui/auth-loading-screen';
 import Overview from '@/components/admin-dashboard/Overview';
 import Partners from '@/components/admin-dashboard/Partners';
 import Communities from '@/components/admin-dashboard/Communities';
@@ -19,12 +20,48 @@ import Support from '@/components/admin-dashboard/Support';
 import Analytics from '@/components/admin-dashboard/Analytics';
 import SettingsPanel from '@/components/admin-dashboard/SettingsPanel';
 import AdminMobileTabNav from '@/components/admin-dashboard/AdminMobileTabNav';
+import { getAdminTabFromPath, getAdminRouteFromTab, type AdminTab } from '@/lib/routing';
 
 const AdminDashboard = () => {
   const { user: authUser, loading } = useAuth();
   const { actualTheme } = useTheme();
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState('overview');
+  const location = useLocation();
+  
+  // Initialize state from URL
+  const [activeView, setActiveView] = useState<AdminTab>(() => 
+    getAdminTabFromPath(location.pathname)
+  );
+
+  // Sync state with URL on mount and browser navigation
+  useEffect(() => {
+    // Set initial tab from URL
+    const initialTab = getAdminTabFromPath(location.pathname);
+    setActiveView(initialTab);
+
+    // Handle browser back/forward buttons
+    const handlePopState = () => {
+      const newTab = getAdminTabFromPath(window.location.pathname);
+      setActiveView(newTab);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []); // Only run once on mount
+
+  const handleViewChange = (view: AdminTab) => {
+    // Update local state
+    setActiveView(view);
+    
+    // Update URL without page reload
+    const route = getAdminRouteFromTab(view);
+    if (route !== window.location.pathname) {
+      window.history.pushState(null, '', route);
+    }
+  };
 
   const MENU_ITEMS = [
     {
@@ -33,22 +70,22 @@ const AdminDashboard = () => {
         { 
           icon: LayoutDashboard, 
           text: 'Overview', 
-          action: () => setActiveView('overview') 
+          action: () => handleViewChange('overview') 
         },
         { 
           icon: Building2, 
           text: 'Partner Applications', 
-          action: () => setActiveView('partners') 
+          action: () => handleViewChange('partners') 
         },
         { 
           icon: Users, 
           text: 'Communities', 
-          action: () => setActiveView('communities') 
+          action: () => handleViewChange('communities') 
         },
         { 
           icon: MessagesSquare, 
           text: 'Support', 
-          action: () => setActiveView('support') 
+          action: () => handleViewChange('support') 
         },
       ]
     },
@@ -58,12 +95,12 @@ const AdminDashboard = () => {
         { 
           icon: BarChart, 
           text: 'Analytics', 
-          action: () => setActiveView('analytics') 
+          action: () => handleViewChange('analytics') 
         },
         { 
           icon: Settings, 
           text: 'Settings', 
-          action: () => setActiveView('settings') 
+          action: () => handleViewChange('settings') 
         },
       ]
     }
@@ -82,9 +119,13 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading) return <LoadingScreen />;
+  // Show auth loading screen while authentication is being verified
+  if (loading) {
+    return <AuthLoadingScreen />;
+  }
   
-  if (!authUser || authUser.role !== 'admin') {
+  // Only redirect to admin login if we're not loading and there's no user or user is not admin
+  if (!loading && (!authUser || authUser.role !== 'admin')) {
     return <Navigate to="/admin/login" />;
   }
 
@@ -245,7 +286,7 @@ const AdminDashboard = () => {
 
       <AdminMobileTabNav 
         activeView={activeView} 
-        setActiveView={setActiveView} 
+        setActiveView={handleViewChange} 
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, getDoc, updateDoc, increment, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, increment, arrayUnion } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -42,7 +42,14 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
         if (onBack) {
           onBack();
         } else {
-          navigate('/dashboard');
+          // Navigate to appropriate dashboard based on user role
+          if (user?.role === 'partner') {
+            navigate('/partner/dashboard');
+          } else if (user?.role === 'admin') {
+            navigate('/admin/dashboard');
+          } else {
+            navigate('/dashboard');
+          }
         }
         return;
       }
@@ -170,12 +177,12 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
 
         // Update the public profile participants count
     const publicProfileRef = doc(db, 'public_profiles', user.uid);
-    await updateDoc(publicProfileRef, {
+    await setDoc(publicProfileRef, {
         total_submissions: increment(1),
         total_active_challenges: increment(-1),
         projectsCount: increment(1),
         submissions: arrayUnion(submissionId)
-    });
+    }, { merge: true });
 
       toast.success('Submission successful!');
       setSubmission({
@@ -226,7 +233,7 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
         <h2 className="text-lg font-medium mb-2 text-slate-900 dark:text-white">Challenge not found</h2>
         <p className="text-slate-500 dark:text-slate-400 mb-6">The challenge you're looking for doesn't exist or you haven't joined it.</p>
         <Button 
-          onClick={() => onBack ? onBack() : navigate('/dashboard')}
+          onClick={() => onBack ? onBack() : (user?.role === 'partner' ? navigate('/partner/dashboard') : user?.role === 'admin' ? navigate('/admin/dashboard') : navigate('/dashboard'))}
           className="bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200"
         >
           Back to challenges
@@ -245,7 +252,7 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
         <Button 
           variant="ghost" 
           className="flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white self-start -ml-3" 
-          onClick={() => onBack ? onBack() : navigate('/dashboard')}
+          onClick={() => onBack ? onBack() : (user?.role === 'partner' ? navigate('/partner/dashboard') : user?.role === 'admin' ? navigate('/admin/dashboard') : navigate('/dashboard'))}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { signOut } from '@/services/auth';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { LayoutDashboard, Users, Trophy, Settings, LogOut, User} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import MobileHeader from '@/components/dashboard/MobileHeader';
 import MobileTabNav from '@/components/dashboard/MobileTabNav';
 import LoadingScreen from '@/components/dashboard/LoadingScreen';
+import AuthLoadingScreen from '@/components/ui/auth-loading-screen';
 import Logo from '@/components/Logo';
 import OverviewTab from '@/components/dashboard/OverviewTab';
 import ChallengesTab from '@/components/dashboard/challenges/ChallengesTab';
@@ -16,16 +17,48 @@ import TeamsTab from '@/components/dashboard/TeamsTab';
 import SettingsTab from '@/components/dashboard/SettingsTab';
 import ProfileTab from '@/components/dashboard/ProfileTab';
 import ChallengesView from '@/components/dashboard/challenges/ChallengesView';
+import { getDashboardTabFromPath, getDashboardRouteFromTab, type DashboardTab } from '@/lib/routing';
 
 const Dashboard = () => {
   const { user: authUser, loading } = useAuth();
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState('overview');
+  const location = useLocation();
+  
+  // Initialize state from URL
+  const [activeView, setActiveView] = useState<DashboardTab>(() => 
+    getDashboardTabFromPath(location.pathname)
+  );
   const [viewData, setViewData] = useState(null);
 
-  const handleViewChange = (view, data = null) => {
+  // Sync state with URL on mount and browser navigation
+  useEffect(() => {
+    // Set initial tab from URL
+    const initialTab = getDashboardTabFromPath(location.pathname);
+    setActiveView(initialTab);
+
+    // Handle browser back/forward buttons
+    const handlePopState = () => {
+      const newTab = getDashboardTabFromPath(window.location.pathname);
+      setActiveView(newTab);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []); // Only run once on mount
+
+  const handleViewChange = (view: DashboardTab, data = null) => {
+    // Update local state
     setActiveView(view);
     setViewData(data);
+    
+    // Update URL without page reload
+    const route = getDashboardRouteFromTab(view);
+    if (route !== window.location.pathname) {
+      window.history.pushState(null, '', route);
+    }
   };
   
   useEffect(() => {
@@ -45,15 +78,17 @@ const Dashboard = () => {
     }
   };
 
+  // Show auth loading screen while authentication is being verified
   if (loading) {
-    return <LoadingScreen />;
+    return <AuthLoadingScreen />;
   }
 
+  // Only redirect to signin if we're not loading and there's no user
   useEffect(() => {
-  if (!authUser) {
-    navigate('/login');
-  }
-  }, [authUser]);
+    if (!loading && !authUser) {
+      navigate('/signin');
+    }
+  }, [loading, authUser, navigate]);
   
 
   const MENU_ITEMS = [
@@ -63,17 +98,17 @@ const Dashboard = () => {
         { 
           icon: LayoutDashboard, 
           text: 'Overview', 
-          action: () => setActiveView('overview') 
+          action: () => handleViewChange('overview') 
         },
         { 
           icon: Trophy, 
           text: 'Challenges', 
-          action: () => setActiveView('challenges') 
+          action: () => handleViewChange('challenges') 
         },
         { 
           icon: Users, 
           text: 'Teams', 
-          action: () => setActiveView('teams') 
+          action: () => handleViewChange('teams') 
         },
       ]
     },
@@ -83,12 +118,12 @@ const Dashboard = () => {
         { 
           icon: User, 
           text: 'Profile', 
-          action: () => setActiveView('profile') 
+          action: () => handleViewChange('profile') 
         },
         { 
           icon: Settings, 
           text: 'Settings', 
-          action: () => setActiveView('settings') 
+          action: () => handleViewChange('settings') 
         },
       ]
     }
@@ -107,9 +142,15 @@ const Dashboard = () => {
       
       case 'teams':
         return <TeamsTab />;
+      
+      case 'teams-discover':
+        return <TeamsTab initialTab="discover" />;
+      
+      case 'teams-invitations':
+        return <TeamsTab initialTab="invitations" />;
 
       case 'do-challenge':
-        return <ChallengesView challengeId={viewData} onBack={() => setActiveView('challenges')} setActiveView={setActiveView} />;
+        return <ChallengesView challengeId={viewData} onBack={() => handleViewChange('challenges')} setActiveView={handleViewChange} />;
 
       case 'settings':
         return <SettingsTab user={authUser} />;
@@ -199,7 +240,7 @@ const Dashboard = () => {
           </div>
         </main>
 
-      <MobileTabNav activeView={activeView} setActiveView={setActiveView} />
+      <MobileTabNav activeView={activeView} setActiveView={handleViewChange} />
     </div>
   );
 };

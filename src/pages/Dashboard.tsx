@@ -23,6 +23,7 @@ const Dashboard = () => {
   const { user: authUser, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
   
   // Initialize state from URL
   const [activeView, setActiveView] = useState<DashboardTab>(() => 
@@ -67,6 +68,33 @@ const Dashboard = () => {
     };
   }, []);
 
+  // Check onboarding status AFTER all other hooks
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      if (!loading && authUser) {
+        const { getCurrentUser } = await import('@/services/user');
+        const userData = await getCurrentUser();
+        
+        if (userData && !userData.onboardingComplete) {
+          navigate('/onboarding');
+        } else {
+          setCheckingOnboarding(false);
+        }
+      } else if (!loading && !authUser) {
+        setCheckingOnboarding(false);
+      }
+    };
+    
+    checkOnboarding();
+  }, [authUser, loading, navigate]);
+
+  // Only redirect to signin if we're not loading and there's no user
+  useEffect(() => {
+    if (!loading && !authUser) {
+      navigate('/signin');
+    }
+  }, [loading, authUser, navigate]);
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -79,16 +107,9 @@ const Dashboard = () => {
   };
 
   // Show auth loading screen while authentication is being verified
-  if (loading) {
+  if (loading || checkingOnboarding) {
     return <AuthLoadingScreen />;
   }
-
-  // Only redirect to signin if we're not loading and there's no user
-  useEffect(() => {
-    if (!loading && !authUser) {
-      navigate('/signin');
-    }
-  }, [loading, authUser, navigate]);
   
 
   const MENU_ITEMS = [
@@ -209,11 +230,15 @@ const Dashboard = () => {
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-sm border border-slate-200 dark:border-slate-700">
                     <span className="text-slate-600 dark:text-slate-300 font-semibold text-sm">
-                      {authUser?.firstName?.[0] || 'A'}
+                      {authUser?.firstName?.[0] || authUser?.lastName?.[0] || 'U'}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">{authUser?.firstName || 'Admin User'}</p>
+                    <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">
+                      {authUser?.firstName && authUser?.lastName 
+                        ? `${authUser.firstName} ${authUser.lastName}`
+                        : authUser?.firstName || authUser?.lastName || 'User'}
+                    </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{authUser?.email}</p>
                   </div>
                 </div>

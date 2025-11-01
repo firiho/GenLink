@@ -1,9 +1,14 @@
-import { auth, db } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as firebaseSignOut, Auth, AuthError } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db, functions } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
+import { httpsCallable } from 'firebase/functions';
+import { doc, getDoc } from 'firebase/firestore';
 import { User } from '@/types/user';
-import { v4 as uuidv4 } from 'uuid';
 import { sendEmailVerification } from './authActions';
+
+// Cloud function references
+const signUpFunction = httpsCallable(functions, 'signUp');
+const signInFunction = httpsCallable(functions, 'signIn');
+const adminSignInFunction = httpsCallable(functions, 'adminSignIn');
 
 export type SignInCredentials = {
   email: string;
@@ -58,12 +63,32 @@ const getAuthErrorMessage = (error: any): string => {
 
 export const signIn = async ({ email, password }: SignInCredentials) => {
   try {
+    // Step 1: Authenticate with Firebase Auth
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const firebaseUser = userCredential.user;
-    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-    const profile = userDoc.data();
+    
+    // Step 2: Call cloud function to get user profile and validate
+    const result = await signInFunction({ uid: firebaseUser.uid });
+    const data = result.data as any;
+    
+    // Step 3: Check email verification
+    if (!data.emailVerified) {
+      throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
+    }
+    
+    if (!data.success) {
+      throw new Error(data.message || 'Failed to sign in');
+    }
+    
+    // Return user data
     return { 
-      user: { ...firebaseUser, role: profile?.user_type || 'participant', status: profile?.status || 'pending', emailVerified: firebaseUser.emailVerified }
+      user: {
+        ...firebaseUser,
+        role: data.userData.userType,
+        status: data.userData.status,
+        emailVerified: firebaseUser.emailVerified,
+        ...data.userData
+      }
     };
   } catch (error) {
     console.error('SignIn error:', error);
@@ -73,16 +98,27 @@ export const signIn = async ({ email, password }: SignInCredentials) => {
 
 export const AdminSignIn = async ({ email, password }: SignInCredentials) => {
   try {
+    // Step 1: Authenticate with Firebase Auth
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
-    const profile = userDoc.data();
-    if (profile?.user_type !== 'admin') {
-      throw new Error('Unauthorized access');
+    
+    // Step 2: Validate admin access via cloud function
+    const result = await adminSignInFunction({ uid: user.uid });
+    const data = result.data as any;
+    
+    if (!data.success) {
+      throw new Error(data.message || 'Unauthorized access');
     }
-    return { user: { ...user, role: profile?.user_type} };
+    
+    return { 
+      user: { 
+        ...user, 
+        role: data.userData.userType,
+        ...data.userData
+      } 
+    };
   } catch (error) {
-    console.error('SignIn error:', error);
+    console.error('Admin SignIn error:', error);
     throw new Error(getAuthErrorMessage(error));
   }
 };
@@ -98,91 +134,37 @@ export const signUp = async ({
   position 
 }: SignUpCredentials) => {
   try {
+    // Step 1: Create Firebase Auth user
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    let organizationId: string | undefined;
-
-    if (userType === 'partner' && organization) {
-      // Generate org ID
-      organizationId = uuidv4();
-      
-      // Create organization record
-      await setDoc(doc(db, 'organizations', organizationId), {
-        id: organizationId,
-        name: organization,
-        type: organizationType || 'Company',
-        address: '',
-        email: email,
-        phone: '',
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        created_by: user.uid
-      });
-
-      // Create staff document for partner
-      await setDoc(doc(db, 'organizations', organizationId, 'staff', user.uid), {
-        userId: user.uid,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        phone: '',
-        position: position || '',
-        permissions: ['owner', 'admin', 'create_challenges', 'manage_submissions', 'view_analytics'],
-        role: 'owner',
-        status: 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-    }
-
-    // Create user profile with org reference
-    await setDoc(doc(db, 'users', user.uid), {
-      user_type: userType,
-      status: userType === 'partner' ? 'pending' : 'approved',
-      ...(organizationId && { organization_id: organizationId }),
-      ...(userType === 'participant' && { onboardingComplete: false }),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+    // Step 2: Call cloud function to create user profile and related documents
+    const result = await signUpFunction({
+      uid: user.uid,
+      email,
+      firstName,
+      lastName,
+      userType,
+      ...(userType === 'partner' && {
+        organization,
+        organizationType,
+        position
+      })
     });
-
-    // Create public profile for participants (used for teams, challenges, community)
-    if (userType === 'participant') {
-      await setDoc(doc(db, 'profiles', user.uid), {
-        userId: user.uid,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        photo: '',
-        title: '',
-        location: '',
-        about: '',
-        skills: [],
-        experience: [],
-        education: [],
-        projects: [],
-        certifications: [],
-        social: {
-          github: '',
-          twitter: '',
-          linkedin: ''
-        },
-        // Stats fields
-        total_active_challenges: 0,
-        total_submissions: 0,
-        total_active_team_members: 0,
-        projectsCount: 0,
-        contributions: 0,
-        success_rate: 0,
-        badges: [],
-        submissions: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
+    
+    const data = result.data as any;
+    
+    if (!data.success) {
+      // If cloud function fails, delete the auth user to keep things clean
+      try {
+        await user.delete();
+      } catch (deleteError) {
+        console.error('Failed to delete auth user after profile creation failure:', deleteError);
+      }
+      throw new Error(data.message || 'Failed to complete signup');
     }
-
-    // Send email verification for both participants and partners
+    
+    // Step 3: Send email verification
     try {
       await sendEmailVerification();
     } catch (error) {
@@ -193,7 +175,7 @@ export const signUp = async ({
     return { 
       ...user, 
       userType,
-      ...(organizationId && { organizationId })
+      organizationId: data.organizationId
     };
   } catch (error) {
     console.error('SignUp error:', error);
@@ -210,44 +192,5 @@ export const signOut = async () => {
   }
 };
 
-export const getCurrentUser = async (): Promise<User | null> => {
-  const user = auth.currentUser;
-  if (!user) return null;
-  const userDoc = await getDoc(doc(db, 'users', user.uid));
-  const profile = userDoc.data();
-  
-  // Get additional profile info based on user type
-  let firstName, lastName, phone, fieldType;
-  if (profile?.user_type === 'participant') {
-    const participantProfile = await getDoc(doc(db, 'profiles', user.uid));
-    const participantData = participantProfile.data();
-    firstName = participantData?.firstName;
-    lastName = participantData?.lastName;
-    phone = participantData?.phone;
-    fieldType = participantData?.fieldType;
-  } else if (profile?.user_type === 'partner' && profile?.organization_id) {
-    const staffDoc = await getDoc(doc(db, 'organizations', profile.organization_id, 'staff', user.uid));
-    const staffData = staffDoc.data();
-    firstName = staffData?.firstName;
-    lastName = staffData?.lastName;
-    phone = staffData?.phone;
-  }
-  
-  return {
-    id: user.uid,
-    email: user.email || '',
-    firstName,
-    lastName,
-    phone,
-    fieldType,
-    userType: profile?.user_type || 'participant',
-    status: profile?.status || 'pending',
-    organization: profile?.organization,
-    createdAt: user.metadata.creationTime,
-  } as User;
-};
-
-export const isAuthenticated = async (): Promise<boolean> => {
-  const user = await getCurrentUser();
-  return !!user;
-};
+// Export centralized user functions
+export { getCurrentUser, isAuthenticated, getUserType } from './user';

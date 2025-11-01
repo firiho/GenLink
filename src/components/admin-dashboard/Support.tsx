@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -129,7 +128,7 @@ const Support = () => {
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <motion.div
+          <div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -157,7 +156,7 @@ const Support = () => {
                 <stat.icon className={`h-6 w-6 ${stat.color}`} />
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 
@@ -243,7 +242,7 @@ const Support = () => {
               actualTheme === 'dark' ? "divide-slate-700" : "divide-gray-200"
             )}>
               {tickets.map((ticket) => (
-                <motion.tr
+                <tr
                   key={ticket.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -300,7 +299,7 @@ const Support = () => {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>

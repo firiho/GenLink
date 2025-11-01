@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { TrendingUp, Activity } from 'lucide-react';
 import StatsCard from '../dashboard/StatsCard';
 

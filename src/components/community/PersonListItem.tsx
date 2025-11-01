@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { MapPin, Award, Github, Twitter, Linkedin, Mail } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,7 @@ export const PersonListItem = ({
   index = 0
 }: PersonListItemProps) => {
   return (
-    <motion.div
+    <div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.02 }}
@@ -146,7 +145,7 @@ export const PersonListItem = ({
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { Users, TrendingUp, Calendar, Lock, Globe, Award } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -9,7 +8,7 @@ interface TeamListItemProps {
   challengeTitle?: string;
   currentMembers: number;
   maxMembers: number;
-  visibility: 'public' | 'private';
+  visibility: 'public' | 'invite-only';
   tags?: string[];
   createdAt?: Date;
   hasSubmitted?: boolean;
@@ -34,7 +33,7 @@ export const TeamListItem = ({
   const isNearlyFull = memberPercentage >= 80;
   
   return (
-    <motion.div
+    <div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.02 }}
@@ -59,7 +58,7 @@ export const TeamListItem = ({
                 <h3 className="text-base font-semibold group-hover:text-accent transition-colors truncate">
                   {name}
                 </h3>
-                {visibility === 'private' ? (
+                {visibility === 'invite-only' ? (
                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs flex-shrink-0">
                     <Lock className="w-3 h-3" />
                     <span>Private</span>
@@ -140,7 +139,7 @@ export const TeamListItem = ({
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

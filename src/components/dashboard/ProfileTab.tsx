@@ -15,7 +15,8 @@ export default function ProfileTab({ user }) {
   const [isEditing, setIsEditing] = useState(false);
   const [originalProfile, setOriginalProfile] = useState(null);
   const [profile, setProfile] = useState({
-    name: user?.firstName || '',
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
     title: user?.title || '',
     photo: user?.photo || '',
     coverPhoto: user?.coverPhoto || '',
@@ -52,7 +53,8 @@ export default function ProfileTab({ user }) {
         if (profileSnap.exists()) {
           const data = profileSnap.data();
           setProfile({
-            name: data.name || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : ''),
+            firstName: data.firstName || user?.firstName || '',
+            lastName: data.lastName || user?.lastName || '',
           title: data.title || user?.title || '',
           photo: data.photo || user?.photo || '/placeholder user.svg',
           coverPhoto: data.coverPhoto || user?.coverPhoto || '',
@@ -78,7 +80,8 @@ export default function ProfileTab({ user }) {
         } else {
           // If no public profile exists yet, create one with user data
           setDoc(profileRef, {
-            name: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : '',
+            firstName: user?.firstName || '',
+            lastName: user?.lastName || '',
             email: user?.email || '',
             userId: user.uid,
             createdAt: new Date().toISOString(),
@@ -495,11 +498,7 @@ export default function ProfileTab({ user }) {
                     ) : (
                       <div className="h-full w-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center">
                         <span className="text-slate-600 dark:text-slate-300 text-xl font-semibold">
-                          {profile.name
-                            .split(' ')
-                            .map((n: string) => n[0])
-                            .join('')
-                            .toUpperCase()}
+                          {`${profile.firstName?.[0] || ''}${profile.lastName?.[0] || ''}`.toUpperCase() || 'U'}
                         </span>
                       </div>
                     )}
@@ -535,11 +534,7 @@ export default function ProfileTab({ user }) {
                 ) : (
                 <div className="h-full w-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center">
                     <span className="text-slate-600 dark:text-slate-300 text-xl font-semibold">
-                      {profile.name
-                        .split(' ')
-                        .map((n: string) => n[0])
-                        .join('')
-                        .toUpperCase()}
+                      {`${profile.firstName?.[0] || ''}${profile.lastName?.[0] || ''}`.toUpperCase() || 'U'}
                     </span>
                   </div>
                 )
@@ -558,15 +553,27 @@ export default function ProfileTab({ user }) {
               <div className="lg:w-2/3">
                 {isEditing ? (
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Full Name</label>
-                      <input
-                        type="text"
-                        value={profile.name}
-                        onChange={(e) => setProfile({...profile, name: e.target.value})}
-                        className="w-full text-2xl font-bold bg-transparent border-b-2 border-slate-200 dark:border-slate-600 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none pb-2"
-                        placeholder='Enter your full name'
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">First Name</label>
+                        <input
+                          type="text"
+                          value={profile.firstName}
+                          onChange={(e) => setProfile({...profile, firstName: e.target.value})}
+                          className="w-full text-lg font-bold bg-transparent border-b-2 border-slate-200 dark:border-slate-600 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none pb-2"
+                          placeholder='First name'
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Last Name</label>
+                        <input
+                          type="text"
+                          value={profile.lastName}
+                          onChange={(e) => setProfile({...profile, lastName: e.target.value})}
+                          className="w-full text-lg font-bold bg-transparent border-b-2 border-slate-200 dark:border-slate-600 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none pb-2"
+                          placeholder='Last name'
+                        />
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Job Title</label>
@@ -601,7 +608,9 @@ export default function ProfileTab({ user }) {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{profile.name || 'Your Name'}</h2>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                      {profile.firstName || profile.lastName ? `${profile.firstName} ${profile.lastName}`.trim() : 'Your Name'}
+                    </h2>
                     <p className="text-xl text-slate-600 dark:text-slate-400">{profile.title || 'Your Title'}</p>
                     <p className="text-sm text-slate-500 dark:text-slate-400">{profile.location || 'Your Location'}</p>
                     {profile.website && (
@@ -843,11 +852,11 @@ export default function ProfileTab({ user }) {
                     ...profile,
                     experience: [...profile.experience, { 
                       id: Date.now(), 
-                      title: '', 
+                      role: '', 
                       company: '',
-                      location: '',
                       startDate: '',
                       endDate: '',
+                      current: false,
                       description: '' 
                     }]
                   })}
@@ -869,17 +878,17 @@ export default function ProfileTab({ user }) {
                       <div className="space-y-4">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Position Title</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Role/Position</label>
                             <input
                               type="text"
-                              value={exp.title}
+                              value={exp.role}
                               onChange={(e) => {
                                 const updatedExperience = [...profile.experience];
-                                updatedExperience[index].title = e.target.value;
+                                updatedExperience[index].role = e.target.value;
                                 setProfile({...profile, experience: updatedExperience});
                               }}
                               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none"
-                              placeholder="Position Title"
+                              placeholder="e.g., Software Engineer"
                             />
                           </div>
                           <button 
@@ -895,7 +904,7 @@ export default function ProfileTab({ user }) {
                           </button>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Company Name</label>
+                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Company</label>
                           <input
                             type="text"
                             value={exp.company}
@@ -905,14 +914,14 @@ export default function ProfileTab({ user }) {
                               setProfile({...profile, experience: updatedExperience});
                             }}
                             className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none"
-                            placeholder="Company Name"
+                            placeholder="e.g., Tech Corp"
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Start Date</label>
                             <input
-                              type="date"
+                              type="month"
                               value={exp.startDate}
                               onChange={(e) => {
                                 const updatedExperience = [...profile.experience];
@@ -923,21 +932,42 @@ export default function ProfileTab({ user }) {
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">End Date</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                              End Date {exp.current && '(Current)'}
+                            </label>
                             <input
-                              type="date"
+                              type="month"
                               value={exp.endDate}
                               onChange={(e) => {
                                 const updatedExperience = [...profile.experience];
                                 updatedExperience[index].endDate = e.target.value;
                                 setProfile({...profile, experience: updatedExperience});
                               }}
-                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none"
+                              disabled={exp.current}
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none disabled:opacity-50"
                             />
                           </div>
                         </div>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={exp.current}
+                            onChange={(e) => {
+                              const updatedExperience = [...profile.experience];
+                              updatedExperience[index].current = e.target.checked;
+                              if (e.target.checked) {
+                                updatedExperience[index].endDate = '';
+                              }
+                              setProfile({...profile, experience: updatedExperience});
+                            }}
+                            className="w-4 h-4 rounded border-slate-300"
+                          />
+                          <label className="ml-2 text-sm text-slate-700 dark:text-slate-300">
+                            I currently work here
+                          </label>
+                        </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</label>
+                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description (Optional)</label>
                           <textarea
                             value={exp.description}
                             onChange={(e) => {
@@ -946,15 +976,17 @@ export default function ProfileTab({ user }) {
                               setProfile({...profile, experience: updatedExperience});
                             }}
                             className="w-full h-24 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none resize-none"
-                            placeholder="Describe your role and achievements..."
+                            placeholder="Brief description of your role and achievements..."
                           />
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <h4 className="font-semibold text-slate-900 dark:text-white text-lg">{exp.title}</h4>
+                        <h4 className="font-semibold text-slate-900 dark:text-white text-lg">{exp.role}</h4>
                         <p className="text-slate-600 dark:text-slate-400 font-medium">{exp.company}</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{exp.startDate} - {exp.endDate}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
+                        </p>
                         {exp.description && (
                           <p className="mt-3 text-slate-700 dark:text-slate-300 leading-relaxed">{exp.description}</p>
                         )}
@@ -977,11 +1009,12 @@ export default function ProfileTab({ user }) {
                     ...profile,
                     education: [...profile.education, { 
                       id: Date.now(), 
-                      school: '', 
+                      institution: '', 
                       degree: '',
                       field: '',
-                      startYear: '',
-                      endYear: ''
+                      startDate: '',
+                      endDate: '',
+                      current: false
                     }]
                   })}
                 >
@@ -1002,17 +1035,17 @@ export default function ProfileTab({ user }) {
                       <div className="space-y-4">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">School/University</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Institution</label>
                             <input
                               type="text"
-                              value={edu.school}
+                              value={edu.institution}
                               onChange={(e) => {
                                 const updatedEducation = [...profile.education];
-                                updatedEducation[index].school = e.target.value;
+                                updatedEducation[index].institution = e.target.value;
                                 setProfile({...profile, education: updatedEducation});
                               }}
                               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none"
-                              placeholder="School/University Name"
+                              placeholder="e.g., University of Rwanda"
                             />
                           </div>
                           <button 
@@ -1027,70 +1060,94 @@ export default function ProfileTab({ user }) {
                             <X className="h-4 w-4" />
                           </button>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Degree</label>
-                          <input
-                            type="text"
-                            value={edu.degree}
-                            onChange={(e) => {
-                              const updatedEducation = [...profile.education];
-                              updatedEducation[index].degree = e.target.value;
-                              setProfile({...profile, education: updatedEducation});
-                            }}
-                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none"
-                            placeholder="Degree"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Field of Study</label>
-                          <input
-                            type="text"
-                            value={edu.field}
-                            onChange={(e) => {
-                              const updatedEducation = [...profile.education];
-                              updatedEducation[index].field = e.target.value;
-                              setProfile({...profile, education: updatedEducation});
-                            }}
-                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none"
-                            placeholder="Field of Study"
-                          />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Degree</label>
+                            <input
+                              type="text"
+                              value={edu.degree}
+                              onChange={(e) => {
+                                const updatedEducation = [...profile.education];
+                                updatedEducation[index].degree = e.target.value;
+                                setProfile({...profile, education: updatedEducation});
+                              }}
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none"
+                              placeholder="e.g., Bachelor of Science"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Field of Study</label>
+                            <input
+                              type="text"
+                              value={edu.field}
+                              onChange={(e) => {
+                                const updatedEducation = [...profile.education];
+                                updatedEducation[index].field = e.target.value;
+                                setProfile({...profile, education: updatedEducation});
+                              }}
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none"
+                              placeholder="e.g., Computer Science"
+                            />
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Start Year</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Start Date</label>
                             <input
-                              type="text"
-                              value={edu.startYear}
+                              type="month"
+                              value={edu.startDate}
                               onChange={(e) => {
                                 const updatedEducation = [...profile.education];
-                                updatedEducation[index].startYear = e.target.value;
+                                updatedEducation[index].startDate = e.target.value;
                                 setProfile({...profile, education: updatedEducation});
                               }}
                               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none"
-                              placeholder="Start Year"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">End Year</label>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                              End Date {edu.current && '(Current)'}
+                            </label>
                             <input
-                              type="text"
-                              value={edu.endYear}
+                              type="month"
+                              value={edu.endDate}
                               onChange={(e) => {
                                 const updatedEducation = [...profile.education];
-                                updatedEducation[index].endYear = e.target.value;
+                                updatedEducation[index].endDate = e.target.value;
                                 setProfile({...profile, education: updatedEducation});
                               }}
-                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none"
-                              placeholder="End Year"
+                              disabled={edu.current}
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 focus:border-slate-400 dark:focus:border-slate-400 focus:outline-none disabled:opacity-50"
                             />
                           </div>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={edu.current}
+                            onChange={(e) => {
+                              const updatedEducation = [...profile.education];
+                              updatedEducation[index].current = e.target.checked;
+                              if (e.target.checked) {
+                                updatedEducation[index].endDate = '';
+                              }
+                              setProfile({...profile, education: updatedEducation});
+                            }}
+                            className="w-4 h-4 rounded border-slate-300"
+                          />
+                          <label className="ml-2 text-sm text-slate-700 dark:text-slate-300">
+                            I currently study here
+                          </label>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <h4 className="font-semibold text-slate-900 dark:text-white text-lg">{edu.school}</h4>
-                        <p className="text-slate-600 dark:text-slate-400 font-medium">{edu.degree}, {edu.field}</p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{edu.startYear} - {edu.endYear}</p>
+                        <h4 className="font-semibold text-slate-900 dark:text-white text-lg">{edu.degree}</h4>
+                        {edu.field && <p className="text-slate-600 dark:text-slate-400 font-medium">{edu.field}</p>}
+                        <p className="text-slate-600 dark:text-slate-400">{edu.institution}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          {edu.startDate} - {edu.current ? 'Present' : edu.endDate}
+                        </p>
                       </div>
                     )}
                   </div>

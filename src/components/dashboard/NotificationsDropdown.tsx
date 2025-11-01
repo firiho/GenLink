@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Bell, Check, Clock, Info, MessageSquare, X, Settings } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -63,28 +62,22 @@ const NotificationsDropdown = () => {
       >
         <Bell className="h-5 w-5 text-slate-600 dark:text-slate-400" />
         {unreadCount > 0 && (
-          <motion.span 
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+          <span 
             className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs flex items-center justify-center font-semibold shadow-sm"
           >
             {unreadCount}
-          </motion.span>
+          </span>
         )}
       </Button>
 
-      <AnimatePresence>
+      
         {isOpen && (
           <>
           <div
             className="fixed inset-0 z-40 bg-transparent cursor-default"
             onClick={() => setIsOpen(false)}
           />
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+          <div
             className={cn(
               "absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl shadow-xl z-50",
               "bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 py-2 pointer-events-auto"
@@ -124,11 +117,7 @@ const NotificationsDropdown = () => {
 
               <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
                 {notifications.map((notification, index) => (
-                  <motion.div
-                    key={notification.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                  <div
                     className={cn(
                       "px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 cursor-pointer group",
                       notification.unread && "bg-slate-50/50 dark:bg-slate-800/30"
@@ -166,7 +155,7 @@ const NotificationsDropdown = () => {
                         )}
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
 
@@ -178,10 +167,10 @@ const NotificationsDropdown = () => {
                   View all notifications
                 </Button>
               </div>
-            </motion.div>
+            </div>
           </>
         )}
-      </AnimatePresence>
+      
     </div>
   );
 };

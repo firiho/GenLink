@@ -31,15 +31,17 @@ const SignIn = () => {
       }
 
       // Check email verification for partners and participants (but not admins)
-      if (!user.emailVerified) {
+      if (!user.emailVerified && user.role !== 'admin') {
         console.log('Email not verified, redirecting to verification page');
         toast.info('Please verify your email to continue');
         navigate('/email-verification');
         return;
       }
 
-      // Check partner status
-      if (user.role === 'partner') {
+      // Redirect based on user role
+      if (user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (user.role === 'partner') {
         if (user.status === 'pending') {
           await signOut();
           navigate('/partner-pending');

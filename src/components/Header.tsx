@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { User, ChevronDown, Menu, ArrowRight, LogOut, LayoutDashboard, Code, Sparkles, X, Folder, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -67,26 +66,28 @@ export const Header = () => {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <motion.div whileHover={{ scale: 1.02 }}>
-            <Button
-              variant="ghost"
-              className="rounded-xl hover:bg-accent/5 border border-border shadow-sm pl-2 pr-3"
-            >
-              <div className="flex items-center space-x-2">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
-                  <User className="h-4 w-4 text-accent" />
-                </div>
-                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-hover:rotate-180" />
+          <Button
+            variant="ghost"
+            className="rounded-xl hover:bg-accent/5 border border-border shadow-sm pl-2 pr-3"
+          >
+            <div className="flex items-center space-x-2">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
+                <User className="h-4 w-4 text-accent" />
               </div>
-            </Button>
-          </motion.div>
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-hover:rotate-180" />
+            </div>
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
           className="w-56 p-2 bg-card/95 backdrop-blur-xl border border-border"
         >
           <div className="px-2 py-1.5 border-b border-border">
-            <p className="text-sm font-medium text-foreground">{user.firstName}</p>
+            <p className="text-sm font-medium text-foreground">
+              {user.firstName && user.lastName 
+                ? `${user.firstName} ${user.lastName}`
+                : user.firstName || user.lastName || 'User'}
+            </p>
             <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
           <DropdownMenuItem onClick={handleDashboardClick} className="text-foreground hover:bg-accent/5">
@@ -115,10 +116,7 @@ export const Header = () => {
   };
 
   return (
-    <motion.header
-      initial={{ y: 0 }}
-      animate={{ y: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+    <header
       className="fixed top-0 left-0 right-0 z-[100]"
     >
       <div 
@@ -143,9 +141,7 @@ export const Header = () => {
                     key={item.label} 
                     to={item.path}
                   >
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    <div
                       className={`px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 flex items-center space-x-2 ${
                         isActive
                           ? 'text-foreground bg-accent/10'
@@ -154,7 +150,7 @@ export const Header = () => {
                     >
                       <Icon className="w-4 h-4" />
                       <span>{item.label}</span>
-                    </motion.div>
+                    </div>
                   </Link>
                 );
               })}
@@ -165,13 +161,12 @@ export const Header = () => {
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center ml-auto space-x-2">
             {user && <NotificationsDropdown />}
-            <motion.button
-              whileTap={{ scale: 0.95 }}
+            <button
               className="p-2 rounded-md bg-accent/5 border border-border text-foreground hover:bg-accent/10 transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </motion.button>
+            </button>
           </div>
 
           {/* Desktop Auth Buttons */}
@@ -179,18 +174,13 @@ export const Header = () => {
             <ThemeSwitcher />
             {user ? (
               <div className="flex items-center space-x-3">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <NotificationsDropdown />
-                </motion.div>
+                <NotificationsDropdown />
                 <ProfileMenu user={user} />
               </div>
             ) : (
-              <AnimatePresence>
-                <motion.div 
-                  className="flex items-center space-x-3"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                >
+              <div 
+                className="flex items-center space-x-3"
+              >
                   <Link to="/signin">
                     <Button 
                       variant="ghost" 
@@ -200,29 +190,22 @@ export const Header = () => {
                     </Button>
                   </Link>
                   <Link to="/signup">
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                      <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg shadow-modern hover:shadow-lg transition-all duration-200 px-6">
-                        Get Started
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </motion.div>
+                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg shadow-modern hover:shadow-lg transition-all duration-200 px-6">
+                      Get Started
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                   </Link>
-                </motion.div>
-              </AnimatePresence>
+                </div>
             )}
           </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="md:hidden absolute top-full left-0 right-0 bg-background/98 backdrop-blur-xl border-t border-border shadow-modern"
-          >
+      {isMobileMenuOpen && (
+        <div
+          className="md:hidden absolute top-full left-0 right-0 bg-background/98 backdrop-blur-xl border-t border-border shadow-modern"
+        >
             <div className="p-4 space-y-2">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -233,8 +216,7 @@ export const Header = () => {
                     to={item.path}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <motion.div
-                      whileTap={{ scale: 0.98 }}
+                    <div
                       className={`px-4 py-3 rounded-md flex items-center space-x-3 transition-all ${
                         isActive
                           ? 'text-foreground bg-accent/10 font-medium'
@@ -243,7 +225,7 @@ export const Header = () => {
                     >
                       <Icon className="w-5 h-5" />
                       <span>{item.label}</span>
-                    </motion.div>
+                    </div>
                   </Link>
                 );
               })}
@@ -291,9 +273,8 @@ export const Header = () => {
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
-    </motion.header>
+    </header>
   );
 };

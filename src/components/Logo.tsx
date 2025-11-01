@@ -50,7 +50,6 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 
 const Logo = ({class_name=''}) => {
   return (
@@ -58,10 +57,7 @@ const Logo = ({class_name=''}) => {
           to="/"
           className={`flex items-center space-x-3 group ${class_name}`}
         >
-          <motion.div
-          initial={{ opacity: 1, scale: 1 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          <div
           className="h-30 w-auto flex items-center justify-center group-hover:scale-105 transition-all duration-300"
           >
           <img 
@@ -69,20 +65,17 @@ const Logo = ({class_name=''}) => {
             alt="Logo" 
             className="h-8 w-auto"
           />
-          </motion.div>
+          </div>
           
-          <motion.div 
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1, duration: 0.3 }}
+          <div 
             className="flex flex-col"
           >
-            <motion.span 
+            <span 
               className="text-xl font-bold text-foreground group-hover:text-accent transition-colors duration-200"
             >
               GenLink
-            </motion.span>
-          </motion.div>
+            </span>
+          </div>
         </Link>
   );
 };

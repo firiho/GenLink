@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { 
@@ -68,9 +67,7 @@ const PartnerPending = () => {
         {/* Logo */}
         <Logo class_name="absolute top-8 left-8 flex items-center space-x-2" />
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+        <div
           className="w-full max-w-md z-10"
         >
           <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-xl p-8 space-y-8 border border-slate-200/50 dark:border-slate-800/50">
@@ -90,11 +87,7 @@ const PartnerPending = () => {
               <div className="absolute left-5 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-700" />
               <div className="space-y-8">
                 {steps.map((step, index) => (
-                  <motion.div
-                    key={step.title}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 * index }}
+                  <div
                     className="flex items-start space-x-4 relative"
                   >
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 
@@ -108,7 +101,7 @@ const PartnerPending = () => {
                       <h3 className="font-semibold text-lg mb-1 text-slate-900 dark:text-white">{step.title}</h3>
                       <p className="text-slate-500 dark:text-slate-400">{step.description}</p>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -124,7 +117,7 @@ const PartnerPending = () => {
               </Link>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Right Side - Dark Background */}
@@ -133,25 +126,16 @@ const PartnerPending = () => {
           <div className="absolute inset-0 bg-grid-white/[0.02]" />
           
           {/* Animated Blobs */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1 }}
+          <div
             className="absolute -left-1/4 -top-1/4 w-1/2 h-1/2 bg-slate-600/30 rounded-full blur-3xl"
           />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.2 }}
+          <div
             className="absolute -right-1/4 -bottom-1/4 w-1/2 h-1/2 bg-slate-500/20 rounded-full blur-3xl"
           />
 
           {/* Content */}
           <div className="relative h-full flex items-center justify-center p-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+            <div
               className="text-white max-w-md"
             >
               <div className="mb-6">
@@ -164,11 +148,7 @@ const PartnerPending = () => {
 
               <div className="space-y-6">
                 {benefits.map((benefit, index) => (
-                  <motion.div
-                    key={benefit.title}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
+                  <div
                     className="flex items-start space-x-4"
                   >
                     <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
@@ -180,7 +160,7 @@ const PartnerPending = () => {
                       </h3>
                       <p className="text-slate-300">{benefit.description}</p>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
 
@@ -191,23 +171,23 @@ const PartnerPending = () => {
                 </p>
                 <div className="flex items-center space-x-4">
                   <a 
-                    href="mailto:partners@qiesta.com" 
+                    href="mailto:info@genlink.africa" 
                     className="inline-flex items-center text-slate-300 hover:text-white transition-colors"
                   >
                     <Mail className="mr-2 h-4 w-4" />
-                    partners@qiesta.com
+                    info@genlink.africa
                   </a>
                   <span className="text-slate-500">|</span>
                   <a 
-                    href="#" 
+                    href="https://genlink.africa/contact" 
                     className="inline-flex items-center text-slate-300 hover:text-white transition-colors"
                   >
-                    View Documentation
+                    Contact Support
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </a>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

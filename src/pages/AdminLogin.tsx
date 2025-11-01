@@ -24,7 +24,7 @@ const AdminLogin = () => {
       const { user } = await AdminSignIn({ email, password });
       console.log('Admin sign in successful, user:', user);
       
-      if (!user || user.role !== 'admin') {
+      if (!user || user.userType !== 'admin') {
         throw new Error('Unauthorized access');
       }
 

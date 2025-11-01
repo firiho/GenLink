@@ -412,11 +412,15 @@ const PartnerDashboard = () => {
               <div className="flex items-center space-x-3 mb-4">
                 <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-sm border border-slate-200 dark:border-slate-700">
                   <span className="text-slate-600 dark:text-slate-300 font-semibold text-sm">
-                    {authUser?.firstName?.[0] || 'A'}
+                    {authUser?.firstName?.[0] || authUser?.lastName?.[0] || 'P'}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">{authUser?.firstName} {authUser?.lastName || 'Partner User'}</p>
+                  <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">
+                    {authUser?.firstName && authUser?.lastName 
+                      ? `${authUser.firstName} ${authUser.lastName}`
+                      : authUser?.firstName || authUser?.lastName || 'Partner User'}
+                  </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{authUser?.email}</p>
                 </div>
               </div>

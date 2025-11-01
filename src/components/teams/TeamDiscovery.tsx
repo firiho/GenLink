@@ -21,7 +21,6 @@ import {
 import { TeamService } from '@/services/teamService';
 import { Team } from '@/types/team';
 import TeamCard from './TeamCard';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface TeamDiscoveryProps {

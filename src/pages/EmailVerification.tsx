@@ -8,6 +8,7 @@ import Logo from '@/components/Logo';
 import { auth } from '@/lib/firebase';
 import { sendEmailVerification } from '@/services/authActions';
 import { signOut } from '@/services/auth';
+import { getUserType } from '@/services/user';
 
 const EmailVerification = () => {
   const [user, setUser] = useState(auth.currentUser);
@@ -25,21 +26,36 @@ const EmailVerification = () => {
 
     // Check if email is already verified
     if (auth.currentUser.emailVerified) {
-      // Redirect based on user role
+      // Redirect based on user role using centralized function
       const checkUserRole = async () => {
         try {
-          const { doc, getDoc } = await import('firebase/firestore');
-          const { db } = await import('@/lib/firebase');
-          const userDoc = await getDoc(doc(db, 'users', auth.currentUser!.uid));
-          const userData = userDoc.data();
+          const userData = await getUserType();
           
-          if (userData?.user_type === 'partner') {
-            navigate('/partner/dashboard');
+          if (!userData) {
+            navigate('/signin');
+            return;
+          }
+
+          // Get full user data to check status
+          const { getCurrentUser } = await import('@/services/user');
+          const fullUserData = await getCurrentUser();
+          
+          if (fullUserData?.userType === 'partner') {
+            // Check partner status
+            if (fullUserData.status === 'pending') {
+              navigate('/partner-pending');
+            } else {
+              navigate('/partner/dashboard');
+            }
+          } else if (fullUserData?.userType === 'admin') {
+            navigate('/admin/dashboard');
           } else {
+            // Participant
             navigate('/dashboard');
           }
         } catch (error) {
-          navigate('/dashboard');
+          console.error('Error checking user role:', error);
+          navigate('/signin');
         }
       };
       checkUserRole();
@@ -78,15 +94,27 @@ const EmailVerification = () => {
       if (user.emailVerified) {
         toast.success('Email verified successfully!');
         
-        // Get user role and redirect
-        const { doc, getDoc } = await import('firebase/firestore');
-        const { db } = await import('@/lib/firebase');
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        const userData = userDoc.data();
+        // Get full user data to check type and status
+        const { getCurrentUser } = await import('@/services/user');
+        const fullUserData = await getCurrentUser();
         
-        if (userData?.user_type === 'partner') {
-          navigate('/partner/dashboard');
+        if (!fullUserData) {
+          toast.error('Failed to load user data');
+          navigate('/signin');
+          return;
+        }
+        
+        if (fullUserData.userType === 'partner') {
+          // Check partner status
+          if (fullUserData.status === 'pending') {
+            navigate('/partner-pending');
+          } else {
+            navigate('/partner/dashboard');
+          }
+        } else if (fullUserData.userType === 'admin') {
+          navigate('/admin/dashboard');
         } else {
+          // Participant
           navigate('/dashboard');
         }
       } else {

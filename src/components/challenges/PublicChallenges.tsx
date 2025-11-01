@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { 
   Trophy, Users, ArrowRight, Timer, Search, 
   CalendarDays, Sliders, X, Globe, ChevronDown
@@ -381,7 +380,7 @@ export default function PublicChallenges() {
 
   // Challenge card in list view
   const ChallengeCard = ({ challenge }) => (
-    <motion.div
+    <div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -494,12 +493,12 @@ export default function PublicChallenges() {
          </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 
   // Empty state when no challenges found
   const EmptyState = () => (
-    <motion.div 
+    <div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="text-center py-16 bg-card rounded-lg border border-border"
@@ -525,7 +524,7 @@ export default function PublicChallenges() {
       >
         Clear all filters
       </Button>
-    </motion.div>
+    </div>
   );
 
   return (

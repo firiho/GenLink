@@ -2,14 +2,14 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { User } from '@/types/user';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getCurrentUser } from '@/services/user';
 
 export interface AuthUser extends User {
   uid: any;
   userType: 'partner' | 'participant' | 'admin';
   status?: 'pending' | 'approved';
   firstName?: string;
+  lastName?: string;
   role?: 'partner' | 'participant' | 'admin';
 }
 
@@ -43,39 +43,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       try {
         if (firebaseUser) {
-          const docRef = doc(db, 'users', firebaseUser.uid);
-          const docSnap = await getDoc(docRef);
-          const profileData = docSnap.data();
+          // Use centralized user data fetch
+          const userData = await getCurrentUser();
           
-          console.log('Profile data:', profileData);
+          console.log('User data fetched:', userData);
 
-          // Get additional profile info based on user type
-          let firstName;
-          if (profileData?.user_type === 'participant') {
-            const participantProfile = await getDoc(doc(db, 'profiles', firebaseUser.uid));
-            const participantData = participantProfile.data();
-            firstName = participantData?.firstName;
-          } else if (profileData?.user_type === 'partner' && profileData?.organization_id) {
-            const staffDoc = await getDoc(doc(db, 'organizations', profileData.organization_id, 'staff', firebaseUser.uid));
-            const staffData = staffDoc.data();
-            firstName = staffData?.firstName;
+          if (userData) {
+            const authUser: AuthUser = {
+              uid: firebaseUser.uid,
+              email: userData.email || '',
+              id: userData.id,
+              userType: userData.userType || 'partner',
+              status: userData.status,
+              firstName: userData.firstName,
+              lastName: userData.lastName,
+              aud: '',
+              created_at: userData.createdAt || '',
+              app_metadata: {},
+              user_metadata: {},
+              role: userData.userType || 'partner'
+            };
+
+            setUser(authUser);
+          } else {
+            setUser(null);
           }
-
-          const authUser: AuthUser = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            id: firebaseUser.uid,
-            userType: profileData?.user_type || 'partner',
-            status: profileData?.status,
-            firstName,
-            aud: '',
-            created_at: '',
-            app_metadata: {},
-            user_metadata: {},
-            role: profileData?.user_type || 'partner'
-          };
-
-          setUser(authUser);
         } else {
           setUser(null);
         }

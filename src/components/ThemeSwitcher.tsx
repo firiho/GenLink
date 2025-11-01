@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -58,14 +57,11 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ simpleToggle = false }) =
         className="h-9 w-9 p-0 rounded-lg border border-border hover:bg-accent/5 transition-all duration-200"
         title={`Current: ${currentTheme.label}. Click to cycle themes.`}
       >
-        <motion.div
+        <div
           key={theme}
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.2 }}
         >
           <CurrentIcon className="h-4 w-4" />
-        </motion.div>
+        </div>
         <span className="sr-only">Toggle theme</span>
       </Button>
     );
@@ -79,14 +75,11 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ simpleToggle = false }) =
           size="sm"
           className="h-9 w-9 p-0 rounded-lg border border-border hover:bg-accent/5 transition-all duration-200"
         >
-          <motion.div
+          <div
             key={theme}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.2 }}
           >
             <CurrentIcon className="h-4 w-4" />
-          </motion.div>
+          </div>
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
@@ -108,23 +101,15 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ simpleToggle = false }) =
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/5'
               }`}
             >
-              <motion.div
-                animate={{ 
-                  scale: isActive ? 1.1 : 1,
-                  rotate: isActive ? 360 : 0
-                }}
-                transition={{ duration: 0.3 }}
-              >
+              <div>
                 <Icon className="h-4 w-4" />
-              </motion.div>
+              </div>
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{themeOption.label}</span>
                 <span className="text-xs text-muted-foreground">{themeOption.description}</span>
               </div>
               {isActive && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
+                <div
                   className="ml-auto w-2 h-2 rounded-full bg-accent"
                 />
               )}

@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { MapPin, Award, Github, Twitter, Linkedin, Mail } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -33,7 +32,7 @@ export const PersonCard = ({
   index = 0
 }: PersonCardProps) => {
   return (
-    <motion.div
+    <div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
@@ -160,7 +159,7 @@ export const PersonCard = ({
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

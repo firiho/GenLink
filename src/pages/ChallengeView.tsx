@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Trophy, Calendar, Users, Timer, Award, Clock, Link2, Download, Globe, Copy,
  BarChart2, Share2, BriefcaseBusiness, CalendarDays, Tag, UserPlus
@@ -286,7 +285,7 @@ const handleJoinAsTeam = async (teamId: string) => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <Header />
       <div className="pt-16">
-        <motion.div
+        <div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="min-h-screen pb-20"
@@ -934,7 +933,7 @@ const handleJoinAsTeam = async (teamId: string) => {
               </Tabs>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
       
       {/* Team Join Modal */}

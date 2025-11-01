@@ -1,7 +1,6 @@
 import React from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, Users, Eye, ArrowRight, Sparkles, Github, ExternalLink } from 'lucide-react';
@@ -58,13 +57,13 @@ const Projects = () => {
         {/* Portfolio Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-accent/5 to-transparent" />
-          <motion.div
+          <div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1 }}
             className="absolute top-1/4 right-1/4 w-72 h-72 bg-accent/15 rounded-full blur-3xl"
           />
-          <motion.div
+          <div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.4 }}
@@ -74,7 +73,7 @@ const Projects = () => {
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
-            <motion.div
+            <div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="space-y-8"
@@ -91,7 +90,7 @@ const Projects = () => {
               </div>
 
               {/* Featured Project Preview */}
-              <motion.div
+              <div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
@@ -125,7 +124,7 @@ const Projects = () => {
                     <ExternalLink className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
-              </motion.div>
+              </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
@@ -144,7 +143,7 @@ const Projects = () => {
                   <Eye className="ml-2 h-5 w-5" />
                 </Button>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -152,7 +151,7 @@ const Projects = () => {
       {/* Stats Section */}
       <section className="py-20 relative">
         <div className="container mx-auto px-4">
-          <motion.div
+          <div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto"
@@ -169,14 +168,14 @@ const Projects = () => {
               <div className="text-4xl font-bold text-accent mb-2">25+</div>
               <div className="text-muted-foreground">Categories</div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Featured Projects */}
       <section className="py-24">
         <div className="container mx-auto px-4">
-          <motion.div
+          <div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-16"
@@ -187,15 +186,15 @@ const Projects = () => {
             <p className="text-xl text-muted-foreground text-pretty max-w-2xl mx-auto">
               Discover innovative solutions built by Rwanda's tech community
             </p>
-          </motion.div>
+          </div>
           
-          <motion.div
+          <div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
           >
             {projects.map((project, index) => (
-              <motion.div
+              <div
                 key={project.title}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -281,16 +280,16 @@ const Projects = () => {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Categories Section */}
       <section className="py-24 relative">
         <div className="container mx-auto px-4">
-          <motion.div
+          <div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-16"
@@ -301,15 +300,15 @@ const Projects = () => {
             <p className="text-xl text-muted-foreground text-pretty max-w-2xl mx-auto">
               Find projects that match your interests and expertise
             </p>
-          </motion.div>
+          </div>
           
-          <motion.div
+          <div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-4xl mx-auto"
           >
             {['IoT', 'FinTech', 'Smart City', 'AI/ML', 'Web3', 'HealthTech', 'EdTech', 'AgriTech', 'E-commerce', 'Mobile', 'Data Science', 'Cybersecurity'].map((category, index) => (
-              <motion.div
+              <div
                 key={category}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -322,16 +321,16 @@ const Projects = () => {
                     {category}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Call to Action */}
       <section className="py-24 relative">
         <div className="container mx-auto px-4">
-          <motion.div
+          <div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="max-w-4xl mx-auto text-center"
@@ -363,7 +362,7 @@ const Projects = () => {
                 </Button>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 

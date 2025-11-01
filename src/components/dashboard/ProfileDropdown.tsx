@@ -15,7 +15,7 @@ const ProfileDropdown = ({ user, onSignOut }) => {
         >
           <div className="h-7 w-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700">
             <span className="text-slate-600 dark:text-slate-200 font-semibold text-sm">
-              {user?.firstName?.[0] || 'A'}
+              {user?.firstName?.[0] || user?.lastName?.[0] || 'U'}
             </span>
           </div>
         </Button>
@@ -28,7 +28,11 @@ const ProfileDropdown = ({ user, onSignOut }) => {
             />
             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-slate-200 dark:border-slate-800 py-1 z-40">
               <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-800">
-                <p className="font-medium truncate text-slate-900 dark:text-white">{user?.firstName}</p>
+                <p className="font-medium truncate text-slate-900 dark:text-white">
+                  {user?.firstName && user?.lastName 
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.firstName || user?.lastName || 'User'}
+                </p>
                 <p className="text-xs text-slate-500 dark:text-slate-300 truncate">{user?.email}</p>
               </div>
               <button

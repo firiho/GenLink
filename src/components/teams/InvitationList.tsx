@@ -18,7 +18,6 @@ import {
   LogIn
 } from 'lucide-react';
 import { TeamInvitation } from '@/types/team';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface InvitationListProps {
@@ -169,11 +168,7 @@ export default function InvitationList({ invitations, onRespond, onJoinByCode }:
       ) : (
         <div className="space-y-4">
       {invitations.map((invitation, index) => (
-        <motion.div
-          key={invitation.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
+        <div
         >
           <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-300">
             <CardHeader className="pb-3">
@@ -273,7 +268,7 @@ export default function InvitationList({ invitations, onRespond, onJoinByCode }:
               )}
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       ))}
 
       {/* Response Modal */}

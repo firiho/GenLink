@@ -1,193 +1,260 @@
-import { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs, query, orderBy, where, limit as firestoreLimit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useState, useEffect } from 'react';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
 import { SearchBar } from './SearchBar';
-import { TeamCard } from './TeamCard';
 import { TeamListItem } from './TeamListItem';
 import { Button } from '@/components/ui/button';
-import { Loader2, Users, LayoutGrid, List } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2, SlidersHorizontal } from 'lucide-react';
 import TeamDetailsModal from '@/components/teams/TeamDetailsModal';
 import { Team } from '@/types/team';
+import { useDebounce } from '@/hooks/useDebounce';
+import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+
+// Initialize the cloud function
+const getTeamsFunction = httpsCallable(functions, 'teams');
 
 export const TeamsTab = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
-  const [loadLimit, setLoadLimit] = useState(24);
   const [hasMore, setHasMore] = useState(true);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [cursor, setCursor] = useState<string | null>(null);
+  
+  // Filters
+  const [availabilityFilter, setAvailabilityFilter] = useState<'All' | 'Available' | 'Full'>('All');
+  const [submissionFilter, setSubmissionFilter] = useState<'All' | 'Submitted' | 'Not Submitted'>('All');
 
+  // Debounce search query for optimization
+  const debouncedSearch = useDebounce(searchQuery, 500);
+
+  // Fetch teams when search query or filters change
   useEffect(() => {
-    fetchTeams();
-  }, [loadLimit]);
+    fetchTeams(true);
+  }, [debouncedSearch, availabilityFilter, submissionFilter]);
 
-  const fetchTeams = async () => {
+  const fetchTeams = async (reset: boolean = false) => {
     try {
-      setLoading(true);
-      const teamsRef = collection(db, 'teams');
-      const q = query(
-        teamsRef,
-        where('status', '==', 'active'),
-        where('visibility', '==', 'public'),
-        orderBy('lastActivity', 'desc'),
-        firestoreLimit(loadLimit)
-      );
+      if (reset) {
+        setLoading(true);
+        setCursor(null);
+      } else {
+        setLoadingMore(true);
+      }
 
-      const querySnapshot = await getDocs(q);
-      const fetchedTeams = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        
-        // Convert Firestore timestamps to Date objects
-        const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-        const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
-        const lastActivity = data.lastActivity?.toDate ? data.lastActivity.toDate() : new Date(data.lastActivity);
-        const submittedAt = data.submittedAt?.toDate ? data.submittedAt.toDate() : (data.submittedAt ? new Date(data.submittedAt) : undefined);
-        
-        return {
-          id: doc.id,
-          name: data.name,
-          description: data.description || '',
-          challengeId: data.challengeId,
-          challengeTitle: data.challengeTitle,
-          maxMembers: data.maxMembers,
-          currentMembers: data.currentMembers || 0,
-          status: data.status,
-          visibility: data.visibility,
-          joinableEnabled: data.joinableEnabled,
-          joinableLink: data.joinableLink,
-          joinableCode: data.joinableCode,
-          autoApprove: data.autoApprove,
-          createdBy: data.createdBy,
-          createdAt,
-          updatedAt,
-          lastActivity,
-          hasSubmitted: data.hasSubmitted || false,
-          submittedAt,
-          tags: data.tags || [],
-          admins: data.admins || [],
-          permissions: data.permissions || {}
-        } as Team;
+      const result = await getTeamsFunction({
+        limit: 24,
+        cursor: reset ? null : cursor,
+        searchQuery: debouncedSearch,
+        availabilityFilter,
+        submissionFilter,
       });
 
-      setTeams(fetchedTeams);
-      setHasMore(querySnapshot.docs.length === loadLimit);
+      const data = result.data as {
+        success: boolean;
+        teams: Team[];
+        hasMore: boolean;
+        nextCursor: string | null;
+      };
+
+      if (data.success) {
+        if (reset) {
+          setTeams(data.teams);
+        } else {
+          setTeams(prev => [...prev, ...data.teams]);
+        }
+        setHasMore(data.hasMore);
+        setCursor(data.nextCursor);
+      }
     } catch (error) {
       console.error('Error fetching teams:', error);
+      toast.error('Failed to load teams. Please try again.');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  const filteredTeams = useMemo(() => {
-    if (!searchQuery.trim()) return teams;
-
-    const query = searchQuery.toLowerCase();
-    return teams.filter(team => 
-      team.name.toLowerCase().includes(query) ||
-      team.description?.toLowerCase().includes(query) ||
-      team.challengeTitle?.toLowerCase().includes(query) ||
-      team.tags?.some(tag => tag.toLowerCase().includes(query))
-    );
-  }, [teams, searchQuery]);
-
   const handleTeamClick = (team: Team) => {
-    setSelectedTeam(team);
-    setIsTeamModalOpen(true);
+    // Navigate to team details page
+    window.location.href = `/t/${team.id}`;
   };
 
   const handleLoadMore = () => {
-    setLoadLimit(prev => prev + 24);
+    if (!loadingMore && hasMore) {
+      fetchTeams(false);
+    }
   };
 
-  if (loading && teams.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Loading teams...</p>
-      </div>
-    );
-  }
+  const isInitialLoad = loading && teams.length === 0;
 
   return (
     <div className="space-y-6">
-      {/* Search and Stats */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          <h2 className="text-2xl font-bold">
-            {filteredTeams.length} {filteredTeams.length === 1 ? 'Team' : 'Teams'}
-          </h2>
-        </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search by name, challenge, tags..."
-            className="w-full sm:flex-1 lg:w-96"
-          />
-          <div className="flex items-center gap-1 p-1 bg-muted rounded-full">
+      {/* Search Bar and Filters */}
+      <div className="flex flex-col md:flex-row gap-3 w-full justify-center items-center">
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search by name, challenge, tags..."
+          className="w-full md:max-w-md"
+        />
+        
+        {/* Desktop Filters - Inline */}
+        <div className="hidden md:flex items-center gap-2">
+          <Select value={availabilityFilter} onValueChange={(value) => setAvailabilityFilter(value as typeof availabilityFilter)}>
+            <SelectTrigger className="w-[160px] bg-background">
+              <SelectValue placeholder="Availability" />
+            </SelectTrigger>
+            <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+              <SelectItem value="All">Any Availability</SelectItem>
+              <SelectItem value="Available">Available to Join</SelectItem>
+              <SelectItem value="Full">Full Teams</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={submissionFilter} onValueChange={(value) => setSubmissionFilter(value as typeof submissionFilter)}>
+            <SelectTrigger className="w-[160px] bg-background">
+              <SelectValue placeholder="Submission" />
+            </SelectTrigger>
+            <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+              <SelectItem value="All">Any Status</SelectItem>
+              <SelectItem value="Submitted">Has Submitted</SelectItem>
+              <SelectItem value="Not Submitted">Not Submitted</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {(availabilityFilter !== 'All' || submissionFilter !== 'All') && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setViewMode('list')}
-              className={`flex-1 sm:flex-none rounded-full ${viewMode === 'list' ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`}
+              onClick={() => {
+                setAvailabilityFilter('All');
+                setSubmissionFilter('All');
+              }}
+              className="text-muted-foreground hover:text-foreground"
             >
-              <List className="h-4 w-4 mr-2" />
-              List
+              Clear
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className={`flex-1 sm:flex-none rounded-full ${viewMode === 'grid' ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`}
-            >
-              <LayoutGrid className="h-4 w-4 mr-2" />
-              Grid
-            </Button>
-          </div>
+          )}
         </div>
+
+        {/* Mobile Filters - Popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full md:hidden">
+              <SlidersHorizontal className="h-4 w-4 mr-2" />
+              Filters
+              {(availabilityFilter !== 'All' || submissionFilter !== 'All') && (
+                <span className="ml-2 flex h-2 w-2 rounded-full bg-primary" />
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 bg-card border-border shadow-lg" align="center">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm text-foreground">Availability</h4>
+                <Select value={availabilityFilter} onValueChange={(value) => setAvailabilityFilter(value as typeof availabilityFilter)}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select availability" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+                    <SelectItem value="All">Any Availability</SelectItem>
+                    <SelectItem value="Available">Available to Join</SelectItem>
+                    <SelectItem value="Full">Full Teams</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm text-foreground">Submission Status</h4>
+                <Select value={submissionFilter} onValueChange={(value) => setSubmissionFilter(value as typeof submissionFilter)}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+                    <SelectItem value="All">Any Status</SelectItem>
+                    <SelectItem value="Submitted">Has Submitted</SelectItem>
+                    <SelectItem value="Not Submitted">Not Submitted</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="pt-2 border-t">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setAvailabilityFilter('All');
+                    setSubmissionFilter('All');
+                  }}
+                  className="w-full"
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Teams Display */}
-      {filteredTeams.length > 0 ? (
+      {isInitialLoad ? (
+        /* Loading Skeletons */
+        <div className="space-y-3">
+          {[...Array(10)].map((_, index) => (
+            <div key={index} className="flex items-center gap-4 py-4 border-b border-border last:border-0">
+              <Skeleton className="h-14 w-14 rounded-lg flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-64" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </div>
+              </div>
+              <Skeleton className="h-9 w-24" />
+            </div>
+          ))}
+        </div>
+      ) : teams.length > 0 ? (
         <>
-          {viewMode === 'list' ? (
-            <div className="space-y-2">
-              {filteredTeams.map((team, index) => (
-                <TeamListItem
-                  key={team.id}
-                  {...team}
-                  onClick={() => handleTeamClick(team)}
-                  index={index}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredTeams.map((team, index) => (
-                <TeamCard
-                  key={team.id}
-                  {...team}
-                  onClick={() => handleTeamClick(team)}
-                  index={index}
-                />
-              ))}
-            </div>
-          )}
+          <div className="space-y-0 divide-y divide-border">
+            {teams.map((team, index) => (
+              <TeamListItem
+                key={team.id}
+                {...team}
+                onClick={() => handleTeamClick(team)}
+                index={index}
+              />
+            ))}
+          </div>
 
           {/* Load More */}
-          {hasMore && !searchQuery && (
+          {hasMore && (
             <div className="flex justify-center pt-8">
               <Button
                 onClick={handleLoadMore}
                 variant="outline"
                 size="lg"
-                disabled={loading}
+                disabled={loadingMore}
                 className="min-w-[200px]"
               >
-                {loading ? (
+                {loadingMore ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Loading...
@@ -201,7 +268,6 @@ export const TeamsTab = () => {
         </>
       ) : (
         <div className="text-center py-20">
-          <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
           <h3 className="text-xl font-semibold mb-2">No teams found</h3>
           <p className="text-muted-foreground">
             {searchQuery ? 'Try adjusting your search query' : 'No public teams available yet'}

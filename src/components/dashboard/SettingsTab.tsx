@@ -2,7 +2,6 @@ import { Bell, Key, Mail, Shield, User, Globe, Palette, Save, Settings as Settin
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -57,9 +56,7 @@ export default function SettingsTab({user}) {
             <TabsContent value="general" className="space-y-6 mt-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     {/* Account Information */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                    <div
                         className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-6"
                     >
                         <div className="flex items-center space-x-3 mb-6">
@@ -80,22 +77,31 @@ export default function SettingsTab({user}) {
                                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Contact support to change your email</p>
                             </div>
                             
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Full Name</label>
-                                <Input 
-                                    value={user?.displayName || ''} 
-                                    className="w-full bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600"
-                                    placeholder="Enter your full name"
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">First Name</label>
+                                    <Input 
+                                        value={user?.firstName || ''} 
+                                        className="w-full bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600"
+                                        placeholder="Enter your first name"
+                                        disabled
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Last Name</label>
+                                    <Input 
+                                        value={user?.lastName || ''} 
+                                        className="w-full bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600"
+                                        placeholder="Enter your last name"
+                                        disabled
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
 
                     {/* Change Password */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
+                    <div
                         className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-6"
                     >
                         <div className="flex items-center space-x-3 mb-6">
@@ -142,15 +148,13 @@ export default function SettingsTab({user}) {
                                 </Button>
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
             </TabsContent>
 
             {/* Notifications Tab */}
             <TabsContent value="notifications" className="space-y-6 mt-6">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                <div
                     className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-6"
                 >
                     <div className="flex items-center space-x-3 mb-6">
@@ -195,14 +199,12 @@ export default function SettingsTab({user}) {
                             </div>
                         ))}
                     </div>
-                </motion.div>
+                </div>
             </TabsContent>
 
             {/* Appearance Tab */}
             <TabsContent value="appearance" className="space-y-6 mt-6">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                <div
                     className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-6"
                 >
                     <div className="flex items-center space-x-3 mb-6">
@@ -249,14 +251,12 @@ export default function SettingsTab({user}) {
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </div>
             </TabsContent>
 
             {/* Security Tab */}
             <TabsContent value="security" className="space-y-6 mt-6">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                <div
                     className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-6"
                 >
                     <div className="flex items-center space-x-3 mb-6">
@@ -301,22 +301,19 @@ export default function SettingsTab({user}) {
                             Data & Privacy Settings
                         </Button>
                     </div>
-                </motion.div>
+                </div>
             </TabsContent>
         </Tabs>
 
         {/* Save Button */}
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+        <div
             className="flex justify-end"
         >
             <Button className="bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-200">
                 <Save className="h-4 w-4 mr-2" />
                 Save Changes
             </Button>
-        </motion.div>
+        </div>
     </div>
   )
 }

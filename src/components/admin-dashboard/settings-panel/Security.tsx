@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -271,7 +270,7 @@ export default function Security() {
 
         <div className="space-y-4">
           {recentActivity.map((activity) => (
-            <motion.div
+            <div
               key={activity.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -303,7 +302,7 @@ export default function Security() {
                   actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
                 )}>{activity.timestamp}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </Card>

@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { ArrowRight, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -79,11 +78,7 @@ export default function FeaturedChallenges() {
       </div>
       
       <div className="container mx-auto px-4 relative">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+        <div
           className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-16 text-center lg:text-left"
         >
           <div className="flex-1 mb-8 lg:mb-0">
@@ -103,7 +98,7 @@ export default function FeaturedChallenges() {
             </p>
           </div>
           <Link to="/challenges" className="w-full lg:w-auto">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <div>
               <Button 
                 variant="outline"
                 className="border-border hover:bg-accent/5 text-foreground font-medium px-6 py-3 rounded-lg transition-all duration-200 group w-full lg:w-auto"
@@ -111,26 +106,17 @@ export default function FeaturedChallenges() {
                 Explore All Challenges
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
-            </motion.div>
+            </div>
           </Link>
-        </motion.div>
+        </div>
         
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+        <div 
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {loading ? (
             // Clean Loading Skeletons
             [...Array(3)].map((_, index) => (
-              <motion.div
-                key={`skeleton-${index}`}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15, duration: 0.6 }}
+              <div
                 className="group relative"
               >
                 <div className="p-6 rounded-lg border border-border bg-card">
@@ -142,24 +128,18 @@ export default function FeaturedChallenges() {
                     <Skeleton className="h-4 w-24 bg-muted" />
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))
           ) : (
             hackathons.map((hackathon, index) => (
-              <motion.div
-                key={hackathon.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15, duration: 0.6 }}
-                whileHover={{ y: -4, scale: 1.02 }}
+              <div
                 className="transform transition-all duration-200"
               >
                 <HackathonCard {...hackathon} />
-              </motion.div>
+              </div>
             ))
           )}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

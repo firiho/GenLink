@@ -19,6 +19,10 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import ChallengeView from '@/pages/ChallengeView';
 import VerifyAction from '@/pages/VerifyAction';
 import EmailVerification from '@/pages/EmailVerification';
+import Onboarding from '@/pages/Onboarding';
+import UserProfile from '@/pages/UserProfile';
+import TeamDetails from '@/pages/TeamDetails';
+import EventDetails from '@/pages/EventDetails';
 import { auth } from '@/lib/firebase';
 
 const PartnerRoute = ({ children }) => {
@@ -99,8 +103,19 @@ function App() {
             <Route path="/challenge/:id" element={<ChallengeView />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/u/:id" element={<UserProfile />} />
+            <Route path="/t/:id" element={<TeamDetails />} />
+            <Route path="/e/:id" element={<EventDetails />} />
             <Route path="/verify" element={<VerifyAction />} />
             <Route path="/email-verification" element={<EmailVerification />} />
+            <Route 
+              path="/onboarding" 
+              element={
+                <ParticipantRoute>
+                  <Onboarding />
+                </ParticipantRoute>
+              } 
+            />
             {/* Dashboard routes with wildcards for deep linking */}
             <Route 
               path="/dashboard/*" 

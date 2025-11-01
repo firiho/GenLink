@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -112,7 +111,7 @@ const Communities = () => {
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <motion.div
+          <div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -136,7 +135,7 @@ const Communities = () => {
                 <stat.icon className={`h-6 w-6 ${stat.color}`} />
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 
@@ -213,7 +212,7 @@ const Communities = () => {
               actualTheme === 'dark' ? "divide-slate-700" : "divide-gray-200"
             )}>
               {filteredCommunities.map((community) => (
-                <motion.tr
+                <tr
                   key={community.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -293,7 +292,7 @@ const Communities = () => {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>

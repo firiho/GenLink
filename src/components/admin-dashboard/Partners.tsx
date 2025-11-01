@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -243,7 +242,7 @@ const Partners = () => {
               {filteredPartners.map((partner) => {
                 const StatusIcon = statusIcons[partner.status];
                 return (
-                  <motion.tr
+                  <tr
                     key={partner.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -318,7 +317,7 @@ const Partners = () => {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
-                  </motion.tr>
+                  </tr>
                 );
               })}
             </tbody>

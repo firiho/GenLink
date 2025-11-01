@@ -2,7 +2,6 @@ import { ArrowLeft, FileText, Users, Award, Calendar, ExternalLink, Clock, Share
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { motion } from 'framer-motion';
 
 export default function PreviewChallenge({ challenge, setActiveView }) {
   if (!challenge) {
@@ -82,7 +81,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
       </div>
 
       {/* Challenge header */}
-      <motion.div 
+      <div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative rounded-xl overflow-hidden"
@@ -113,11 +112,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
             </p>
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Challenge overview cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <motion.div 
+        <div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -132,9 +131,9 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
               <p className="text-lg font-semibold text-slate-900 dark:text-white">${challenge.total_prize?.toLocaleString() || '0'}</p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div 
+        <div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -149,9 +148,9 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
               <p className="text-lg font-semibold text-slate-900 dark:text-white">{formattedDate(challenge.deadline)}</p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div 
+        <div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -166,7 +165,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
               <p className="text-lg font-semibold text-slate-900 dark:text-white">{calculateDaysRemaining()}</p>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Challenge details */}
@@ -208,7 +207,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
-              <motion.div 
+              <div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
@@ -217,9 +216,9 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                 <div className="prose max-w-none">
                   <p className="text-slate-700 dark:text-slate-300">{challenge.description}</p>
                 </div>
-              </motion.div>
+              </div>
 
-              <motion.div 
+              <div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1 }}
@@ -309,10 +308,10 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                     </div>
                   </div>
                 )}
-              </motion.div>
+              </div>
 
               {challenge.categories?.length > 0 && (
-                <motion.div 
+                <div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
@@ -330,11 +329,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                       </Badge>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {challenge.timeline?.length > 0 && (
-                <motion.div 
+                <div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
@@ -356,13 +355,13 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                       </div>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               )}
             </TabsContent>
 
             <TabsContent value="details" className="space-y-6">
               {challenge.requirements && (
-                <motion.div 
+                <div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
@@ -371,11 +370,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   <div className="prose max-w-none">
                     <p className="text-slate-700 dark:text-slate-300">{challenge.requirements}</p>
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {challenge.evaluationCriteria && (
-                <motion.div 
+                <div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.1 }}
@@ -385,11 +384,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   <div className="prose max-w-none">
                     <p className="text-slate-700 dark:text-slate-300">{challenge.evaluationCriteria}</p>
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {challenge.skills?.length > 0 && (
-                <motion.div 
+                <div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
@@ -407,11 +406,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                       </Badge>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {challenge.termsAndConditions && (
-                <motion.div 
+                <div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
@@ -421,13 +420,13 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   <div className="prose max-w-none">
                     <p className="text-slate-700 dark:text-slate-300">{challenge.termsAndConditions}</p>
                   </div>
-                </motion.div>
+                </div>
               )}
             </TabsContent>
 
             <TabsContent value="resources" className="space-y-6">
               {challenge.resources?.length > 0 ? (
-                <motion.div 
+                <div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
@@ -463,7 +462,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                       </div>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               ) : (
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm text-center border border-slate-200 dark:border-slate-800">
                   <p className="text-slate-500 dark:text-slate-400">No resources have been added for this challenge.</p>
@@ -473,7 +472,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
 
             <TabsContent value="faq" className="space-y-6">
               {challenge.faq?.length > 0 ? (
-                <motion.div 
+                <div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
@@ -487,7 +486,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                       </div>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               ) : (
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm text-center border border-slate-200 dark:border-slate-800">
                   <p className="text-slate-500 dark:text-slate-400">No FAQs have been added for this challenge.</p>
@@ -496,7 +495,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
             </TabsContent>
 
             <TabsContent value="submission" className="space-y-6">
-              <motion.div 
+              <div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
@@ -510,10 +509,10 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                     {challenge.submissionFormat === 'custom' && 'This challenge has custom submission requirements.'}
                   </p>
                 </div>
-              </motion.div>
+              </div>
               
               {challenge.maxParticipants && (
-                <motion.div 
+                <div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.1 }}
@@ -521,11 +520,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                 >
                   <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Participation Limit</h2>
                   <p className="text-slate-700 dark:text-slate-300">This challenge is limited to {challenge.maxParticipants} participants.</p>
-                </motion.div>
+                </div>
               )}
 
               {challenge.allowTeams && (
-                <motion.div 
+                <div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
@@ -533,7 +532,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                 >
                   <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Team Information</h2>
                   <p className="text-slate-700 dark:text-slate-300">This challenge allows team participation with up to {challenge.maxTeamSize || 'unlimited'} members per team.</p>
-                </motion.div>
+                </div>
               )}
             </TabsContent>
           </Tabs>
@@ -542,7 +541,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Organization info */}
-          <motion.div 
+          <div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
@@ -580,10 +579,10 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                 </p>
               )}
             </div>
-          </motion.div>
+          </div>
 
           {/* Challenge stats */}
-          <motion.div 
+          <div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
@@ -614,11 +613,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                 </span>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Judges */}
           {challenge.judges?.length > 0 && (
-            <motion.div 
+            <div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
@@ -641,11 +640,11 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Share */}
-          <motion.div 
+          <div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
@@ -656,7 +655,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
               <Share2 className="h-4 w-4 mr-2" />
               Copy Challenge Link
             </Button>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

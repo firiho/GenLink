@@ -1,7 +1,6 @@
 import React from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
@@ -17,7 +16,7 @@ const Challenges = () => {
         {/* Subtle Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-primary/5" />
-          <motion.div
+          <div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1 }}
@@ -27,7 +26,7 @@ const Challenges = () => {
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto">
-            <motion.div
+            <div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-center"
@@ -38,7 +37,7 @@ const Challenges = () => {
               <p className="text-xl text-muted-foreground">
                 Find and join exciting challenges that push your limits
               </p>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
@@ -49,7 +48,7 @@ const Challenges = () => {
       {/* Call to Action */}
       <section className="py-20 relative">
         <div className="container mx-auto px-4">
-          <motion.div
+          <div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="max-w-3xl mx-auto text-center"
@@ -70,7 +69,7 @@ const Challenges = () => {
               Get Started Now
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-          </motion.div>
+          </div>
         </div>
       </section>
 

@@ -16,7 +16,6 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import { Team } from '@/types/team';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface TeamCardProps {
@@ -73,10 +72,7 @@ export default function TeamCard({ team, onManage, onChat, onViewDetails, showAc
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+    <div
       className="group"
     >
       <Card 
@@ -256,6 +252,6 @@ export default function TeamCard({ team, onManage, onChat, onViewDetails, showAc
           )}
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 }

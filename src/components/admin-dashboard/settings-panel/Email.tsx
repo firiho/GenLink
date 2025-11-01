@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -181,7 +180,7 @@ export default function Email() {
 
         <div className="space-y-4">
           {emailLogs.map((log) => (
-            <motion.div
+            <div
               key={log.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -204,7 +203,7 @@ export default function Email() {
                 </p>
                 <p className="text-sm text-gray-500">{log.timestamp}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </Card>

@@ -3,7 +3,6 @@ import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { Partners } from '@/components/Partners';
 import { Footer } from '@/components/Footer';
-import { motion } from 'framer-motion';
 import { ArrowRight, Trophy, Users, Calendar, Star, Award, Sparkles, Code, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -56,7 +55,7 @@ const Index = () => {
         </div>
         
         <div className="container mx-auto px-4 relative">
-          <motion.div
+          <div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -76,11 +75,11 @@ const Index = () => {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
               Celebrating the visionaries who built tomorrow's solutions today
             </p>
-          </motion.div>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {winners.map((winner, index) => (
-              <motion.div
+              <div
                 key={winner.name}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -118,7 +117,7 @@ const Index = () => {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -129,7 +128,7 @@ const Index = () => {
         {/* Minimal Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-tech-grid opacity-[0.01]" />
-          <motion.div 
+          <div 
             animate={{ 
               scale: [1, 1.05, 1],
               opacity: [0.1, 0.2, 0.1]
@@ -144,14 +143,14 @@ const Index = () => {
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <motion.div
+          <div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             className="max-w-4xl mx-auto text-center"
           >
-            <motion.div
+            <div
               initial={{ scale: 0.9 }}
               whileInView={{ scale: 1 }}
               viewport={{ once: true }}
@@ -161,9 +160,9 @@ const Index = () => {
                 <Sparkles className="w-4 h-4" />
                 Join the Innovation Revolution
               </span>
-            </motion.div>
+            </div>
             
-            <motion.h2 
+            <h2 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -173,9 +172,9 @@ const Index = () => {
               <span className="gradient-text">Transform Ideas Into</span>
               <br />
               <span className="gradient-text-primary">Reality</span>
-            </motion.h2>
+            </h2>
             
-            <motion.p 
+            <p 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -184,9 +183,9 @@ const Index = () => {
             >
               Connect with visionary minds, access cutting-edge resources, and build solutions 
               that shape the future of technology across Africa and beyond.
-            </motion.p>
+            </p>
             
-            <motion.div 
+            <div 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -194,7 +193,7 @@ const Index = () => {
               className="flex flex-col sm:flex-row gap-4 justify-center"
             >
               <Link to="/signup">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button 
                     size="lg" 
                     className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-lg px-8 py-4 rounded-lg shadow-modern hover:shadow-lg transition-all duration-200"
@@ -202,10 +201,10 @@ const Index = () => {
                     Start Building Today
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
-                </motion.div>
+                </div>
               </Link>
               <Link to="/challenges">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button 
                     size="lg" 
                     variant="outline"
@@ -214,10 +213,10 @@ const Index = () => {
                     Explore Challenges
                     <Trophy className="ml-2 h-5 w-5" />
                   </Button>
-                </motion.div>
+                </div>
               </Link>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </section>
 

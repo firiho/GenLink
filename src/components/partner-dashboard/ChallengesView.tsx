@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
 import { Plus, Search, FileText, Eye, PenTool, Play, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -229,7 +228,7 @@ const ChallengeCard = ({
   onArchive
 }: ChallengeCardProps) => {
   return (
-    <motion.div
+    <div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-200 dark:border-slate-800"
@@ -337,6 +336,6 @@ const ChallengeCard = ({
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }; 

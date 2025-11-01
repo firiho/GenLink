@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { Calendar, MapPin, Users, Clock, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,7 @@ export const EventCard = ({
   index = 0
 }: EventCardProps) => {
   return (
-    <motion.div
+    <div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
@@ -129,7 +128,7 @@ export const EventCard = ({
           </Button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { 
   Github, Twitter, Linkedin, Mail, 
   ArrowUpRight, Heart
@@ -50,61 +49,44 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand Section */}
           <div className="lg:col-span-2 space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+            <div
               className="flex items-start"
             >
               <Logo class_name="transform hover:scale-105 transition-all duration-200" />
-            </motion.div>
+            </div>
             
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
+            <p
               className="text-muted-foreground text-base leading-relaxed max-w-md text-pretty"
             >
               Empowering innovation across Africa through cutting-edge technology challenges. 
               Join us in building tomorrow's solutions today.
-            </motion.p>
+            </p>
             
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
+            <div
               className="flex items-center gap-4"
             >
               {socialLinks.map((social, i) => (
-                <motion.a
+                <a
                   key={i}
                   href={social.href}
                   aria-label={social.label}
-                  whileHover={{ y: -2, scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   className="p-3 rounded-xl bg-card/50 backdrop-blur-sm text-muted-foreground hover:text-accent 
                     transition-all duration-200 hover:bg-accent/10 border border-border/50 hover:border-accent/30 
                     hover:shadow-lg hover:shadow-accent/10"
                 >
                   <social.icon className="h-5 w-5" />
-                </motion.a>
+                </a>
               ))}
               <div className="ml-2">
                 <ThemeSwitcher />
               </div>
-            </motion.div>
+            </div>
           </div>
 
           {/* Links Sections */}
           {Object.entries(links).map(([title, items], sectionIndex) => (
-            <motion.div
+            <div
               key={title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 * sectionIndex }}
               className="space-y-4"
             >
               <h3 className="font-semibold text-foreground mb-4 text-base">
@@ -117,12 +99,8 @@ export const Footer = () => {
                   const isExistingPage = existingPages.includes(item.href);
                   
                   return (
-                    <motion.li
+                    <li
                       key={item.label}
-                      initial={{ opacity: 0, x: -10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.05 * itemIndex }}
                     >
                       {isExistingPage ? (
                         <Link
@@ -140,20 +118,16 @@ export const Footer = () => {
                           {/* {item.comment} */}
                         </div>
                       )}
-                    </motion.li>
+                    </li>
                   );
                 })}
               </ul>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Bottom Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
+        <div
           className="mt-12 pt-8"
         >
           <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-6" />
@@ -180,7 +154,7 @@ export const Footer = () => {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </footer>
   );

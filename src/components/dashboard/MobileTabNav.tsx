@@ -1,6 +1,5 @@
 import { LayoutDashboard, Trophy, Users, Settings, User } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 
 const MobileTabNav = ({ activeView, setActiveView }) => (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-700/50 z-40 px-2 pb-safe">
@@ -12,7 +11,7 @@ const MobileTabNav = ({ activeView, setActiveView }) => (
           { icon: User, label: 'Profile', value: 'profile' },
           { icon: Settings, label: 'Settings', value: 'settings' }
         ].map(tab => (
-          <motion.button
+          <button
             key={tab.value}
             onClick={() => setActiveView(tab.value)}
             className={cn(
@@ -22,14 +21,10 @@ const MobileTabNav = ({ activeView, setActiveView }) => (
                 ? "text-slate-900 dark:text-white" 
                 : "text-slate-500 dark:text-slate-400"
             )}
-            whileTap={{ scale: 0.95 }}
           >
             {activeView === tab.value && (
-              <motion.div
-                layoutId="activeTab"
+              <div
                 className="absolute inset-0 bg-slate-100 dark:bg-slate-800 rounded-xl"
-                initial={false}
-                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
               />
             )}
             <div className="relative z-10 flex flex-col items-center">
@@ -48,7 +43,7 @@ const MobileTabNav = ({ activeView, setActiveView }) => (
                 {tab.label}
               </span>
             </div>
-          </motion.button>
+          </button>
         ))}
       </div>
     </div>

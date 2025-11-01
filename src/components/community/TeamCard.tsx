@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { Users, TrendingUp, Calendar, Lock, Globe, Award } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -9,7 +8,7 @@ interface TeamCardProps {
   challengeTitle?: string;
   currentMembers: number;
   maxMembers: number;
-  visibility: 'public' | 'private';
+  visibility: 'public' | 'invite-only';
   tags?: string[];
   createdAt?: Date;
   hasSubmitted?: boolean;
@@ -34,7 +33,7 @@ export const TeamCard = ({
   const isNearlyFull = memberPercentage >= 80;
   
   return (
-    <motion.div
+    <div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
@@ -47,7 +46,7 @@ export const TeamCard = ({
         <div className="h-24 bg-gradient-to-br from-primary/10 via-accent/5 to-primary/15 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent"></div>
           <div className="absolute top-3 right-3 flex items-center gap-2">
-            {visibility === 'private' ? (
+            {visibility === 'invite-only' ? (
               <div className="px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm flex items-center gap-1 text-xs">
                 <Lock className="w-3 h-3" />
                 <span>Private</span>
@@ -136,7 +135,7 @@ export const TeamCard = ({
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

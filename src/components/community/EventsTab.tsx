@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
 import { SearchBar } from './SearchBar';
-import { EventCard } from './EventCard';
 import { EventListItem } from './EventListItem';
 import { Button } from '@/components/ui/button';
-import { Calendar, Filter, LayoutGrid, List } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Filter, Loader2, SlidersHorizontal } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -11,6 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { useDebounce } from '@/hooks/useDebounce';
+import { toast } from 'sonner';
 
 // Temporary event data - will be replaced with Firebase integration
 const TEMP_EVENTS = [
@@ -162,122 +171,267 @@ const TEMP_EVENTS = [
 
 type EventType = 'All' | 'In-Person' | 'Online' | 'Hybrid';
 
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  type: 'In-Person' | 'Online' | 'Hybrid';
+  attendees: number;
+  maxAttendees: number;
+  category: string;
+}
+
+// Initialize the cloud function
+const getEventsFunction = httpsCallable(functions, 'events');
+
 export const EventsTab = () => {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<EventType>('All');
-  const [displayLimit, setDisplayLimit] = useState(12);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [dateFilter, setDateFilter] = useState<'All' | 'Upcoming' | 'This Week' | 'This Month'>('All');
+  const [hasMore, setHasMore] = useState(true);
+  const [cursor, setCursor] = useState<string | null>(null);
 
-  const filteredEvents = useMemo(() => {
-    let filtered = TEMP_EVENTS;
+  // Debounce search query for optimization
+  const debouncedSearch = useDebounce(searchQuery, 500);
 
-    // Apply type filter
-    if (typeFilter !== 'All') {
-      filtered = filtered.filter(event => event.type === typeFilter);
+  // Fetch events when search query or filters change
+  useEffect(() => {
+    fetchEvents(true);
+  }, [debouncedSearch, typeFilter, categoryFilter, dateFilter]);
+
+  const fetchEvents = async (reset: boolean = false) => {
+    try {
+      if (reset) {
+        setLoading(true);
+        setCursor(null);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const result = await getEventsFunction({
+        limit: 24,
+        cursor: reset ? null : cursor,
+        searchQuery: debouncedSearch,
+        typeFilter: typeFilter,
+        categoryFilter: categoryFilter !== 'All' ? categoryFilter : undefined,
+        dateFilter: dateFilter,
+      });
+
+      const data = result.data as {
+        success: boolean;
+        events: Event[];
+        hasMore: boolean;
+        nextCursor: string | null;
+      };
+
+      if (data.success) {
+        if (reset) {
+          setEvents(data.events);
+        } else {
+          setEvents(prev => [...prev, ...data.events]);
+        }
+        setHasMore(data.hasMore);
+        setCursor(data.nextCursor);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      toast.error('Failed to load events. Please try again.');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
-
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(event => 
-        event.title.toLowerCase().includes(query) ||
-        event.description.toLowerCase().includes(query) ||
-        event.location.toLowerCase().includes(query) ||
-        event.category.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }, [searchQuery, typeFilter]);
-
-  const displayedEvents = filteredEvents.slice(0, displayLimit);
-  const hasMore = displayLimit < filteredEvents.length;
+  };
 
   const handleLoadMore = () => {
-    setDisplayLimit(prev => prev + 12);
+    if (!loadingMore && hasMore) {
+      fetchEvents(false);
+    }
   };
 
   return (
     <div className="space-y-6">
       {/* Search and Filters */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          <h2 className="text-2xl font-bold">
-            {filteredEvents.length} {filteredEvents.length === 1 ? 'Event' : 'Events'}
-          </h2>
-        </div>
+      <div className="flex flex-col md:flex-row gap-3 w-full justify-center items-center">
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search events by name, location, category..."
+          className="w-full md:max-w-md"
+        />
         
-        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search events by name, location, category..."
-            className="w-full sm:flex-1 lg:w-80"
-          />
+        {/* Desktop Filters - Inline */}
+        <div className="hidden md:flex items-center gap-2 flex-wrap justify-center">
+          <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as EventType)}>
+            <SelectTrigger className="w-[140px] bg-background">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+              <SelectItem value="All">Any Type</SelectItem>
+              <SelectItem value="In-Person">In-Person</SelectItem>
+              <SelectItem value="Online">Online</SelectItem>
+              <SelectItem value="Hybrid">Hybrid</SelectItem>
+            </SelectContent>
+          </Select>
           
-          <div className="flex gap-2">
-            <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as EventType)}>
-              <SelectTrigger className="w-full sm:w-[140px] bg-background">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Types</SelectItem>
-                <SelectItem value="In-Person">In-Person</SelectItem>
-                <SelectItem value="Online">Online</SelectItem>
-                <SelectItem value="Hybrid">Hybrid</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <div className="flex items-center gap-1 p-1 bg-muted rounded-full">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className={`rounded-full ${viewMode === 'list' ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className={`rounded-full ${viewMode === 'grid' ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[140px] bg-background">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+              <SelectItem value="All">Any Category</SelectItem>
+              <SelectItem value="Workshop">Workshop</SelectItem>
+              <SelectItem value="Networking">Networking</SelectItem>
+              <SelectItem value="Hackathon">Hackathon</SelectItem>
+              <SelectItem value="Conference">Conference</SelectItem>
+              <SelectItem value="Meetup">Meetup</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={dateFilter} onValueChange={(value) => setDateFilter(value as typeof dateFilter)}>
+            <SelectTrigger className="w-[140px] bg-background">
+              <SelectValue placeholder="Date" />
+            </SelectTrigger>
+            <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+              <SelectItem value="All">Any Time</SelectItem>
+              <SelectItem value="Upcoming">Upcoming</SelectItem>
+              <SelectItem value="This Week">This Week</SelectItem>
+              <SelectItem value="This Month">This Month</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {(typeFilter !== 'All' || categoryFilter !== 'All' || dateFilter !== 'All') && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setTypeFilter('All');
+                setCategoryFilter('All');
+                setDateFilter('All');
+              }}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Clear
+            </Button>
+          )}
         </div>
+
+        {/* Mobile Filters - Popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full md:hidden">
+              <SlidersHorizontal className="h-4 w-4 mr-2" />
+              Filters
+              {(typeFilter !== 'All' || categoryFilter !== 'All' || dateFilter !== 'All') && (
+                <span className="ml-2 flex h-2 w-2 rounded-full bg-primary" />
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 bg-card border-border shadow-lg" align="center">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm text-foreground">Event Type</h4>
+                <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as EventType)}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+                    <SelectItem value="All">Any Type</SelectItem>
+                    <SelectItem value="In-Person">In-Person</SelectItem>
+                    <SelectItem value="Online">Online</SelectItem>
+                    <SelectItem value="Hybrid">Hybrid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm text-foreground">Category</h4>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+                    <SelectItem value="All">Any Category</SelectItem>
+                    <SelectItem value="Workshop">Workshop</SelectItem>
+                    <SelectItem value="Networking">Networking</SelectItem>
+                    <SelectItem value="Hackathon">Hackathon</SelectItem>
+                    <SelectItem value="Conference">Conference</SelectItem>
+                    <SelectItem value="Meetup">Meetup</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm text-foreground">Date Range</h4>
+                <Select value={dateFilter} onValueChange={(value) => setDateFilter(value as typeof dateFilter)}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select date range" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+                    <SelectItem value="All">Any Time</SelectItem>
+                    <SelectItem value="Upcoming">Upcoming</SelectItem>
+                    <SelectItem value="This Week">This Week</SelectItem>
+                    <SelectItem value="This Month">This Month</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="pt-2 border-t">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setTypeFilter('All');
+                    setCategoryFilter('All');
+                    setDateFilter('All');
+                  }}
+                  className="w-full"
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Events Display */}
-      {displayedEvents.length > 0 ? (
+      {loading ? (
+        /* Loading Skeletons */
+        <div className="space-y-3">
+          {[...Array(10)].map((_, index) => (
+            <div key={index} className="flex items-center gap-4 py-4 border-b border-border last:border-0">
+              <Skeleton className="h-14 w-14 rounded-lg flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-56" />
+                <Skeleton className="h-4 w-40" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                  <Skeleton className="h-6 w-32 rounded-full" />
+                </div>
+              </div>
+              <Skeleton className="h-9 w-24" />
+            </div>
+          ))}
+        </div>
+      ) : events.length > 0 ? (
         <>
-          {viewMode === 'list' ? (
-            <div className="space-y-2">
-              {displayedEvents.map((event, index) => (
-                <EventListItem
-                  key={event.id}
-                  {...event}
-                  onClick={() => console.log('Event clicked:', event.id)}
-                  index={index}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {displayedEvents.map((event, index) => (
-                <EventCard
-                  key={event.id}
-                  {...event}
-                  onClick={() => console.log('Event clicked:', event.id)}
-                  index={index}
-                />
-              ))}
-            </div>
-          )}
+          <div className="space-y-0 divide-y divide-border">
+            {events.map((event, index) => (
+              <EventListItem
+                key={event.id}
+                {...event}
+                onClick={() => window.location.href = `/e/${event.id}`}
+                index={index}
+              />
+            ))}
+          </div>
 
           {/* Load More */}
           {hasMore && (
@@ -286,16 +440,23 @@ export const EventsTab = () => {
                 onClick={handleLoadMore}
                 variant="outline"
                 size="lg"
+                disabled={loadingMore}
                 className="min-w-[200px]"
               >
-                Load More Events
+                {loadingMore ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  'Load More Events'
+                )}
               </Button>
             </div>
           )}
         </>
       ) : (
         <div className="text-center py-20">
-          <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
           <h3 className="text-xl font-semibold mb-2">No events found</h3>
           <p className="text-muted-foreground">
             {searchQuery || typeFilter !== 'All' 

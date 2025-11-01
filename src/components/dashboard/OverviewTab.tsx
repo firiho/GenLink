@@ -183,7 +183,14 @@ export default function OverviewTab({setActiveView, user}) {
 
     return (
         <div className="space-y-4 sm:space-y-6 lg:space-y-8">
-            <WelcomeSection title={`Welcome back, ${user?.firstName || 'User'}!`} subtitle={"Here's what's happening with your challenges and progress"} />
+            <WelcomeSection 
+                title={`Welcome back, ${
+                    user?.firstName && user?.lastName 
+                        ? `${user.firstName} ${user.lastName}`
+                        : user?.firstName || user?.lastName || 'User'
+                }!`} 
+                subtitle={"Here's what's happening with your challenges and progress"} 
+            />
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">

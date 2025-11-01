@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
-import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { TeamService } from '@/services/teamService';
@@ -218,10 +217,7 @@ export default function TeamsTab({ initialTab = 'my-teams' }: TeamsTabProps) {
             </div>
           ) : teams.length === 0 ? (
             <div className="text-center py-16">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
+              <div
               >
                 <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl flex items-center justify-center border-2 border-blue-100 dark:border-blue-800">
                   <Users className="h-10 w-10 text-blue-600 dark:text-blue-400" />
@@ -248,7 +244,7 @@ export default function TeamsTab({ initialTab = 'my-teams' }: TeamsTabProps) {
                     Discover Teams
                   </Button>
                 </div>
-              </motion.div>
+              </div>
             </div>
           ) : (
             <>
@@ -276,11 +272,7 @@ export default function TeamsTab({ initialTab = 'my-teams' }: TeamsTabProps) {
               {/* Teams Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {teams.map((team, index) => (
-                  <motion.div
-                    key={team.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  <div
                   >
                     <TeamCard 
                       team={team}
@@ -289,7 +281,7 @@ export default function TeamsTab({ initialTab = 'my-teams' }: TeamsTabProps) {
                       onChat={(t) => toast.info('Team chat coming soon')}
                       onManage={handleManageTeam}
                     />
-                  </motion.div>
+                  </div>
                 ))}
               </div>
 

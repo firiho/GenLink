@@ -1,16 +1,33 @@
-import { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs, query, orderBy, limit as firestoreLimit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useState, useEffect } from 'react';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
 import { SearchBar } from './SearchBar';
-import { PersonCard } from './PersonCard';
 import { PersonListItem } from './PersonListItem';
 import { Button } from '@/components/ui/button';
-import { Loader2, Users, LayoutGrid, List } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2, SlidersHorizontal } from 'lucide-react';
 import ProfileModal from '@/components/ProfileModal';
+import { useDebounce } from '@/hooks/useDebounce';
+import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface Profile {
   id: string;
-  name: string;
+  username?: string;
+  firstName: string;
+  lastName: string;
+  name: string; // Computed from firstName + lastName for display
   title?: string;
   photo?: string;
   location?: string;
@@ -34,174 +51,252 @@ interface Profile {
   projectsCount?: number;
 }
 
+// Initialize the cloud function
+const getPeopleFunction = httpsCallable(functions, 'people');
+
 export const PeopleTab = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPerson, setSelectedPerson] = useState<Profile | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [loadLimit, setLoadLimit] = useState(24);
   const [hasMore, setHasMore] = useState(true);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [cursor, setCursor] = useState<string | null>(null);
+  
+  // Filters
+  const [locationFilter, setLocationFilter] = useState('All');
+  const [skillFilter, setSkillFilter] = useState('All');
 
+  // Debounce search query for optimization
+  const debouncedSearch = useDebounce(searchQuery, 500);
+
+  // Fetch profiles when search query or filters change
   useEffect(() => {
-    fetchProfiles();
-  }, [loadLimit]);
+    fetchProfiles(true);
+  }, [debouncedSearch, locationFilter, skillFilter]);
 
-  const fetchProfiles = async () => {
+  const fetchProfiles = async (reset: boolean = false) => {
     try {
-      setLoading(true);
-      const profilesRef = collection(db, 'profiles');
-      const q = query(
-        profilesRef,
-        orderBy('contributions', 'desc'),
-        firestoreLimit(loadLimit)
-      );
+      if (reset) {
+        setLoading(true);
+        setCursor(null);
+      } else {
+        setLoadingMore(true);
+      }
 
-      const querySnapshot = await getDocs(q);
-      const fetchedProfiles = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          name: data.name || data.displayName || 'Anonymous User',
-          title: data.title || 'Community Member',
-          photo: data.photo || '/placeholder user.svg',
-          location: data.location || '',
-          badges: data.badges || [],
-          contributions: data.contributions || 0,
-          skills: data.skills || [],
-          social: data.social || {},
-          // Additional fields for modal
-          email: data.email || '',
-          phone: data.phone || '',
-          website: data.website || '',
-          about: data.about || '',
-          experience: data.experience || [],
-          education: data.education || [],
-          projects: data.projects || [],
-          coverPhoto: data.coverPhoto || '',
-          projectsCount: data.projectsCount || 0,
-        } as Profile;
+      const result = await getPeopleFunction({
+        limit: 24,
+        cursor: reset ? null : cursor,
+        searchQuery: debouncedSearch,
+        locationFilter: locationFilter !== 'All' ? locationFilter : undefined,
+        skillFilter: skillFilter !== 'All' ? skillFilter : undefined,
       });
 
-      setProfiles(fetchedProfiles);
-      setHasMore(querySnapshot.docs.length === loadLimit);
+      const data = result.data as {
+        success: boolean;
+        profiles: Profile[];
+        hasMore: boolean;
+        nextCursor: string | null;
+      };
+
+      if (data.success) {
+        if (reset) {
+          setProfiles(data.profiles);
+        } else {
+          setProfiles(prev => [...prev, ...data.profiles]);
+        }
+        setHasMore(data.hasMore);
+        setCursor(data.nextCursor);
+      }
     } catch (error) {
       console.error('Error fetching profiles:', error);
+      toast.error('Failed to load people. Please try again.');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  const filteredProfiles = useMemo(() => {
-    if (!searchQuery.trim()) return profiles;
-
-    const query = searchQuery.toLowerCase();
-    return profiles.filter(profile => 
-      profile.name.toLowerCase().includes(query) ||
-      profile.title?.toLowerCase().includes(query) ||
-      profile.location?.toLowerCase().includes(query) ||
-      profile.skills?.some(skill => skill.toLowerCase().includes(query)) ||
-      profile.badges?.some(badge => badge.toLowerCase().includes(query))
-    );
-  }, [profiles, searchQuery]);
-
   const handlePersonClick = (person: Profile) => {
-    setSelectedPerson(person);
-    setIsProfileOpen(true);
+    // Navigate to user profile page using username if available, otherwise use id
+    const identifier = person.username || person.id;
+    window.location.href = `/u/${identifier}`;
   };
 
   const handleLoadMore = () => {
-    setLoadLimit(prev => prev + 24);
+    if (!loadingMore && hasMore) {
+      fetchProfiles(false);
+    }
   };
 
-  if (loading && profiles.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Loading community members...</p>
-      </div>
-    );
-  }
+  const isInitialLoad = loading && profiles.length === 0;
 
   return (
     <div className="space-y-6">
-      {/* Search and Stats */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          <h2 className="text-2xl font-bold">
-            {filteredProfiles.length} {filteredProfiles.length === 1 ? 'Person' : 'People'}
-          </h2>
-        </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search by name, skills, location..."
-            className="w-full sm:flex-1 lg:w-96"
-          />
-          <div className="flex items-center gap-1 p-1 bg-muted rounded-full">
+      {/* Search Bar and Filters */}
+      <div className="flex flex-col md:flex-row gap-3 w-full justify-center items-center">
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search by name, skills, location..."
+          className="w-full md:max-w-md"
+        />
+        
+        {/* Desktop Filters - Inline */}
+        <div className="hidden md:flex items-center gap-2">
+          <Select value={locationFilter} onValueChange={setLocationFilter}>
+            <SelectTrigger className="w-[160px] bg-background">
+              <SelectValue placeholder="Location" />
+            </SelectTrigger>
+            <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+              <SelectItem value="All">Any Location</SelectItem>
+              <SelectItem value="Rwanda">Rwanda</SelectItem>
+              <SelectItem value="Uganda">Uganda</SelectItem>
+              <SelectItem value="Tanzania">Tanzania</SelectItem>
+              <SelectItem value="Kenya">Kenya</SelectItem>
+              <SelectItem value="Burundi">Burundi</SelectItem>
+              <SelectItem value="South Sudan">South Sudan</SelectItem>
+              <SelectItem value="Ethiopia">Ethiopia</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={skillFilter} onValueChange={setSkillFilter}>
+            <SelectTrigger className="w-[180px] bg-background">
+              <SelectValue placeholder="Skill" />
+            </SelectTrigger>
+            <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+              <SelectItem value="All">Any Skill</SelectItem>
+              <SelectItem value="React">React</SelectItem>
+              <SelectItem value="Node.js">Node.js</SelectItem>
+              <SelectItem value="Python">Python</SelectItem>
+              <SelectItem value="UI/UX Design">UI/UX Design</SelectItem>
+              <SelectItem value="Machine Learning">Machine Learning</SelectItem>
+              <SelectItem value="Mobile Development">Mobile Development</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {(locationFilter !== 'All' || skillFilter !== 'All') && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setViewMode('list')}
-              className={`flex-1 sm:flex-none rounded-full ${viewMode === 'list' ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`}
+              onClick={() => {
+                setLocationFilter('All');
+                setSkillFilter('All');
+              }}
+              className="text-muted-foreground hover:text-foreground"
             >
-              <List className="h-4 w-4 mr-2" />
-              List
+              Clear
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className={`flex-1 sm:flex-none rounded-full ${viewMode === 'grid' ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`}
-            >
-              <LayoutGrid className="h-4 w-4 mr-2" />
-              Grid
-            </Button>
-          </div>
+          )}
         </div>
+
+        {/* Mobile Filters - Popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full md:hidden">
+              <SlidersHorizontal className="h-4 w-4 mr-2" />
+              Filters
+              {(locationFilter !== 'All' || skillFilter !== 'All') && (
+                <span className="ml-2 flex h-2 w-2 rounded-full bg-primary" />
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 bg-card border-border shadow-lg" align="center">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm text-foreground">Location</h4>
+                <Select value={locationFilter} onValueChange={setLocationFilter}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+                    <SelectItem value="All">Any Location</SelectItem>
+                    <SelectItem value="South Africa">South Africa</SelectItem>
+                    <SelectItem value="Nigeria">Nigeria</SelectItem>
+                    <SelectItem value="Kenya">Kenya</SelectItem>
+                    <SelectItem value="Ghana">Ghana</SelectItem>
+                    <SelectItem value="Egypt">Egypt</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm text-foreground">Skills</h4>
+                <Select value={skillFilter} onValueChange={setSkillFilter}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select skill" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background/95 backdrop-blur-sm border shadow-lg">
+                    <SelectItem value="All">Any Skill</SelectItem>
+                    <SelectItem value="React">React</SelectItem>
+                    <SelectItem value="Node.js">Node.js</SelectItem>
+                    <SelectItem value="Python">Python</SelectItem>
+                    <SelectItem value="UI/UX Design">UI/UX Design</SelectItem>
+                    <SelectItem value="Machine Learning">Machine Learning</SelectItem>
+                    <SelectItem value="Mobile Development">Mobile Development</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="pt-2 border-t">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setLocationFilter('All');
+                    setSkillFilter('All');
+                  }}
+                  className="w-full"
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* People Display */}
-      {filteredProfiles.length > 0 ? (
+      {isInitialLoad ? (
+        /* Loading Skeletons */
+        <div className="space-y-3">
+          {[...Array(10)].map((_, index) => (
+            <div key={index} className="flex items-center gap-4 py-4 border-b border-border last:border-0">
+              <Skeleton className="h-14 w-14 rounded-full flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <Skeleton className="h-9 w-24" />
+            </div>
+          ))}
+        </div>
+      ) : profiles.length > 0 ? (
         <>
-          {viewMode === 'list' ? (
-            <div className="space-y-2">
-              {filteredProfiles.map((person, index) => (
-                <PersonListItem
-                  key={person.id}
-                  {...person}
-                  onClick={() => handlePersonClick(person)}
-                  index={index}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProfiles.map((person, index) => (
-                <PersonCard
-                  key={person.id}
-                  {...person}
-                  onClick={() => handlePersonClick(person)}
-                  index={index}
-                />
-              ))}
-            </div>
-          )}
+          <div className="space-y-0 divide-y divide-border">
+            {profiles.map((person, index) => (
+              <PersonListItem
+                key={person.id}
+                {...person}
+                onClick={() => handlePersonClick(person)}
+                index={index}
+              />
+            ))}
+          </div>
 
           {/* Load More */}
-          {hasMore && !searchQuery && (
+          {hasMore && (
             <div className="flex justify-center pt-8">
               <Button
                 onClick={handleLoadMore}
                 variant="outline"
                 size="lg"
-                disabled={loading}
+                disabled={loadingMore}
                 className="min-w-[200px]"
               >
-                {loading ? (
+                {loadingMore ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Loading...
@@ -215,7 +310,6 @@ export const PeopleTab = () => {
         </>
       ) : (
         <div className="text-center py-20">
-          <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
           <h3 className="text-xl font-semibold mb-2">No people found</h3>
           <p className="text-muted-foreground">
             {searchQuery ? 'Try adjusting your search query' : 'No community members yet'}

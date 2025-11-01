@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -111,7 +110,7 @@ export default function Analytics() {
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {stats.map((stat) => (
-          <motion.div
+          <div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -145,7 +144,7 @@ export default function Analytics() {
                 <stat.icon className={`h-6 w-6 ${stat.color}`} />
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 

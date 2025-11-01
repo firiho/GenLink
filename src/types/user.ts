@@ -17,6 +17,7 @@ export interface User extends SupabaseUser {
   organization?: Organization;
   position?: string;
   createdAt?: string;
+  onboardingComplete?: boolean;
 }
 
 export interface Challenge {

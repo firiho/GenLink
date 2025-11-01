@@ -28,3 +28,14 @@ notes.txt
 
 # Local Netlify folder
 .netlify
+
+# Firebase Functions
+functions/node_modules/
+functions/lib/
+functions/.env
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log

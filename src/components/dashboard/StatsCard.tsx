@@ -1,13 +1,8 @@
 import { Activity, TrendingUp, ArrowUpRight } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const StatsCard = ({ stat, index, loading = false }) => (
-    <motion.div
-      key={stat.label}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1, duration: 0.5 }}
+    <div
       className="group relative bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-200/50 dark:border-slate-700/50 hover:border-slate-300/50 dark:hover:border-slate-600/50 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
     >
       {/* Gradient overlay */}
@@ -45,7 +40,7 @@ const StatsCard = ({ stat, index, loading = false }) => (
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 
 export default StatsCard;

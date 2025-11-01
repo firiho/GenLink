@@ -1,6 +1,6 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Building2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // Clean marquee row with minimal styling
 function MarqueeRow({ partners, speed = 20, reverse = false }) {
@@ -32,10 +32,8 @@ function MarqueeRow({ partners, speed = 20, reverse = false }) {
         }}
       >
         {fullPartners.map((partner, idx) => (
-          <motion.div
+          <div
             key={`${partner.name}-${idx}-${reverse ? 'reverse' : 'normal'}`}
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
             className="flex-shrink-0 group"
           >
             <div className="px-6 py-4 rounded-lg border border-border bg-card hover:bg-accent/5 transition-all duration-200 min-w-[200px] text-center">
@@ -46,7 +44,7 @@ function MarqueeRow({ partners, speed = 20, reverse = false }) {
                 {partner.type}
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
       </motion.div>
     </div>
@@ -73,11 +71,7 @@ export function Partners() {
 
       {/* Header */}
       <div className="container mx-auto px-4 relative z-10 mb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+        <div
           className="max-w-3xl mx-auto text-center"
         >
           <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-accent/10 text-accent border border-accent/20 text-sm font-medium">
@@ -92,19 +86,15 @@ export function Partners() {
           <p className="text-lg text-muted-foreground leading-relaxed text-pretty">
             Collaborating with visionary organizations to build the future of technology across East Africa and beyond
           </p>
-        </motion.div>
+        </div>
       </div>
 
       {/* Marquee */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6, delay: 0.2 }}
+      <div
         className="relative z-10"
       >
         <MarqueeRow partners={partners} speed={45} reverse={false} />
-      </motion.div>
+      </div>
     </section>
   );
 }

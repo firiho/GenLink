@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { ChevronRight, FileText, Clock, UserPlus, Users, DollarSign, Award, Plus, InboxIcon, Settings, Activity, TrendingUp } from 'lucide-react';
@@ -126,42 +125,48 @@ export const OverviewView = ({
             </div>
           </div>
           <div className="p-4 sm:p-6">
-            <div className="space-y-3">
-              {recentChallenges.slice(0, 3).map((challenge) => (
-                <div
-                  key={challenge.id}
-                  onClick={() => setActiveView('preview-challenge', { challenge })}
-                  className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg flex-shrink-0">
-                      <Trophy className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm mb-1 truncate text-slate-900 dark:text-white">
-                        {challenge.title}
-                      </h4>
-                      <div className="flex items-center space-x-3 text-sm text-slate-500 dark:text-slate-400">
-                        <span>{challenge.participants} participants</span>
-                        <span>•</span>
-                        <span>{challenge.daysLeft} days left</span>
+            {recentChallenges.length > 0 ? (
+              <div className="space-y-3">
+                {recentChallenges.slice(0, 3).map((challenge) => (
+                  <div
+                    key={challenge.id}
+                    onClick={() => setActiveView('preview-challenge', { challenge })}
+                    className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg flex-shrink-0">
+                        <Trophy className="h-5 w-5 text-slate-600 dark:text-slate-400" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm mb-1 truncate text-slate-900 dark:text-white">
+                          {challenge.title}
+                        </h4>
+                        <div className="flex items-center space-x-3 text-sm text-slate-500 dark:text-slate-400">
+                          <span>{challenge.participants} participants</span>
+                          <span>•</span>
+                          <span>{challenge.daysLeft} days left</span>
+                        </div>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-xs",
+                          challenge.status === 'active' 
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' 
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                        )}
+                      >
+                        {challenge.status}
+                      </Badge>
                     </div>
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-xs",
-                        challenge.status === 'active' 
-                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' 
-                          : 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                      )}
-                    >
-                      {challenge.status}
-                    </Badge>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-slate-500 dark:text-slate-400">
+                No challenges yet
+              </div>
+            )}
           </div>
         </div>
 

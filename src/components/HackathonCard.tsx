@@ -1,6 +1,5 @@
 import { Badge } from './ui/badge';
 import { Calendar, Users, Award, ArrowUpRight } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -31,8 +30,7 @@ export const HackathonCard = ({
   };
 
   return (
-    <motion.div 
-      whileHover={{ y: -4 }}
+    <div
       className="group h-full"
     >
       <div className="h-full rounded-lg border border-border bg-card hover:bg-accent/5 transition-all duration-200 overflow-hidden">
@@ -90,6 +88,6 @@ export const HackathonCard = ({
           </Button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

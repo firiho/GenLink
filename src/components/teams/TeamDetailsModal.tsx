@@ -65,7 +65,7 @@ export default function TeamDetailsModal({ team, onClose, onUpdate, isMember = f
 
   const fetchCreatorName = async () => {
     try {
-      const profileDoc = await getDoc(doc(db, 'public_profiles', team.createdBy));
+      const profileDoc = await getDoc(doc(db, 'profiles', team.createdBy));
       if (profileDoc.exists()) {
         const profileData = profileDoc.data();
         setCreatorName(profileData.name || profileData.displayName || team.createdBy);

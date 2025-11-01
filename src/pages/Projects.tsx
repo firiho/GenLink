@@ -95,34 +95,34 @@ const Projects = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-card/50 backdrop-blur-sm rounded-3xl p-8 border border-border/50 max-w-2xl mx-auto"
+                className="bg-card/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-border/50 max-w-2xl mx-auto"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-accent to-primary rounded-xl flex items-center justify-center">
-                      <Star className="w-6 h-6 text-white" />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-accent to-primary rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Star className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-foreground">Featured Project</h3>
-                      <p className="text-sm text-muted-foreground">Smart Waste Management</p>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-bold text-foreground text-sm sm:text-base">Featured Project</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">Smart Waste Management</p>
                     </div>
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium">
+                  <span className="px-3 py-1 rounded-full bg-accent/10 text-accent text-xs sm:text-sm font-medium flex-shrink-0">
                     IoT
                   </span>
                 </div>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground text-sm sm:text-base mb-4">
                   An IoT-based solution for efficient waste collection and management in Kigali
                 </p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                    <span>1.2K views</span>
-                    <span>328 likes</span>
-                    <span>5 contributors</span>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center flex-wrap gap-x-3 gap-y-2 text-xs sm:text-sm text-muted-foreground">
+                    <span className="whitespace-nowrap">1.2K views</span>
+                    <span className="whitespace-nowrap">328 likes</span>
+                    <span className="whitespace-nowrap">5 contributors</span>
                   </div>
-                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto">
                     View Project
-                    <ExternalLink className="ml-2 h-4 w-4" />
+                    <ExternalLink className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </motion.div>

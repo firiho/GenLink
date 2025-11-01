@@ -177,7 +177,7 @@ export class TeamService {
       const membersWithProfiles = await Promise.all(
         members.map(async (member) => {
           try {
-            const profileDoc = await getDoc(doc(db, 'public_profiles', member.userId));
+            const profileDoc = await getDoc(doc(db, 'profiles', member.userId));
             if (profileDoc.exists()) {
               const profileData = profileDoc.data();
               return {
@@ -212,7 +212,7 @@ export class TeamService {
     try {
       // Get user's team references from profile
       const userTeamsQuery = query(
-        collection(db, 'profiles', userId, 'teams'),
+        collection(db, 'users', userId, 'teams'),
         where('status', '==', 'active'),
         orderBy('joinedAt', 'desc')
       );
@@ -250,7 +250,7 @@ export class TeamService {
           console.warn(`Unable to fetch team ${teamId}:`, error);
           // Optionally clean up invalid team reference from user profile
           try {
-            await deleteDoc(doc(db, 'profiles', userId, 'teams', teamId));
+            await deleteDoc(doc(db, 'users', userId, 'teams', teamId));
           } catch (cleanupError) {
             console.warn(`Could not clean up invalid team reference ${teamId}`);
           }
@@ -269,7 +269,7 @@ export class TeamService {
     try {
       // Get invitations from user's profile
       const invitationsQuery = query(
-        collection(db, 'profiles', userId, 'invitations'),
+        collection(db, 'users', userId, 'invitations'),
         where('status', '==', 'pending'),
         orderBy('createdAt', 'desc')
       );
@@ -298,7 +298,7 @@ export class TeamService {
         // Fetch inviter name
         let invitedByName = 'Unknown User';
         try {
-          const profileDoc = await getDoc(doc(db, 'public_profiles', invData.invitedBy));
+          const profileDoc = await getDoc(doc(db, 'profiles', invData.invitedBy));
           if (profileDoc.exists()) {
             invitedByName = profileDoc.data().name || profileDoc.data().displayName || 'Unknown User';
           }
@@ -428,7 +428,7 @@ export class TeamService {
         });
         
         // Add team reference to user's profile
-        await setDoc(doc(db, 'profiles', userId, 'teams', teamId), {
+        await setDoc(doc(db, 'users', userId, 'teams', teamId), {
           teamId,
           role,
           joinedAt: new Date(),
@@ -463,7 +463,7 @@ export class TeamService {
     await deleteDoc(doc(db, 'teams', teamId, 'members', userId));
     
     // Remove team reference from user's profile
-    await deleteDoc(doc(db, 'profiles', userId, 'teams', teamId));
+    await deleteDoc(doc(db, 'users', userId, 'teams', teamId));
     
     // Update team member count
     const teamRef = doc(db, 'teams', teamId);
@@ -484,7 +484,7 @@ export class TeamService {
     });
     
     // Add application reference to user's profile
-    await setDoc(doc(db, 'profiles', applicantId, 'applications', applicationRef.id), {
+    await setDoc(doc(db, 'users', applicantId, 'applications', applicationRef.id), {
       teamId,
       status: 'pending',
       message,
@@ -508,7 +508,7 @@ export class TeamService {
       });
       
       // Add invitation reference to user's profile with merge to prevent overwriting
-      await setDoc(doc(db, 'profiles', invitedUserId, 'invitations', invitationRef.id), {
+      await setDoc(doc(db, 'users', invitedUserId, 'invitations', invitationRef.id), {
         teamId,
         invitedBy,
         status: 'pending',
@@ -553,7 +553,7 @@ export class TeamService {
           await updateDoc(invitationRef, updateData);
           
           // Update the invitation in user's profile
-          const userInvitationRef = doc(db, 'profiles', invitationData.invitedUserId, 'invitations', invitationId);
+          const userInvitationRef = doc(db, 'users', invitationData.invitedUserId, 'invitations', invitationId);
           await updateDoc(userInvitationRef, updateData);
           
           // If accepted, add user as team member

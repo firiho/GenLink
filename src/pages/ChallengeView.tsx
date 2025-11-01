@@ -157,7 +157,7 @@ const handleAddChallenge = async (challengeId) => {
     }
     
     // Get user profile to check role
-    const userDoc = await getDoc(doc(db, 'profiles', user.uid));
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
     const userData = userDoc.data();
     
     if (!userData || userData.user_type !== 'participant') {
@@ -185,7 +185,7 @@ const handleAddChallenge = async (challengeId) => {
     }
     
     // Add user's challenge to their profile first (this should have proper permissions)
-    const userChallengeRef = doc(db, 'profiles', user.uid, 'challenges', challengeId);
+    const userChallengeRef = doc(db, 'users', user.uid, 'challenges', challengeId);
     await setDoc(userChallengeRef, {
       challengeId: challengeId,
       joinedAt: new Date(),
@@ -205,7 +205,7 @@ const handleAddChallenge = async (challengeId) => {
       updatedAt: new Date()
     });
 
-    const publicProfileRef = doc(db, 'public_profiles', user.uid);
+    const publicProfileRef = doc(db, 'profiles', user.uid);
     await setDoc(publicProfileRef, {
         total_active_challenges: increment(1)
     }, { merge: true });

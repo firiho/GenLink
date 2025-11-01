@@ -36,7 +36,7 @@ export default function OverviewTab({setActiveView, user}) {
                 const db = getFirestore();
                 
                 // Using direct document reference with user.uid
-                const profileDocRef = doc(db, 'public_profiles', user?.uid);
+                const profileDocRef = doc(db, 'profiles', user?.uid);
                 const profileSnapshot = await getDoc(profileDocRef);
                 
                 if (profileSnapshot.exists()) {
@@ -71,7 +71,7 @@ export default function OverviewTab({setActiveView, user}) {
                 setLoading(true);
                 
                 // Get the user's joined challenges from their profile subcollection
-                const userChallengesRef = collection(db, 'profiles', user.uid, 'challenges');
+                const userChallengesRef = collection(db, 'users', user.uid, 'challenges');
                 const userChallengesSnap = await getDocs(userChallengesRef);
                 
                 const challengesData = [];
@@ -183,7 +183,7 @@ export default function OverviewTab({setActiveView, user}) {
 
     return (
         <div className="space-y-4 sm:space-y-6 lg:space-y-8">
-            <WelcomeSection title={`Welcome back, ${user?.fullName || 'User'}!`} subtitle={"Here's what's happening with your challenges and progress"} />
+            <WelcomeSection title={`Welcome back, ${user?.firstName || 'User'}!`} subtitle={"Here's what's happening with your challenges and progress"} />
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">

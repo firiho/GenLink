@@ -117,7 +117,7 @@ export default function ManageTeamModal({ open, onClose, team, onTeamUpdated }: 
         
         // Query all public profiles (searchable field might not exist on all profiles)
         const profilesQuery = firestoreQuery(
-          collection(db, 'public_profiles')
+          collection(db, 'profiles')
         );
         
         const profilesSnap = await getDocs(profilesQuery);

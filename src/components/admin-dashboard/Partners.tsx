@@ -120,7 +120,7 @@ const Partners = () => {
   
         // Get profile doc using created_by
         const createdBy = orgDoc.data().created_by;
-        const profileRef = doc(db, 'profiles', createdBy);
+        const profileRef = doc(db, 'users', createdBy);
         const profileDoc = await transaction.get(profileRef);
   
         if (!profileDoc.exists()) {

@@ -8,7 +8,10 @@ export interface Organization {
 export interface User extends SupabaseUser {
   id: string;
   email: string;
-  fullName?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  fieldType?: string;
   userType: 'partner' | 'participant' | 'admin';
   status?: 'pending' | 'approved';
   organization?: Organization;

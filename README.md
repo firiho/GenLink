@@ -20,11 +20,11 @@ GenLink is designed to be a comprehensive platform that bridges the gap between 
 
 This platform is built using modern web technologies:
 - React with TypeScript
-- HTML5/CSS3
+- Firebase
 - Vite
 - shadcn-ui
 - Tailwind CSS
 
 ## Getting Started
 
-!!! This is private code. Please contact the GenLink team for access. !!!
+!!! This is private code. Please contact the GenLink team for more info. !!!

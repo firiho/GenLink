@@ -10,17 +10,20 @@ import {
 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { signUp, SignUpCredentials } from '@/services/auth';
 import Logo from '@/components/Logo';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
     userType: 'participant',
     organization: '',
+    organizationType: 'Company',
     position: '',
   });
 
@@ -57,7 +60,7 @@ const SignUp = () => {
   };
 
   const validateForm = () => {
-    if (!formData.email || !formData.password || !formData.fullName) {
+    if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
       throw new Error('All fields are required');
     }
     if (formData.password !== formData.confirmPassword) {
@@ -90,10 +93,14 @@ const SignUp = () => {
       const credentials: SignUpCredentials = {
         email: formData.email.trim(),
         password: formData.password,
-        fullName: formData.fullName.trim(),
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
         userType: formData.userType as 'participant' | 'partner',
-        organization: formData.organization?.trim(),
-        position: formData.position?.trim()
+        ...(formData.userType === 'partner' && {
+          organization: formData.organization.trim(),
+          organizationType: formData.organizationType,
+          position: formData.position.trim()
+        })
       };
 
       console.log('Starting signup process...');
@@ -108,20 +115,14 @@ const SignUp = () => {
 
       // Add delay before navigation
       setTimeout(() => {
-        const destination = user.userType === 'partner' ? '/partner-pending' : '/dashboard';
-        console.log('Navigating to:', destination);
-        navigate(destination);
+        // All users go to email verification first
+        navigate('/email-verification');
       }, 100);
 
     } catch (error) {
       console.error('Sign up error:', error);
       const err = error as Error;
-      
-      if (err.message?.toLowerCase().includes('email')) {
-        toast.error('This email is already registered');
-      } else {
-        toast.error(err.message || 'Failed to create account. Please try again.');
-      }
+      toast.error(err.message || 'Failed to create account. Please try again.');
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -223,24 +224,48 @@ const SignUp = () => {
 
               {/* Personal Information */}
               <div className="space-y-4 pt-4">
-                <div>
-                  <label htmlFor="fullName" className="block text-sm font-medium text-foreground mb-1.5">
-                    Full Name
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-muted-foreground" />
+                {/* First Name and Last Name on same row on desktop */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="firstName" className="block text-sm font-medium text-foreground mb-1.5">
+                      First Name
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <User className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        type="text"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        required
+                        className="pl-10 bg-card border-border"
+                        placeholder="First name"
+                      />
                     </div>
-                    <Input
-                      id="fullName"
-                      name="fullName"
-                      type="text"
-                      value={formData.fullName}
-                      onChange={handleChange}
-                      required
-                      className="pl-10 bg-card border-border"
-                      placeholder="Enter your full name"
-                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-foreground mb-1.5">
+                      Last Name
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <User className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        type="text"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        required
+                        className="pl-10 bg-card border-border"
+                        placeholder="Last name"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -358,6 +383,32 @@ const SignUp = () => {
                         />
                       </div>
                     </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1.5">
+                        Organization Type
+                      </label>
+                      <Select
+                        value={formData.organizationType}
+                        onValueChange={(value) => 
+                          setFormData(prev => ({ ...prev, organizationType: value }))
+                        }
+                      >
+                        <SelectTrigger className="bg-card border-border">
+                          <SelectValue placeholder="Select organization type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card border-border z-50">
+                          <SelectItem value="Company">Company</SelectItem>
+                          <SelectItem value="Startup">Startup</SelectItem>
+                          <SelectItem value="Non-Profit">Non-Profit</SelectItem>
+                          <SelectItem value="Government">Government</SelectItem>
+                          <SelectItem value="Educational Institution">Educational Institution</SelectItem>
+                          <SelectItem value="Research Organization">Research Organization</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-1.5">
                         Your Position

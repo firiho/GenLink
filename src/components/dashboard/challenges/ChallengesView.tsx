@@ -58,7 +58,7 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
         setLoading(true);
         
         // Check if the user has a public profile
-        const publicProfileRef = doc(db, 'public_profiles', user.uid);
+        const publicProfileRef = doc(db, 'profiles', user.uid);
         const publicProfileSnap = await getDoc(publicProfileRef);
         setHasPublicProfile(publicProfileSnap.exists());
         
@@ -159,7 +159,7 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
       });
       
       // Also update the challenge status in the user's profile
-      const userChallengeRef = doc(db, 'profiles', user.uid, 'challenges', challengeId);
+      const userChallengeRef = doc(db, 'users', user.uid, 'challenges', challengeId);
       await updateDoc(userChallengeRef, {
         status: 'submitted',
         submittedAt: new Date()
@@ -176,7 +176,7 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
       }
 
         // Update the public profile participants count
-    const publicProfileRef = doc(db, 'public_profiles', user.uid);
+    const publicProfileRef = doc(db, 'profiles', user.uid);
     await setDoc(publicProfileRef, {
         total_submissions: increment(1),
         total_active_challenges: increment(-1),

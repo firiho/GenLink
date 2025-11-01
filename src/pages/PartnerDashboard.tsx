@@ -140,7 +140,7 @@ const PartnerDashboard = () => {
         
         
         // Get public profile for avatar
-        const publicProfileRef = doc(db, 'public_profiles', data.userId);
+        const publicProfileRef = doc(db, 'profiles', data.userId);
         const publicProfileSnap = await getDoc(publicProfileRef);
         const publicProfileData = publicProfileSnap.exists() ? publicProfileSnap.data() : {};
         
@@ -170,7 +170,7 @@ const PartnerDashboard = () => {
             uid: data.userId,
             name: publicProfileData.name || 'Anonymous User',
             email: publicProfileData.email || 'No email provided',
-            avatar: publicProfileData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(publicProfileData.fullName || 'U')}`
+            avatar: publicProfileData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(publicProfileData.firstName || 'U')}`
           },
           status: data.status || 'pending',
           submittedAt: submittedAt,
@@ -412,11 +412,11 @@ const PartnerDashboard = () => {
               <div className="flex items-center space-x-3 mb-4">
                 <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-sm border border-slate-200 dark:border-slate-700">
                   <span className="text-slate-600 dark:text-slate-300 font-semibold text-sm">
-                    {authUser?.fullName?.[0] || 'A'}
+                    {authUser?.firstName?.[0] || 'A'}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">{authUser?.fullName || 'Partner User'}</p>
+                  <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">{authUser?.firstName} {authUser?.lastName || 'Partner User'}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{authUser?.email}</p>
                 </div>
               </div>

@@ -15,7 +15,7 @@ export default function ProfileTab({ user }) {
   const [isEditing, setIsEditing] = useState(false);
   const [originalProfile, setOriginalProfile] = useState(null);
   const [profile, setProfile] = useState({
-    name: user?.fullName || '',
+    name: user?.firstName || '',
     title: user?.title || '',
     photo: user?.photo || '',
     coverPhoto: user?.coverPhoto || '',
@@ -46,13 +46,13 @@ export default function ProfileTab({ user }) {
       
       try {
         setIsLoading(true);
-        const profileRef = doc(db, 'public_profiles', user.uid);
+        const profileRef = doc(db, 'profiles', user.uid);
         const profileSnap = await getDoc(profileRef);
         
         if (profileSnap.exists()) {
           const data = profileSnap.data();
           setProfile({
-            name: data.name || user?.fullName || '',
+            name: data.name || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : ''),
           title: data.title || user?.title || '',
           photo: data.photo || user?.photo || '/placeholder user.svg',
           coverPhoto: data.coverPhoto || user?.coverPhoto || '',
@@ -78,7 +78,7 @@ export default function ProfileTab({ user }) {
         } else {
           // If no public profile exists yet, create one with user data
           setDoc(profileRef, {
-            name: user?.fullName || '',
+            name: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : '',
             email: user?.email || '',
             userId: user.uid,
             createdAt: new Date().toISOString(),
@@ -123,20 +123,14 @@ export default function ProfileTab({ user }) {
       // }
       
       // Save to Firebase
-      const profileRef = doc(db, 'public_profiles', user.uid);
+      const profileRef = doc(db, 'profiles', user.uid);
       await setDoc(profileRef, {
         ...updatedProfile,
         userId: user.uid,
         updatedAt: new Date().toISOString()
       }, { merge: true });
       
-      // Update the name in the user profile if changed
-      if (profile.name && profile.name !== user?.fullName) {
-        const userProfileRef = doc(db, 'profiles', user.uid);
-        await setDoc(userProfileRef, {
-          full_name: profile.name
-        }, { merge: true });
-      }
+      // Note: Name is stored in profiles collection, no need to update users collection
       
       setOriginalProfile(null);
       toast.success("Profile updated successfully");

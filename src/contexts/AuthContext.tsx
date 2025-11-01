@@ -9,7 +9,7 @@ export interface AuthUser extends User {
   uid: any;
   userType: 'partner' | 'participant' | 'admin';
   status?: 'pending' | 'approved';
-  fullName?: string;
+  firstName?: string;
   role?: 'partner' | 'participant' | 'admin';
 }
 
@@ -43,11 +43,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       try {
         if (firebaseUser) {
-          const docRef = doc(db, 'profiles', firebaseUser.uid);
+          const docRef = doc(db, 'users', firebaseUser.uid);
           const docSnap = await getDoc(docRef);
           const profileData = docSnap.data();
           
           console.log('Profile data:', profileData);
+
+          // Get additional profile info based on user type
+          let firstName;
+          if (profileData?.user_type === 'participant') {
+            const participantProfile = await getDoc(doc(db, 'profiles', firebaseUser.uid));
+            const participantData = participantProfile.data();
+            firstName = participantData?.firstName;
+          } else if (profileData?.user_type === 'partner' && profileData?.organization_id) {
+            const staffDoc = await getDoc(doc(db, 'organizations', profileData.organization_id, 'staff', firebaseUser.uid));
+            const staffData = staffDoc.data();
+            firstName = staffData?.firstName;
+          }
 
           const authUser: AuthUser = {
             uid: firebaseUser.uid,
@@ -55,7 +67,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             id: firebaseUser.uid,
             userType: profileData?.user_type || 'partner',
             status: profileData?.status,
-            fullName: profileData?.full_name,
+            firstName,
             aud: '',
             created_at: '',
             app_metadata: {},

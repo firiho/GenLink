@@ -5,7 +5,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     function isAdmin() {
-      let profile = get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
+      let profile = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
       return profile.user_type == 'admin';
     }
     
@@ -15,7 +15,7 @@ service cloud.firestore {
     }
     
     function isParticipant() {
-      let profile = get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
+      let profile = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
       return profile.user_type == 'participant';
     }
 
@@ -29,8 +29,8 @@ service cloud.firestore {
              get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.status == 'active';
     }
     
-    // Profiles and their subcollections
-    match /profiles/{userId} {
+    // Users (main profiles) and their subcollections
+    match /users/{userId} {
       allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
       
       match /challenges/{challengeId} {
@@ -63,10 +63,32 @@ service cloud.firestore {
     match /organizations/{organizationId} {
       allow read: if true;
       allow write: if request.auth != null;
+      
+      // Staff subcollection for organization members
+      match /staff/{staffId} {
+        // Allow reading staff list to authenticated users
+        allow read: if request.auth != null;
+        
+        // Allow creating staff during organization creation
+        allow create: if request.auth != null && (
+          request.auth.uid == staffId ||
+          exists(/databases/$(database)/documents/organizations/$(organizationId)/staff/$(request.auth.uid))
+        );
+        
+        // Allow updating own profile or by organization admins
+        allow update: if request.auth != null && (
+          request.auth.uid == staffId ||
+          get(/databases/$(database)/documents/organizations/$(organizationId)/staff/$(request.auth.uid)).data.role in ['owner', 'admin']
+        );
+        
+        // Allow deletion by organization admins
+        allow delete: if request.auth != null && 
+          get(/databases/$(database)/documents/organizations/$(organizationId)/staff/$(request.auth.uid)).data.role in ['owner', 'admin'];
+      }
     }
     
-    // Public profiles
-    match /public_profiles/{profileId} {
+    // Public profiles (for teams, challenges, community)
+    match /profiles/{profileId} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == profileId;
     }
@@ -77,8 +99,8 @@ service cloud.firestore {
       
       // Allow partners to create and write challenges
       allow write: if request.auth != null && 
-        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.user_type == 'partner' && 
-        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.status == 'approved';
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.user_type == 'partner' && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved';
       
       // Special case for incrementing participant count only
       allow update: if request.auth != null && 
@@ -120,7 +142,7 @@ service cloud.firestore {
       allow read: if request.auth != null && (
         (resource != null && resource.data.visibility == 'public') ||
         (resource != null && request.auth.uid in resource.data.admins) ||
-        exists(/databases/$(database)/documents/profiles/$(request.auth.uid)/teams/$(teamId)) ||
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)/teams/$(teamId)) ||
         isAdmin()
       );
       

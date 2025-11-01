@@ -43,7 +43,7 @@ export default function UserSearchSelect({
       const usersData: User[] = [];
       for (const userId of selectedUsers) {
         const profileDoc = await getDocs(
-          query(collection(db, 'profiles'), where('__name__', '==', userId), limit(1))
+          query(collection(db, 'users'), where('__name__', '==', userId), limit(1))
         );
         if (!profileDoc.empty) {
           const data = profileDoc.docs[0].data();
@@ -70,7 +70,7 @@ export default function UserSearchSelect({
     try {
       // Search by email or name (simplified)
       const usersQuery = query(
-        collection(db, 'profiles'),
+        collection(db, 'users'),
         where('user_type', '==', 'participant'),
         limit(10)
       );

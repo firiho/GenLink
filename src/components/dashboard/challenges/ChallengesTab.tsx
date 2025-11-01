@@ -30,7 +30,7 @@ export default function ChallengesTab({setActiveView}) {
                 setIsLoading(true);
                 
                 // Get the user's joined challenges from their profile subcollection
-                const userChallengesRef = collection(db, 'profiles', user.uid, 'challenges');
+                const userChallengesRef = collection(db, 'users', user.uid, 'challenges');
                 const userChallengesSnap = await getDocs(userChallengesRef);
                 
                 // Create an array to hold the full challenge data

@@ -30,6 +30,15 @@ const SignIn = () => {
         throw new Error('No user returned from sign in');
       }
 
+      // Check email verification for partners and participants (but not admins)
+      if (!user.emailVerified) {
+        console.log('Email not verified, redirecting to verification page');
+        toast.info('Please verify your email to continue');
+        navigate('/email-verification');
+        return;
+      }
+
+      // Check partner status
       if (user.role === 'partner') {
         if (user.status === 'pending') {
           await signOut();

@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Mail, ArrowRight, KeyRound, ShieldCheck, RefreshCw } from 'lucide-react';
 import Logo from '@/components/Logo';
+import { sendPasswordReset } from '@/services/authActions';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -17,12 +18,11 @@ const ForgotPassword = () => {
     setIsLoading(true);
 
     try {
-      // Add your password reset logic here
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      await sendPasswordReset(email);
       setIsEmailSent(true);
       toast.success('Reset instructions sent to your email!');
-    } catch (error) {
-      toast.error('Failed to send reset instructions. Please try again.');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send reset instructions. Please try again.');
     } finally {
       setIsLoading(false);
     }

@@ -17,15 +17,23 @@ import PartnerPending from '@/pages/PartnerPending';
 import AdminLogin from '@/pages/AdminLogin';
 import AdminDashboard from '@/pages/AdminDashboard';
 import ChallengeView from '@/pages/ChallengeView';
+import VerifyAction from '@/pages/VerifyAction';
+import EmailVerification from '@/pages/EmailVerification';
+import { auth } from '@/lib/firebase';
 
 const PartnerRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'partner')) {
-      toast.error('You are not registed as a partner!');
-      navigate('/signin');
+    if (!loading) {
+      if (!user || user.role !== 'partner') {
+        toast.error('You are not registered as a partner!');
+        navigate('/signin');
+      } else if (!auth.currentUser?.emailVerified) {
+        // Redirect to email verification if not verified
+        navigate('/email-verification');
+      }
     }
   }, [user, loading, navigate]);
 
@@ -33,7 +41,7 @@ const PartnerRoute = ({ children }) => {
     return <AuthLoadingScreen />;
   }
 
-  return user?.role === 'partner' ? children : null;
+  return user?.role === 'partner' && auth.currentUser?.emailVerified ? children : null;
 };
 
 const AdminRoute = ({ children }) => {
@@ -58,9 +66,14 @@ const ParticipantRoute = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'participant')) {
-      toast.error('You are not registed as a participant!');
-      navigate('/signin');
+    if (!loading) {
+      if (!user || user.role !== 'participant') {
+        toast.error('You are not registered as a participant!');
+        navigate('/signin');
+      } else if (!auth.currentUser?.emailVerified) {
+        // Redirect to email verification if not verified
+        navigate('/email-verification');
+      }
     }
   }, [user, loading, navigate]);
 
@@ -68,7 +81,7 @@ const ParticipantRoute = ({ children }) => {
     return <AuthLoadingScreen />;
   }
 
-  return user?.role === 'participant' ? children : null;
+  return user?.role === 'participant' && auth.currentUser?.emailVerified ? children : null;
 }
 
 function App() {
@@ -86,6 +99,8 @@ function App() {
             <Route path="/challenge/:id" element={<ChallengeView />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/verify" element={<VerifyAction />} />
+            <Route path="/email-verification" element={<EmailVerification />} />
             {/* Dashboard routes with wildcards for deep linking */}
             <Route 
               path="/dashboard/*" 

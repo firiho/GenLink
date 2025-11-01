@@ -116,7 +116,7 @@ export const SettingsView = ({ user, onSaveChanges }: SettingsViewProps) => {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Full Name</label>
                   <Input 
-                    value={user?.fullName || ''} 
+                    value={user?.firstName || ''} 
                     className="w-full bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600"
                     placeholder="Enter your full name"
                   />

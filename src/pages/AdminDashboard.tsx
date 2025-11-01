@@ -242,7 +242,7 @@ const AdminDashboard = () => {
               <div className="flex items-center space-x-3 mb-3">
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <span className="text-primary font-semibold">
-                    {authUser?.fullName?.[0] || 'A'}
+                    {authUser?.firstName?.[0] || 'A'}
                   </span>
                 </div>
                 <div>
@@ -250,7 +250,7 @@ const AdminDashboard = () => {
                     "font-medium",
                     actualTheme === 'dark' ? "text-white" : "text-gray-900"
                   )}>
-                    {authUser?.fullName || 'Admin'}
+                    {authUser?.firstName || 'Admin'}
                   </p>
                   <p className={cn(
                     "text-sm",

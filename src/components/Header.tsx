@@ -86,7 +86,7 @@ export const Header = () => {
           className="w-56 p-2 bg-card/95 backdrop-blur-xl border border-border"
         >
           <div className="px-2 py-1.5 border-b border-border">
-            <p className="text-sm font-medium text-foreground">{user.fullName}</p>
+            <p className="text-sm font-medium text-foreground">{user.firstName}</p>
             <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
           <DropdownMenuItem onClick={handleDashboardClick} className="text-foreground hover:bg-accent/5">

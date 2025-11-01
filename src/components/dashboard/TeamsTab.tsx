@@ -7,31 +7,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { TeamService } from '@/services/teamService';
 import { Team, TeamInvitation } from '@/types/team';
 import CreateTeamModal from '@/components/teams/CreateTeamModal';
-import TeamDiscovery from '@/components/teams/TeamDiscovery';
 import TeamCard from '@/components/teams/TeamCard';
 import InvitationList from '@/components/teams/InvitationList';
-import TeamDetailsModal from '@/components/teams/TeamDetailsModal';
-import ManageTeamModal from '@/components/teams/ManageTeamModal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
 interface TeamsTabProps {
-  initialTab?: 'my-teams' | 'discover' | 'invitations';
+  initialTab?: 'my-teams' | 'invitations';
 }
 
 export default function TeamsTab({ initialTab = 'my-teams' }: TeamsTabProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [teams, setTeams] = useState<Team[]>([]);
   const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
-  const [showTeamDetails, setShowTeamDetails] = useState(false);
-  const [showManageModal, setShowManageModal] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -96,14 +92,8 @@ export default function TeamsTab({ initialTab = 'my-teams' }: TeamsTabProps) {
     }
   };
 
-  const handleViewTeamDetails = (team: Team, isMember: boolean = false) => {
-    setSelectedTeam(team);
-    setShowTeamDetails(true);
-  };
-
-  const handleCloseTeamDetails = () => {
-    setShowTeamDetails(false);
-    setSelectedTeam(null);
+  const handleViewTeamDetails = (team: Team) => {
+    navigate(`/dashboard/teams/${team.id}`);
   };
 
   const handleTeamUpdate = async () => {
@@ -114,38 +104,6 @@ export default function TeamsTab({ initialTab = 'my-teams' }: TeamsTabProps) {
     }
   };
 
-  const handleManageTeam = (team: Team) => {
-    setSelectedTeam(team);
-    setShowManageModal(true);
-  };
-
-  const handleCloseManageModal = () => {
-    setShowManageModal(false);
-    setSelectedTeam(null);
-  };
-
-  const handleJoinTeam = (team: Team) => {
-    handleViewTeamDetails(team, false);
-  };
-
-  const handleInviteToTeam = (team: Team) => {
-    // This would open an invite modal
-    toast.info('Team invitations coming soon');
-  };
-
-  const handleJoinByCode = async (code: string) => {
-    if (!user) return;
-    
-    const result = await TeamService.joinTeamByLink(code, user.uid);
-    if (result.success) {
-      // Refresh teams
-      const userTeams = await TeamService.getUserTeams(user.uid);
-      setTeams(userTeams);
-      toast.success(result.message);
-    } else {
-      throw new Error(result.message);
-    }
-  };
 
   // Only show team functionality for participants
   if (user?.userType !== 'participant') {
@@ -174,10 +132,9 @@ export default function TeamsTab({ initialTab = 'my-teams' }: TeamsTabProps) {
         subtitle="Build, manage, and collaborate with teams on innovation challenges" 
       />
       
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'my-teams' | 'discover' | 'invitations')} className="w-full">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'my-teams' | 'invitations')} className="w-full">
         <TabsList className="bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 w-full sm:w-auto mb-6">
           <TabsTrigger value="my-teams">My Teams</TabsTrigger>
-          <TabsTrigger value="discover">Discover</TabsTrigger>
           <TabsTrigger value="invitations">
             Invitations
             {invitations.length > 0 && (
@@ -238,7 +195,7 @@ export default function TeamsTab({ initialTab = 'my-teams' }: TeamsTabProps) {
                   <Button 
                     variant="outline"
                     size="lg"
-                    onClick={() => setActiveTab('discover')}
+                    onClick={() => navigate('/community/teams')}
                   >
                     <Search className="h-5 w-5 mr-2" />
                     Discover Teams
@@ -271,15 +228,13 @@ export default function TeamsTab({ initialTab = 'my-teams' }: TeamsTabProps) {
 
               {/* Teams Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {teams.map((team, index) => (
-                  <div
-                  >
+                {teams.map((team) => (
+                  <div key={team.id}>
                     <TeamCard 
                       team={team}
                       isMember={true}
-                      onViewDetails={(t) => handleViewTeamDetails(t, true)}
-                      onChat={(t) => toast.info('Team chat coming soon')}
-                      onManage={handleManageTeam}
+                      onViewDetails={handleViewTeamDetails}
+                      showActions={false}
                     />
                   </div>
                 ))}
@@ -289,18 +244,10 @@ export default function TeamsTab({ initialTab = 'my-teams' }: TeamsTabProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="discover" className="mt-0">
-          <TeamDiscovery 
-            onJoinTeam={handleJoinTeam}
-            onInviteToTeam={handleInviteToTeam}
-          />
-        </TabsContent>
-
         <TabsContent value="invitations" className="mt-0">
           <InvitationList 
             invitations={invitations}
             onRespond={handleInvitationResponse}
-            onJoinByCode={handleJoinByCode}
           />
         </TabsContent>
       </Tabs>
@@ -309,27 +256,6 @@ export default function TeamsTab({ initialTab = 'my-teams' }: TeamsTabProps) {
         <CreateTeamModal
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreateTeam}
-        />
-      )}
-
-      {showTeamDetails && selectedTeam && (
-        <TeamDetailsModal
-          team={selectedTeam}
-          isMember={teams.some(t => t.id === selectedTeam.id)}
-          onClose={handleCloseTeamDetails}
-          onUpdate={handleTeamUpdate}
-        />
-      )}
-
-      {showManageModal && selectedTeam && (
-        <ManageTeamModal
-          open={showManageModal}
-          onClose={handleCloseManageModal}
-          team={selectedTeam}
-          onTeamUpdated={async () => {
-            await handleTeamUpdate();
-            handleCloseManageModal();
-          }}
         />
       )}
     </div>

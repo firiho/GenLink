@@ -57,13 +57,13 @@ const NotificationsDropdown = () => {
       <Button
         variant="ghost"
         size="icon"
-        className="relative hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all duration-200"
+        className="relative hover:bg-accent/10 rounded-lg transition-colors border border-border"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <Bell className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+        <Bell className="h-4 w-4 text-foreground" />
         {unreadCount > 0 && (
           <span 
-            className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs flex items-center justify-center font-semibold shadow-sm"
+            className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold shadow-sm"
           >
             {unreadCount}
           </span>
@@ -79,17 +79,17 @@ const NotificationsDropdown = () => {
           />
           <div
             className={cn(
-              "absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl shadow-xl z-50",
-              "bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 py-2 pointer-events-auto"
+              "absolute right-0 mt-3 w-80 sm:w-96 rounded-lg shadow-lg z-50",
+              "bg-card/95 backdrop-blur-sm border border-border py-2 pointer-events-auto"
             )}
             onClick={(e) => e.stopPropagation()}
           >
-              <div className="px-6 py-4 border-b border-slate-200/50 dark:border-slate-700/50">
+              <div className="px-6 py-4 border-b border-border/50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <h3 className="font-bold text-slate-900 dark:text-white">Notifications</h3>
+                    <h3 className="font-bold text-foreground">Notifications</h3>
                     {unreadCount > 0 && (
-                      <Badge variant="outline" className="border-red-200 text-red-700 bg-red-50 dark:border-red-800 dark:text-red-300 dark:bg-red-900/20 text-xs">
+                      <Badge variant="outline" className="border-red-200 text-red-700 bg-red-50 dark:border-red-800/50 dark:text-red-300 dark:bg-red-900/20 text-xs">
                         {unreadCount} new
                       </Badge>
                     )}
@@ -98,7 +98,7 @@ const NotificationsDropdown = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs"
+                      className="text-muted-foreground hover:text-foreground text-xs"
                       onClick={markAllAsRead}
                     >
                       <Check className="h-3 w-3 mr-1" />
@@ -107,7 +107,7 @@ const NotificationsDropdown = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      className="text-muted-foreground hover:text-foreground"
                     >
                       <Settings className="h-3 w-3" />
                     </Button>
@@ -119,16 +119,15 @@ const NotificationsDropdown = () => {
                 {notifications.map((notification, index) => (
                   <div
                     className={cn(
-                      "px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 cursor-pointer group",
-                      notification.unread && "bg-slate-50/50 dark:bg-slate-800/30"
+                      "px-6 py-4 hover:bg-accent/5 transition-colors cursor-pointer group",
+                      notification.unread && "bg-accent/5"
                     )}
                   >
                     <div className="flex items-start space-x-3">
                       <div className={cn(
-                        "p-2.5 rounded-xl flex-shrink-0 border",
+                        "p-2 rounded-lg flex-shrink-0 border",
                         notification.bg,
-                        notification.border,
-                        "group-hover:shadow-sm transition-shadow duration-200"
+                        notification.border
                       )}>
                         <notification.icon className={cn(
                           "h-4 w-4",
@@ -139,19 +138,19 @@ const NotificationsDropdown = () => {
                         <div className="flex items-start justify-between mb-1">
                           <p className={cn(
                             "font-semibold text-sm",
-                            notification.unread ? "text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-400"
+                            notification.unread ? "text-foreground" : "text-muted-foreground"
                           )}>
                             {notification.title}
                           </p>
-                          <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap ml-2">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
                             {notification.time}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                           {notification.message}
                         </p>
                         {notification.unread && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                          <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
                         )}
                       </div>
                     </div>
@@ -159,10 +158,10 @@ const NotificationsDropdown = () => {
                 ))}
               </div>
 
-              <div className="px-6 py-4 border-t border-slate-200/50 dark:border-slate-700/50">
+              <div className="px-6 py-4 border-t border-border/50">
                 <Button
                   variant="ghost"
-                  className="w-full text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm font-medium"
+                  className="w-full text-primary hover:bg-accent/10 text-sm font-medium"
                 >
                   View all notifications
                 </Button>

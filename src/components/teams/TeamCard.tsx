@@ -217,8 +217,8 @@ export default function TeamCard({ team, onManage, onChat, onViewDetails, showAc
             </div>
           </div>
 
-          {/* Actions */}
-          {showActions && isMember && (
+          {/* Actions - Hidden when showActions is false */}
+          {showActions && isMember && (onChat || onManage) && (
             <div className="flex gap-2 pt-2">
               {onChat && (
                 <Button 

@@ -121,15 +121,15 @@ export default function TeamDetailsModal({ team, onClose, onUpdate, isMember = f
     
     try {
       setLoading(true);
-      await TeamService.removeTeamMember(team.id, user.uid);
+      await TeamService.leaveTeam(team.id, user.uid);
       toast.success('Left the team successfully');
       setIsUserMember(false);
       setUserRole(null);
       onUpdate?.();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error leaving team:', error);
-      toast.error('Failed to leave team');
+      toast.error(error.message || 'Failed to leave team');
     } finally {
       setLoading(false);
     }

@@ -68,21 +68,21 @@ export const Header = () => {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="rounded-xl hover:bg-accent/5 border border-border shadow-sm pl-2 pr-3"
+            className="rounded-lg hover:bg-accent/5 border border-border pl-2 pr-3 transition-colors"
           >
             <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
-                <User className="h-4 w-4 text-accent" />
+              <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center">
+                <User className="h-4 w-4 text-foreground" />
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-hover:rotate-180" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
             </div>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="w-56 p-2 bg-card/95 backdrop-blur-xl border border-border"
+          className="w-56 p-2"
         >
-          <div className="px-2 py-1.5 border-b border-border">
+          <div className="px-2 py-1.5 border-b border-border/50">
             <p className="text-sm font-medium text-foreground">
               {user.firstName && user.lastName 
                 ? `${user.firstName} ${user.lastName}`
@@ -90,23 +90,17 @@ export const Header = () => {
             </p>
             <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
-          <DropdownMenuItem onClick={handleDashboardClick} className="text-foreground hover:bg-accent/5">
+          <DropdownMenuItem onClick={handleDashboardClick} className="rounded-md text-foreground hover:bg-accent/10 cursor-pointer">
             <LayoutDashboard className="w-4 h-4 mr-2" />
             Dashboard
           </DropdownMenuItem>
-          {/* <DropdownMenuItem 
-            onClick={handleSettingsClick}
-            className="rounded-lg cursor-pointer"
-          >
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </DropdownMenuItem> */}
-          <DropdownMenuSeparator className="bg-border" />
+          <DropdownMenuSeparator className="my-1" />
           
           <DropdownMenuItem 
             onClick={() => handleLogout()}
-            className="rounded-lg cursor-pointer text-foreground hover:bg-destructive/10 hover:text-destructive"
+            className="rounded-md cursor-pointer text-foreground hover:bg-destructive/10 hover:text-destructive"
           >
+            <LogOut className="w-4 h-4 mr-2" />
             Log Out
           </DropdownMenuItem>  
           

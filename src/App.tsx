@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import { toast, Toaster } from 'sonner';
+import { Toaster } from 'sonner';
 import { useEffect } from 'react';
 import AuthLoadingScreen from '@/components/ui/auth-loading-screen';
 import PartnerDashboard from '@/pages/PartnerDashboard';
@@ -31,9 +31,17 @@ const PartnerRoute = ({ children }) => {
 
   useEffect(() => {
     if (!loading) {
-      if (!user || user.role !== 'partner') {
-        toast.error('You are not registered as a partner!');
+      if (!user) {
         navigate('/signin');
+      } else if (user.role !== 'partner') {
+        // Silently redirect to appropriate dashboard based on role
+        if (user.role === 'admin') {
+          navigate('/admin/dashboard');
+        } else if (user.role === 'participant') {
+          navigate('/dashboard');
+        } else {
+          navigate('/signin');
+        }
       } else if (!auth.currentUser?.emailVerified) {
         // Redirect to email verification if not verified
         navigate('/email-verification');
@@ -71,9 +79,17 @@ const ParticipantRoute = ({ children }) => {
 
   useEffect(() => {
     if (!loading) {
-      if (!user || user.role !== 'participant') {
-        toast.error('You are not registered as a participant!');
+      if (!user) {
         navigate('/signin');
+      } else if (user.role !== 'participant') {
+        // Silently redirect to appropriate dashboard based on role
+        if (user.role === 'admin') {
+          navigate('/admin/dashboard');
+        } else if (user.role === 'partner') {
+          navigate('/partner/dashboard');
+        } else {
+          navigate('/signin');
+        }
       } else if (!auth.currentUser?.emailVerified) {
         // Redirect to email verification if not verified
         navigate('/email-verification');
@@ -103,6 +119,9 @@ function App() {
             <Route path="/challenge/:id" element={<ChallengeView />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/community/people" element={<Community />} />
+            <Route path="/community/teams" element={<Community />} />
+            <Route path="/community/events" element={<Community />} />
             <Route path="/u/:id" element={<UserProfile />} />
             <Route path="/t/:id" element={<TeamDetails />} />
             <Route path="/e/:id" element={<EventDetails />} />

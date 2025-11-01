@@ -43,8 +43,6 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
     challengeTitle: '',
     maxMembers: 5,
     visibility: 'public',
-    joinableEnabled: false,
-    autoApprove: false,
     initialMembers: [],
     tags: [],
     permissions: {
@@ -327,10 +325,10 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="space-y-4 pb-6 border-b border-border">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col bg-background border-border">
+        <DialogHeader className="space-y-4 pb-6 border-b border-border/50">
           <DialogTitle className="text-2xl font-bold flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
+            <div className="p-2.5 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl border border-border/50 shadow-sm">
               <Users className="h-6 w-6 text-primary" />
             </div>
             Create New Team
@@ -343,7 +341,6 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
             {/* Step Indicators */}
             <div className="flex items-center justify-between">
               {stepTitles.map((step, index) => {
-                const StepIcon = step.icon;
                 const isCompleted = currentStep > step.number;
                 const isCurrent = currentStep === step.number;
                 
@@ -352,23 +349,24 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
                     <div className="flex flex-col items-center flex-1">
                       <div
                         className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
+                          "w-8 h-8 rounded-lg flex items-center justify-center border-2 transition-all duration-300",
                           isCompleted && "bg-primary border-primary text-primary-foreground",
-                          isCurrent && "bg-primary/10 border-primary text-primary scale-110",
-                          !isCompleted && !isCurrent && "bg-muted border-border text-muted-foreground"
+                          isCurrent && "bg-primary/10 border-primary text-primary",
+                          !isCompleted && !isCurrent && "bg-muted/50 border-border text-muted-foreground"
                         )}
                       >
                         {isCompleted ? (
-                          <Check className="h-5 w-5" />
+                          <Check className="h-4 w-4" />
                         ) : (
-                          <StepIcon className="h-5 w-5" />
+                          <span className="text-sm font-semibold">{step.number}</span>
                         )}
                       </div>
-                      <div className="mt-2 text-center">
+                      <div className="mt-2 text-center px-1">
                         <p className={cn(
                           "text-xs font-medium transition-colors",
-                          isCurrent && "text-primary",
-                          !isCurrent && "text-muted-foreground"
+                          isCurrent && "text-primary font-semibold",
+                          isCompleted && "text-foreground",
+                          !isCompleted && !isCurrent && "text-muted-foreground"
                         )}>
                           {step.title}
                         </p>
@@ -403,7 +401,7 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
               {/* STEP 1: Challenge Selection */}
               {currentStep === 1 && (
                 <div className="space-y-6 animate-in fade-in duration-300">
-                  <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800">
+                  <Alert className="border-blue-200/50 bg-gradient-to-br from-blue-50 to-blue-50/50 dark:from-blue-950/30 dark:to-blue-950/10 dark:border-blue-800/50 shadow-sm">
                     <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     <AlertDescription className="text-blue-800 dark:text-blue-300">
                       Selecting a challenge first helps us set the right team size and requirements for your team.
@@ -492,7 +490,7 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
                     )}
 
                     {teamData.challengeId && (
-                      <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                      <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 p-4 bg-gradient-to-br from-green-50 to-green-50/50 dark:from-green-950/30 dark:to-green-950/10 rounded-lg border border-green-200/50 dark:border-green-800/50 shadow-sm">
                         <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
                         <div>
                           <div className="font-medium">Challenge selected!</div>
@@ -651,7 +649,7 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
               {/* STEP 3: Invite Members */}
               {currentStep === 3 && (
                 <div className="space-y-6 animate-in fade-in duration-300">
-                  <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800">
+                  <Alert className="border-blue-200/50 bg-gradient-to-br from-blue-50 to-blue-50/50 dark:from-blue-950/30 dark:to-blue-950/10 dark:border-blue-800/50 shadow-sm">
                     <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     <AlertDescription className="text-blue-800 dark:text-blue-300">
                       This step is optional. You can invite members now or add them later after creating the team.
@@ -832,48 +830,6 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
                         </Select>
                       </div>
 
-                      {/* Public Team Options */}
-                      {teamData.visibility === 'public' && (
-                        <div className="space-y-3 pt-3 border-t">
-                          <div className="flex items-start space-x-3">
-                            <Checkbox 
-                              id="joinableEnabled" 
-                              checked={teamData.joinableEnabled}
-                              onCheckedChange={(checked) => setTeamData(prev => ({ 
-                                ...prev, 
-                                joinableEnabled: checked === true 
-                              }))}
-                            />
-                            <div className="space-y-1">
-                              <Label htmlFor="joinableEnabled" className="text-sm font-medium cursor-pointer">
-                                Enable joinable link
-                              </Label>
-                              <p className="text-xs text-muted-foreground">
-                                Generate a shareable link for instant team joining
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start space-x-3">
-                            <Checkbox 
-                              id="autoApprove" 
-                              checked={teamData.autoApprove}
-                              onCheckedChange={(checked) => setTeamData(prev => ({ 
-                                ...prev, 
-                                autoApprove: checked === true 
-                              }))}
-                            />
-                            <div className="space-y-1">
-                              <Label htmlFor="autoApprove" className="text-sm font-medium cursor-pointer">
-                                Auto-approve join requests
-                              </Label>
-                              <p className="text-xs text-muted-foreground">
-                                New members join instantly without approval
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
 
                       {/* Member Permissions */}
                       <div className="space-y-3 pt-3 border-t">
@@ -1035,12 +991,12 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
         </div>
 
         {/* Navigation Footer */}
-        <div className="flex items-center justify-between gap-3 pt-4 px-6 pb-6 border-t border-border">
+        <div className="flex items-center justify-between gap-3 pt-4 px-6 pb-6 border-t border-border/50 bg-muted/30">
           <Button 
             type="button" 
             variant="outline" 
             onClick={currentStep === 1 ? onClose : handlePrevStep}
-            className="gap-2"
+            className="gap-2 border-border/50 hover:bg-muted/50 transition-colors"
           >
             {currentStep === 1 ? (
               <>
@@ -1061,7 +1017,7 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
                 type="button"
                 onClick={handleNextStep}
                 disabled={!canGoToNextStep()}
-                className="gap-2"
+                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
               >
                 Next Step
                 <ArrowRight className="h-4 w-4" />
@@ -1071,7 +1027,7 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
                 type="submit"
                 onClick={handleSubmit}
                 disabled={loading || !isStep4Valid()}
-                className="gap-2"
+                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
               >
                 {loading ? (
                   <>

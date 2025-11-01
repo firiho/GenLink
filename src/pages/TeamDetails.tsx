@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, query, collection, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { TeamService } from '@/services/teamService';
+import { useAuth } from '@/contexts/AuthContext';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toast } from 'sonner';
 import { 
   Users, 
   ArrowLeft,
@@ -14,15 +17,30 @@ import {
   CheckCircle2,
   Lock,
   Trophy,
-  Target
+  Target,
+  UserPlus,
+  Clock
 } from 'lucide-react';
 
-interface TeamMember {
+interface TeamMemberWithProfile {
   id: string;
+  userId: string;
   username?: string;
   name: string;
+  email: string;
   photo: string;
   role: string;
+  joinedAt: Date;
+}
+
+interface Challenge {
+  id: string;
+  title: string;
+  description?: string;
+  deadline?: string;
+  prize?: string;
+  total_prize?: number;
+  organization?: string;
 }
 
 interface Team {
@@ -31,6 +49,7 @@ interface Team {
   description: string;
   challengeId: string;
   challengeTitle: string;
+  challengeData?: Challenge;
   maxMembers: number;
   currentMembers: number;
   status: 'active' | 'inactive' | 'closed';
@@ -40,16 +59,19 @@ interface Team {
   lastActivity: Date;
   hasSubmitted: boolean;
   submittedAt?: Date;
-  members?: TeamMember[];
 }
 
 const TeamDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [team, setTeam] = useState<Team | null>(null);
-  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [members, setMembers] = useState<TeamMemberWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const [hasPendingApplication, setHasPendingApplication] = useState(false);
+  const [requesting, setRequesting] = useState(false);
 
   useEffect(() => {
     const fetchTeamDetails = async () => {
@@ -62,26 +84,36 @@ const TeamDetails = () => {
         if (teamDoc.exists()) {
           const data = teamDoc.data();
           
-          // Fetch member details
-          const membersList: TeamMember[] = [];
-          if (data.members && data.members.length > 0) {
-            for (const memberId of data.members.slice(0, 10)) {
-              try {
-                const profileDoc = await getDoc(doc(db, 'profiles', memberId));
-                if (profileDoc.exists()) {
-                  const profileData = profileDoc.data();
-                  membersList.push({
-                    id: profileDoc.id,
-                    username: profileData.username || undefined,
-                    name: `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim() || 'User',
-                    photo: profileData.photo || '/placeholder user.svg',
-                    role: data.admins?.includes(memberId) ? 'Admin' : 'Member',
-                  });
-                }
-              } catch (err) {
-                console.error('Error fetching member:', err);
+          // Fetch challenge data
+          let challengeData: Challenge | undefined;
+          if (data.challengeId) {
+            try {
+              const challengeDoc = await getDoc(doc(db, 'challenges', data.challengeId));
+              if (challengeDoc.exists()) {
+                const chalData = challengeDoc.data();
+                challengeData = {
+                  id: challengeDoc.id,
+                  title: chalData.title,
+                  description: chalData.description,
+                  deadline: chalData.deadline,
+                  prize: chalData.prize,
+                  total_prize: chalData.total_prize,
+                  organization: chalData.companyInfo?.name || chalData.organization,
+                };
               }
+            } catch (err) {
+              console.error('Error fetching challenge:', err);
             }
+          }
+          
+          // Fetch members using TeamService (from subcollection)
+          let membersList: TeamMemberWithProfile[] = [];
+          try {
+            const teamMembers = await TeamService.getTeamMembersWithProfiles(id);
+            membersList = teamMembers as TeamMemberWithProfile[];
+            console.log('Fetched team members:', membersList);
+          } catch (err) {
+            console.error('Error fetching team members:', err);
           }
 
           setTeam({
@@ -90,30 +122,91 @@ const TeamDetails = () => {
             description: data.description || '',
             challengeId: data.challengeId,
             challengeTitle: data.challengeTitle,
+            challengeData,
             maxMembers: data.maxMembers,
             currentMembers: data.currentMembers || 0,
             status: data.status,
             visibility: data.visibility,
             tags: data.tags || [],
             createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
-            lastActivity: data.lastActivity?.toDate?.() || new Date(data.lastActivity),
+            lastActivity: data.lastActivity?.toDate?.() || data.updatedAt?.toDate?.() || new Date(),
             hasSubmitted: data.hasSubmitted || false,
             submittedAt: data.submittedAt?.toDate?.(),
           });
           setMembers(membersList);
+          
+          // Check membership and application status (only if authenticated)
+          if (user) {
+            try {
+              const memberInfo = await TeamService.getTeamMember(id, user.uid);
+              setIsMember(!!memberInfo);
+              
+              // Check if user has pending application
+              const applicationsQuery = query(
+                collection(db, 'teams', id, 'applications'),
+                where('applicantId', '==', user.uid),
+                where('status', '==', 'pending')
+              );
+              const applicationsSnap = await getDocs(applicationsQuery);
+              setHasPendingApplication(!applicationsSnap.empty);
+            } catch (err) {
+              // User might not have access to check membership, that's okay
+              console.warn('Could not check membership status:', err);
+              setIsMember(false);
+              setHasPendingApplication(false);
+            }
+          } else {
+            setIsMember(false);
+            setHasPendingApplication(false);
+          }
         } else {
           setError(true);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching team:', err);
-        setError(true);
+        // If it's a permissions error and team might be private, show a more helpful message
+        if (err?.code === 'permission-denied') {
+          setError(true);
+        } else {
+          setError(true);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchTeamDetails();
-  }, [id]);
+  }, [id, user]);
+
+  const handleRequestToJoin = async () => {
+    if (!team || !id) {
+      return;
+    }
+
+    // If user is not logged in, redirect to signin with return URL
+    if (!user) {
+      const currentUrl = window.location.pathname + window.location.search;
+      navigate(`/signin?redirect=${encodeURIComponent(currentUrl)}`);
+      return;
+    }
+
+    if (team.currentMembers >= team.maxMembers) {
+      toast.error('Team is at full capacity');
+      return;
+    }
+
+    setRequesting(true);
+    try {
+      await TeamService.createTeamApplication(id, user.uid, `I would like to join ${team.name} for the ${team.challengeTitle} challenge.`);
+      toast.success('Join request submitted! The team admin will review your request.');
+      setHasPendingApplication(true);
+    } catch (error: any) {
+      console.error('Error requesting to join:', error);
+      toast.error(error.message || 'Failed to submit join request');
+    } finally {
+      setRequesting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -141,7 +234,7 @@ const TeamDetails = () => {
             <p className="text-muted-foreground mb-8">
               The team you're looking for doesn't exist or has been removed.
             </p>
-            <Button onClick={() => navigate('/community?tab=teams')}>
+            <Button onClick={() => navigate('/community/teams')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Teams
             </Button>
@@ -161,18 +254,18 @@ const TeamDetails = () => {
       <div className="container mx-auto px-4 pt-24 pb-16">
         <div className="max-w-5xl mx-auto space-y-6">
           {/* Back Button */}
-          <Button variant="ghost" onClick={() => navigate('/community?tab=teams')} className="mb-4">
+          <Button variant="ghost" onClick={() => navigate('/community/teams')} className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Teams
           </Button>
 
           {/* Header Card */}
-          <div className="bg-card border rounded-xl p-6 md:p-8 shadow-sm">
+          <div className="bg-card border border-border rounded-lg p-6 md:p-8">
             <div className="flex flex-col md:flex-row gap-4 md:gap-6">
               {/* Team Icon */}
               <div className="flex-shrink-0">
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 flex items-center justify-center">
-                  <Users className="h-10 w-10 md:h-12 md:w-12 text-primary" />
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg bg-accent/5 border border-border flex items-center justify-center">
+                  <Users className="h-10 w-10 md:h-12 md:w-12 text-foreground" />
                 </div>
               </div>
               
@@ -180,9 +273,9 @@ const TeamDetails = () => {
               <div className="flex-1">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">{team.name}</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold mb-2">{team.name}</h1>
                     <div className="flex items-center gap-2 text-sm md:text-base text-muted-foreground mb-4">
-                      <Target className="h-4 w-4 flex-shrink-0" />
+                      <Target className="h-4 w-4 flex-shrink-0 text-primary" />
                       <span className="line-clamp-1">{team.challengeTitle}</span>
                     </div>
                   </div>
@@ -190,19 +283,19 @@ const TeamDetails = () => {
                   {/* Status Badges */}
                   <div className="flex flex-col gap-2">
                     {team.visibility === 'invite-only' && (
-                      <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted border border-border text-xs font-medium text-foreground">
+                      <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted border border-border text-xs font-medium">
                         <Lock className="h-3 w-3" />
                         <span>Private</span>
                       </div>
                     )}
                     {team.hasSubmitted && (
-                      <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-xs font-medium">
+                      <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-500 text-xs font-medium">
                         <CheckCircle2 className="h-3 w-3" />
                         <span>Submitted</span>
                       </div>
                     )}
                     {isFull && (
-                      <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-medium">
+                      <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-500 text-xs font-medium">
                         <Users className="h-3 w-3" />
                         <span>Full</span>
                       </div>
@@ -213,20 +306,20 @@ const TeamDetails = () => {
                 {/* Stats */}
                 <div className="flex flex-wrap gap-4 md:gap-6 mt-4">
                   <div>
-                    <div className="text-xl md:text-2xl font-bold text-primary">
+                    <div className="text-xl md:text-2xl font-bold">
                       {team.currentMembers}/{team.maxMembers}
                     </div>
                     <div className="text-xs md:text-sm text-muted-foreground">Members</div>
                   </div>
                   <div>
-                    <div className="text-xl md:text-2xl font-bold text-primary capitalize">
+                    <div className="text-xl md:text-2xl font-bold capitalize">
                       {team.status === 'active' ? 'Active' : team.status}
                     </div>
                     <div className="text-xs md:text-sm text-muted-foreground">Status</div>
                   </div>
                   {team.hasSubmitted && team.submittedAt && (
                     <div>
-                      <div className="text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">
+                      <div className="text-xl md:text-2xl font-bold text-green-600 dark:text-green-500">
                         <Trophy className="h-7 w-7 md:h-8 md:w-8" />
                       </div>
                       <div className="text-xs md:text-sm text-muted-foreground">Submitted</div>
@@ -240,7 +333,7 @@ const TeamDetails = () => {
                     {team.tags.map((tag, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 rounded-full bg-accent/50 border border-border text-sm font-medium text-foreground"
+                        className="px-3 py-1 rounded-full bg-accent/10 border border-border text-sm font-medium"
                       >
                         {tag}
                       </span>
@@ -251,17 +344,61 @@ const TeamDetails = () => {
             </div>
           </div>
 
+          {/* Challenge Info */}
+          {team.challengeData && (
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                Challenge Details
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-1">{team.challengeData.title}</h3>
+                  {team.challengeData.organization && (
+                    <p className="text-sm text-muted-foreground">by {team.challengeData.organization}</p>
+                  )}
+                </div>
+                {team.challengeData.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-3">{team.challengeData.description}</p>
+                )}
+                <div className="grid grid-cols-2 gap-4">
+                  {team.challengeData.total_prize && (
+                    <div className="p-3 rounded-lg bg-accent/5 border border-border">
+                      <p className="text-xs text-muted-foreground mb-1">Prize Pool</p>
+                      <p className="font-semibold">${team.challengeData.total_prize.toLocaleString()}</p>
+                    </div>
+                  )}
+                  {team.challengeData.deadline && (
+                    <div className="p-3 rounded-lg bg-accent/5 border border-border">
+                      <p className="text-xs text-muted-foreground mb-1">Deadline</p>
+                      <p className="font-semibold">
+                        {new Date(team.challengeData.deadline).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate(`/challenge/${team.challengeId}`)}
+                  className="w-full"
+                >
+                  View Challenge
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Description */}
           {team.description && (
-            <div className="bg-card border rounded-xl p-6 shadow-sm">
-              <h2 className="text-lg md:text-xl font-bold mb-4 text-foreground">About This Team</h2>
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h2 className="text-lg md:text-xl font-bold mb-4">About This Team</h2>
               <p className="text-sm md:text-base text-muted-foreground whitespace-pre-wrap leading-relaxed">{team.description}</p>
             </div>
           )}
 
           {/* Team Members */}
-          <div className="bg-card border rounded-xl p-6 shadow-sm">
-            <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2 text-foreground">
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
               Team Members ({members.length})
             </h2>
@@ -269,41 +406,46 @@ const TeamDetails = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {members.map((member) => (
                   <div
-                    key={member.id}
-                    onClick={() => navigate(`/u/${member.username || member.id}`)}
-                    className="flex items-center gap-4 p-4 rounded-lg bg-accent/30 hover:bg-accent/50 border border-transparent hover:border-primary/20 transition-all cursor-pointer group"
+                    key={member.userId}
+                    onClick={() => navigate(`/u/${member.username || member.userId}`)}
+                    className="flex items-center gap-4 p-4 rounded-lg bg-accent/5 hover:bg-accent/10 border border-border hover:border-primary/50 transition-all cursor-pointer group"
                   >
                     <Avatar className="h-12 w-12 ring-2 ring-border">
                       <AvatarImage src={member.photo} alt={member.name} />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-muted text-foreground">
                         {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                      <p className="font-semibold group-hover:text-primary transition-colors truncate">
                         {member.name}
                       </p>
-                      <p className="text-sm text-muted-foreground">{member.role}</p>
+                      <p className="text-sm text-muted-foreground capitalize">{member.role}</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground text-center py-8 text-sm">No members to display</p>
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-accent/5 flex items-center justify-center">
+                  <Users className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground text-sm">No members to display</p>
+              </div>
             )}
           </div>
 
           {/* Activity Info */}
-          <div className="bg-card border rounded-xl p-6 shadow-sm">
-            <h2 className="text-lg md:text-xl font-bold mb-4 text-foreground">Activity</h2>
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h2 className="text-lg md:text-xl font-bold mb-4">Activity</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/30 border border-border">
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/5 border border-border">
                 <div className="p-2 rounded-lg bg-primary/10">
                   <Calendar className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-xs md:text-sm text-muted-foreground">Created</p>
-                  <p className="font-semibold text-sm md:text-base text-foreground">
+                  <p className="font-semibold text-sm md:text-base">
                     {team.createdAt.toLocaleDateString('en-US', { 
                       year: 'numeric', 
                       month: 'long', 
@@ -312,13 +454,13 @@ const TeamDetails = () => {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/30 border border-border">
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/5 border border-border">
                 <div className="p-2 rounded-lg bg-primary/10">
                   <Calendar className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-xs md:text-sm text-muted-foreground">Last Activity</p>
-                  <p className="font-semibold text-sm md:text-base text-foreground">
+                  <p className="font-semibold text-sm md:text-base">
                     {team.lastActivity.toLocaleDateString('en-US', { 
                       year: 'numeric', 
                       month: 'long', 
@@ -329,6 +471,63 @@ const TeamDetails = () => {
               </div>
             </div>
           </div>
+
+          {/* Request to Join Section (Public Teams Only) */}
+          {team.visibility === 'public' && !isMember && !hasPendingApplication && team.currentMembers < team.maxMembers && (
+            <div className="bg-card border border-border rounded-lg p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+                  <UserPlus className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg md:text-xl font-bold">Want to Join?</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {user ? 'Request to join this team' : 'Sign in to request to join this team'}
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                {user 
+                  ? 'Send a request to join this team. The team admin will review and approve or deny your request.'
+                  : 'Sign in to your account to send a request to join this team. The team admin will review your request.'
+                }
+              </p>
+              <Button 
+                onClick={handleRequestToJoin}
+                disabled={requesting || team.currentMembers >= team.maxMembers}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {requesting ? (
+                  <>
+                    <Clock className="h-4 w-4 mr-2 animate-spin" />
+                    Submitting Request...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    {user ? 'Request to Join Team' : 'Sign In to Join Team'}
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
+          {/* Pending Application Status */}
+          {hasPendingApplication && !isMember && user && (
+            <div className="bg-card border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-1">Pending Request</h3>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    Your request to join this team is pending review. The team admin will notify you once they make a decision.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

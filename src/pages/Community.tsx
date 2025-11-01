@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Users, UsersRound, Calendar } from 'lucide-react';
@@ -8,7 +9,36 @@ import { TeamsTab } from '@/components/community/TeamsTab';
 import { EventsTab } from '@/components/community/EventsTab';
 
 const Community = () => {
-  const [activeTab, setActiveTab] = useState('people');
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Get initial tab from URL path
+  const getTabFromPath = (pathname: string): 'people' | 'teams' | 'events' => {
+    if (pathname.includes('/community/teams')) return 'teams';
+    if (pathname.includes('/community/events')) return 'events';
+    return 'people';
+  };
+  
+  const [activeTab, setActiveTab] = useState<'people' | 'teams' | 'events'>(() => 
+    getTabFromPath(location.pathname)
+  );
+  
+  // Update tab when URL changes
+  useEffect(() => {
+    const newTab = getTabFromPath(location.pathname);
+    setActiveTab(newTab);
+  }, [location.pathname]);
+  
+  // Handle tab change and update URL
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as 'people' | 'teams' | 'events');
+    
+    // Update URL without page reload
+    const newPath = value === 'people' ? '/community' : `/community/${value}`;
+    if (location.pathname !== newPath) {
+      navigate(newPath, { replace: true });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -19,7 +49,7 @@ const Community = () => {
         <div className="container mx-auto px-4">
           <Tabs 
             value={activeTab} 
-            onValueChange={setActiveTab}
+            onValueChange={handleTabChange}
             className="w-full"
           >
             <div className="flex justify-center mb-8">

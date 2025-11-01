@@ -13,7 +13,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { query, collection, where, getDocs } from 'firebase/firestore';
 import LoadingScreen from '@/components/dashboard/LoadingScreen';
-import { useNavigate } from 'react-router-dom';
 
 export const NewChallengeForm = ({setActiveView, editMode=false, existingChallenge = null}) => {
 
@@ -97,7 +96,6 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('basic');
-  const navigate = useNavigate();
 
   const { user } = useAuth();
 
@@ -366,14 +364,18 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
       // Then save to Firestore with 'active' status
       await saveChallenge(challengeWithImages, 'active');
       
-      toast.success('Challenge created successfully!');
+      const successMessage = editMode 
+        ? 'Challenge updated successfully!' 
+        : 'Challenge created successfully!';
+      toast.success(successMessage);
       
-      // Here you would typically redirect to the challenge page
-      console.log('Challenge created:', challengeWithImages);
-
-      navigate(`/partner/dashboard/challenges`);
+      // Navigate to challenges tab
+      setActiveView('challenges');
     } catch (error) {
-      toast.error('Error creating challenge. Please try again.');
+      const errorMessage = editMode
+        ? 'Error updating challenge. Please try again.'
+        : 'Error creating challenge. Please try again.';
+      toast.error(errorMessage);
     }
   };
 
@@ -391,7 +393,9 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
       await saveChallenge(challengeWithImages, 'draft');
       
       toast.success('Draft saved successfully!');
-
+      
+      // Navigate to challenges tab after saving draft
+      setActiveView('challenges');
     } catch (error) {
       toast.error('Error saving draft. Please try again.');
     }

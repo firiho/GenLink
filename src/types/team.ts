@@ -99,8 +99,6 @@ export interface CreateTeamData {
   maxMembers: number; // From challenge
   
   visibility: 'public' | 'invite-only'; // Only two options
-  joinableEnabled: boolean; // Only for public teams
-  autoApprove: boolean;
   
   // Initial team members to invite
   initialMembers?: string[]; // Array of user IDs

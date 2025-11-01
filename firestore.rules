@@ -135,18 +135,18 @@ service cloud.firestore {
     // Main teams collection
     match /teams/{teamId} {
       // Allow reading teams if:
-      // 1. Team is public
-      // 2. User is in admins array
-      // 3. User has a team reference in their profile (is a member)
-      // 4. User is admin
-      allow read: if request.auth != null && (
-        (resource != null && resource.data.visibility == 'public') ||
-        (resource != null && request.auth.uid in resource.data.admins) ||
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)/teams/$(teamId)) ||
-        isAdmin()
-      );
+      // 1. Team is public (anyone can read, including unauthenticated)
+      // 2. User is authenticated and is in admins array
+      // 3. User is authenticated and has a team reference in their profile (is a member)
+      // 4. User is authenticated and is admin
+      allow read: if (resource != null && resource.data.visibility == 'public') ||
+                   (request.auth != null && (
+                     (resource != null && request.auth.uid in resource.data.admins) ||
+                     exists(/databases/$(database)/documents/users/$(request.auth.uid)/teams/$(teamId)) ||
+                     isAdmin()
+                   ));
       
-      // Allow listing/querying teams for discovery
+      // Allow listing/querying teams for discovery (authenticated only)
       allow list: if request.auth != null;
 
       // Allow authenticated participants to create teams
@@ -176,7 +176,11 @@ service cloud.firestore {
 
       // Team members as subcollection
       match /members/{userId} {
-        allow read: if request.auth != null;
+        // Allow reading members if:
+        // 1. User is authenticated (for any team)
+        // 2. Team is public (allow anyone to read members of public teams)
+        allow read: if request.auth != null || 
+                     get(/databases/$(database)/documents/teams/$(teamId)).data.visibility == 'public';
         
         // Allow creating member during team creation, by team admins, or when accepting invitation
         allow create: if request.auth != null && (
@@ -248,6 +252,23 @@ service cloud.firestore {
         allow create: if isTeamMember(teamId) || isTeamOwner(teamId) || isAdmin();
         allow update: if isTeamMember(teamId) || isTeamOwner(teamId) || isAdmin();
         allow delete: if isTeamMember(teamId) || isTeamOwner(teamId) || isAdmin();
+      }
+
+      // Team messages as subcollection
+      match /messages/{messageId} {
+        // Allow reading messages if user is a team member
+        allow read: if isTeamMember(teamId) || isTeamOwner(teamId) || isAdmin();
+        
+        // Allow creating messages if user is a team member
+        allow create: if request.auth != null && 
+                       (isTeamMember(teamId) || isTeamOwner(teamId) || isAdmin()) &&
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.teamId == teamId &&
+                       request.resource.data.text is string;
+        
+        // No updates or deletes allowed (messages are immutable)
+        allow update: if false;
+        allow delete: if false;
       }
     }
   }

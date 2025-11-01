@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Users, 
@@ -13,9 +12,7 @@ import {
   CheckCircle, 
   XCircle, 
   Clock,
-  UserPlus,
-  Key,
-  LogIn
+  UserPlus
 } from 'lucide-react';
 import { TeamInvitation } from '@/types/team';
 import { toast } from 'sonner';
@@ -23,15 +20,12 @@ import { toast } from 'sonner';
 interface InvitationListProps {
   invitations: TeamInvitation[];
   onRespond: (invitationId: string, status: 'accepted' | 'declined', message?: string) => void;
-  onJoinByCode?: (code: string) => Promise<void>;
 }
 
-export default function InvitationList({ invitations, onRespond, onJoinByCode }: InvitationListProps) {
+export default function InvitationList({ invitations, onRespond }: InvitationListProps) {
   const [selectedInvitation, setSelectedInvitation] = useState<TeamInvitation | null>(null);
   const [responseMessage, setResponseMessage] = useState('');
   const [loading, setLoading] = useState<string | null>(null);
-  const [invitationCode, setInvitationCode] = useState('');
-  const [joiningByCode, setJoiningByCode] = useState(false);
 
   const handleRespond = async (invitation: TeamInvitation, status: 'accepted' | 'declined') => {
     setLoading(invitation.id);
@@ -48,29 +42,6 @@ export default function InvitationList({ invitations, onRespond, onJoinByCode }:
     }
   };
 
-  const handleJoinByCode = async () => {
-    if (!invitationCode.trim()) {
-      toast.error('Please enter an invitation code');
-      return;
-    }
-
-    if (!onJoinByCode) {
-      toast.error('Join by code is not available');
-      return;
-    }
-
-    setJoiningByCode(true);
-    try {
-      await onJoinByCode(invitationCode.trim());
-      setInvitationCode('');
-      toast.success('Successfully joined team!');
-    } catch (error) {
-      console.error('Error joining by code:', error);
-      toast.error('Invalid or expired invitation code');
-    } finally {
-      setJoiningByCode(false);
-    }
-  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -117,45 +88,6 @@ export default function InvitationList({ invitations, onRespond, onJoinByCode }:
 
   return (
     <div className="space-y-6">
-      {/* Join by Code Section */}
-      <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-800">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Key className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <CardTitle className="text-lg text-slate-900 dark:text-white">
-              Join Team with Code
-            </CardTitle>
-          </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Enter an invitation code to join a team instantly
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-3">
-            <Input
-              value={invitationCode}
-              onChange={(e) => setInvitationCode(e.target.value.toUpperCase())}
-              placeholder="Enter code (e.g., ABC12XYZ)"
-              className="flex-1 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 uppercase"
-              maxLength={8}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleJoinByCode();
-                }
-              }}
-            />
-            <Button 
-              onClick={handleJoinByCode}
-              disabled={joiningByCode || !invitationCode.trim()}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <LogIn className="h-4 w-4 mr-2" />
-              Join Team
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Invitations List */}
       {invitations.length === 0 ? (
         <div className="text-center py-12">

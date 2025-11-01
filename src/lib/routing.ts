@@ -3,7 +3,7 @@
  * Handles URL-to-state mapping and state-to-URL mapping
  */
 
-export type DashboardTab = 'overview' | 'challenges' | 'teams' | 'teams-discover' | 'teams-invitations' | 'profile' | 'settings' | 'do-challenge';
+export type DashboardTab = 'overview' | 'challenges' | 'teams' | 'teams-discover' | 'teams-invitations' | 'team-manage' | 'profile' | 'settings' | 'do-challenge';
 export type PartnerTab = 'overview' | 'challenges' | 'submissions' | 'settings' | 'create-challenge' | 'preview-challenge';
 export type AdminTab = 'overview' | 'partners' | 'communities' | 'support' | 'analytics' | 'settings';
 
@@ -14,6 +14,10 @@ export const getDashboardTabFromPath = (pathname: string): DashboardTab => {
   if (pathname.includes('/challenges')) return 'challenges';
   if (pathname.includes('/teams/discover')) return 'teams-discover';
   if (pathname.includes('/teams/invitations')) return 'teams-invitations';
+  // Match /dashboard/teams/:id pattern (team management) - check for specific ID pattern
+  if (pathname.match(/\/teams\/[^/]+$/) && !pathname.includes('/teams/discover') && !pathname.includes('/teams/invitations')) {
+    return 'team-manage';
+  }
   if (pathname.includes('/teams')) return 'teams';
   if (pathname.includes('/profile')) return 'profile';
   if (pathname.includes('/settings')) return 'settings';
@@ -55,6 +59,7 @@ export const getDashboardRouteFromTab = (tab: DashboardTab): string => {
     teams: '/dashboard/teams',
     'teams-discover': '/dashboard/teams/discover',
     'teams-invitations': '/dashboard/teams/invitations',
+    'team-manage': '/dashboard/teams', // This will be overridden with actual team ID
     profile: '/dashboard/profile',
     settings: '/dashboard/settings',
     'do-challenge': '/dashboard/do-challenge',

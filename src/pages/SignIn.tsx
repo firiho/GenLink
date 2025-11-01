@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { signIn } from '@/services/auth';
 import { toast } from 'sonner';
 import { Sparkles, Mail, Lock, ArrowRight } from 'lucide-react';
@@ -14,7 +14,12 @@ const SignIn = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState('');
+  
+  // Get redirect parameter from URL
+  const searchParams = new URLSearchParams(location.search);
+  const redirectUrl = searchParams.get('redirect');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +40,13 @@ const SignIn = () => {
         console.log('Email not verified, redirecting to verification page');
         toast.info('Please verify your email to continue');
         navigate('/email-verification');
+        return;
+      }
+
+      // If there's a redirect URL, use it (for participants only, to avoid security issues)
+      if (redirectUrl && user.role === 'participant') {
+        console.log('Redirecting to:', redirectUrl);
+        navigate(redirectUrl);
         return;
       }
 

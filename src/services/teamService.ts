@@ -15,16 +15,16 @@ import {
   arrayUnion,
   arrayRemove
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, functions } from '@/lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { Team, TeamMember, TeamInvitation, TeamApplication, TeamChallenge, CreateTeamData } from '@/types/team';
+
+// Backend function reference
+const teamFunction = httpsCallable(functions, 'team');
 
 export class TeamService {
   // Create a new team (participants only)
   static async createTeam(teamData: CreateTeamData & { createdBy: string }): Promise<string> {
-    const joinableCode = teamData.joinableEnabled && teamData.visibility === 'public' 
-      ? this.generateLinkCode() 
-      : null;
-    
     const teamRef = await addDoc(collection(db, 'teams'), {
       name: teamData.name,
       description: teamData.description,
@@ -34,10 +34,6 @@ export class TeamService {
       currentMembers: 0,
       status: 'active',
       visibility: teamData.visibility,
-      joinableEnabled: teamData.joinableEnabled && teamData.visibility === 'public',
-      joinableLink: joinableCode ? `${window.location.origin}/teams/join/${joinableCode}` : null,
-      joinableCode: joinableCode,
-      autoApprove: teamData.autoApprove,
       createdBy: teamData.createdBy,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -63,75 +59,6 @@ export class TeamService {
     return teamRef.id;
   }
   
-  // Generate joinable link for team
-  static async generateJoinableLink(teamId: string, createdBy: string): Promise<string> {
-    const linkCode = this.generateLinkCode();
-    
-    // Update team with joinable link
-    const teamRef = doc(db, 'teams', teamId);
-    await updateDoc(teamRef, {
-      joinableLink: `${window.location.origin}/teams/join/${linkCode}`,
-      joinableCode: linkCode,
-      updatedAt: new Date()
-    });
-    
-    return linkCode;
-  }
-  
-  // Generate unique 8-character link code
-  private static generateLinkCode(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  }
-  
-  // Join team by link code
-  static async joinTeamByLink(linkCode: string, userId: string): Promise<{ success: boolean; message: string }> {
-    try {
-      // Find the team with this joinable code
-      const teamQuery = query(
-        collection(db, 'teams'),
-        where('joinableCode', '==', linkCode),
-        where('joinableEnabled', '==', true)
-      );
-      
-      const teamSnap = await getDocs(teamQuery);
-      if (teamSnap.empty) {
-        return { success: false, message: 'Invalid or expired link' };
-      }
-      
-      const teamDoc = teamSnap.docs[0];
-      const teamId = teamDoc.id;
-      const team = teamDoc.data() as Team;
-      
-      // Check if user is already a member
-      const existingMember = await this.getTeamMember(teamId, userId);
-      if (existingMember) {
-        return { success: false, message: 'You are already a member of this team' };
-      }
-      
-      // Check team capacity
-      if (team.currentMembers >= team.maxMembers) {
-        return { success: false, message: 'Team is full' };
-      }
-      
-      // Add member
-      if (team.autoApprove) {
-        await this.addTeamMember(teamId, userId, 'member');
-        return { success: true, message: 'Successfully joined the team!' };
-      } else {
-        // Create application for review
-        await this.createTeamApplication(teamId, userId, 'Joined via link');
-        return { success: true, message: 'Application submitted for review' };
-      }
-    } catch (error) {
-      console.error('Error joining team by link:', error);
-      return { success: false, message: 'An error occurred while joining the team' };
-    }
-  }
   
   // Get team by ID
   static async getTeam(teamId: string): Promise<Team | null> {
@@ -171,31 +98,44 @@ export class TeamService {
   }
   
   // Get team members with profile data
-  static async getTeamMembersWithProfiles(teamId: string): Promise<Array<TeamMember & { name: string; email: string; photo: string }>> {
+  static async getTeamMembersWithProfiles(teamId: string): Promise<Array<TeamMember & { name: string; email: string; photo: string; username?: string }>> {
     try {
       const members = await this.getTeamMembers(teamId);
       const membersWithProfiles = await Promise.all(
         members.map(async (member) => {
           try {
-            const profileDoc = await getDoc(doc(db, 'profiles', member.userId));
-            if (profileDoc.exists()) {
-              const profileData = profileDoc.data();
+            // Try profiles collection first
+            let profileDoc = await getDoc(doc(db, 'profiles', member.userId));
+            let profileData = profileDoc.exists() ? profileDoc.data() : null;
+            
+            // If not found in profiles, try users collection
+            if (!profileData) {
+              profileDoc = await getDoc(doc(db, 'users', member.userId));
+              profileData = profileDoc.exists() ? profileDoc.data() : null;
+            }
+            
+            if (profileData) {
               return {
                 ...member,
-                name: profileData.name || profileData.displayName || 'Unknown User',
+                name: profileData.name || 
+                      profileData.displayName || 
+                      `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim() || 
+                      'Unknown User',
                 email: profileData.email || '',
-                photo: profileData.photo || '/placeholder-user.svg'
+                photo: profileData.photo || profileData.avatar || '/placeholder-user.svg',
+                username: profileData.username || undefined
               };
             }
           } catch (error) {
-            console.warn(`Could not fetch profile for ${member.userId}`);
+            console.warn(`Could not fetch profile for ${member.userId}`, error);
           }
           
           return {
             ...member,
             name: 'Unknown User',
             email: '',
-            photo: '/placeholder-user.svg'
+            photo: '/placeholder-user.svg',
+            username: undefined
           };
         })
       );
@@ -459,114 +399,268 @@ export class TeamService {
   }
   
   // Remove team member
+  // Remove team member - now using backend
   static async removeTeamMember(teamId: string, userId: string): Promise<void> {
-    await deleteDoc(doc(db, 'teams', teamId, 'members', userId));
-    
-    // Remove team reference from user's profile
-    await deleteDoc(doc(db, 'users', userId, 'teams', teamId));
-    
-    // Update team member count
-    const teamRef = doc(db, 'teams', teamId);
-    await updateDoc(teamRef, {
-      currentMembers: increment(-1),
-      lastActivity: new Date()
-    });
-  }
-  
-  // Create team application
-  static async createTeamApplication(teamId: string, applicantId: string, message: string): Promise<string> {
-    const applicationRef = await addDoc(collection(db, 'teams', teamId, 'applications'), {
-      applicantId,
-      status: 'pending',
-      message,
-      skills: [],
-      createdAt: new Date()
-    });
-    
-    // Add application reference to user's profile
-    await setDoc(doc(db, 'users', applicantId, 'applications', applicationRef.id), {
-      teamId,
-      status: 'pending',
-      message,
-      createdAt: new Date()
-    });
-    
-    return applicationRef.id;
-  }
-  
-  // Invite user from public profile
-  static async inviteFromPublicProfile(teamId: string, invitedUserId: string, invitedBy: string, message?: string): Promise<string> {
     try {
-      const invitationRef = await addDoc(collection(db, 'teams', teamId, 'invitations'), {
-        invitedUserId,
-        invitedBy,
-        status: 'pending',
-        message,
-        createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-        invitationType: 'public_profile'
+      const result = await teamFunction({
+        action: 'removeMember',
+        teamId,
+        memberUserId: userId
       });
       
-      // Add invitation reference to user's profile with merge to prevent overwriting
-      await setDoc(doc(db, 'users', invitedUserId, 'invitations', invitationRef.id), {
-        teamId,
-        invitedBy,
-        status: 'pending',
-        message,
-        createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        invitationType: 'public_profile'
-      }, { merge: true });
+      const data = result.data as any;
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to remove team member');
+      }
+    } catch (error: any) {
+      console.error('Error removing team member:', error);
+      throw new Error(error.message || 'Failed to remove team member');
+    }
+  }
+
+  // Leave team - now using backend (user leaving themselves)
+  static async leaveTeam(teamId: string, userId: string): Promise<void> {
+    try {
+      const result = await teamFunction({
+        action: 'leaveTeam',
+        teamId
+      });
       
-      return invitationRef.id;
-    } catch (error) {
-      console.error('Error creating invitation:', error);
-      throw error;
+      const data = result.data as any;
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to leave team');
+      }
+    } catch (error: any) {
+      console.error('Error leaving team:', error);
+      throw new Error(error.message || 'Failed to leave team');
     }
   }
   
-  // Respond to invitation
+  // Create team application - now using backend (applicantId comes from authenticated user)
+  static async createTeamApplication(teamId: string, applicantId: string, message: string): Promise<string> {
+    try {
+      // Note: applicantId parameter kept for compatibility but backend uses authenticated user
+      const result = await teamFunction({
+        action: 'requestToJoin',
+        teamId,
+        message
+      });
+      
+      const data = result.data as any;
+      if (data.success) {
+        return data.applicationId;
+      } else {
+        throw new Error(data.message || 'Failed to create application');
+      }
+    } catch (error: any) {
+      console.error('Error creating application:', error);
+      throw new Error(error.message || 'Failed to create application');
+    }
+  }
+
+  // Get team applications
+  static async getTeamApplications(teamId: string, status?: 'pending' | 'accepted' | 'declined'): Promise<Array<TeamApplication & { applicantName?: string; applicantEmail?: string; applicantPhoto?: string }>> {
+    try {
+      let applicationsQuery;
+      if (status) {
+        // For filtered queries with orderBy, we need to use a composite index
+        // If the index doesn't exist, fall back to client-side sorting
+        try {
+          applicationsQuery = query(
+            collection(db, 'teams', teamId, 'applications'),
+            where('status', '==', status),
+            orderBy('createdAt', 'desc')
+          );
+        } catch (error: any) {
+          // If composite index error, fall back to client-side sorting
+          if (error?.code === 'failed-precondition') {
+            applicationsQuery = query(
+              collection(db, 'teams', teamId, 'applications'),
+              where('status', '==', status)
+            );
+          } else {
+            throw error;
+          }
+        }
+      } else {
+        applicationsQuery = query(
+          collection(db, 'teams', teamId, 'applications'),
+          orderBy('createdAt', 'desc')
+        );
+      }
+      
+      const applicationsSnap = await getDocs(applicationsQuery);
+      let applicationsData = applicationsSnap.docs.map(docSnapshot => {
+        const data = docSnapshot.data() as any;
+        return {
+          id: docSnapshot.id,
+          applicantId: data.applicantId,
+          status: data.status,
+          message: data.message,
+          skills: data.skills || [],
+          createdAt: data.createdAt,
+          reviewedAt: data.reviewedAt,
+          reviewedBy: data.reviewedBy
+        };
+      });
+      
+      // If we couldn't use orderBy in the query (due to missing index), sort client-side
+      if (status) {
+        applicationsData = applicationsData.sort((a, b) => {
+          const aDate = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
+          const bDate = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
+          return bDate - aDate; // Descending order
+        });
+      }
+      
+      const applications = await Promise.all(
+        applicationsData.map(async (appData: any) => {
+          // Fetch applicant profile
+          let applicantName = 'Unknown User';
+          let applicantEmail = '';
+          let applicantPhoto = '/placeholder-user.svg';
+          
+          try {
+            // Try profiles collection first
+            let profileDoc = await getDoc(doc(db, 'profiles', appData.applicantId));
+            let profileData = profileDoc.exists() ? profileDoc.data() : null;
+            
+            // If not found in profiles, try users collection
+            if (!profileData) {
+              profileDoc = await getDoc(doc(db, 'users', appData.applicantId));
+              profileData = profileDoc.exists() ? profileDoc.data() : null;
+            }
+            
+            if (profileData) {
+              applicantName = profileData.name || 
+                             profileData.displayName || 
+                             `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim() || 
+                             profileData.username || 
+                             'Unknown User';
+              applicantEmail = profileData.email || '';
+              applicantPhoto = profileData.photo || profileData.avatar || '/placeholder-user.svg';
+            }
+          } catch (error) {
+            console.warn(`Could not fetch profile for ${appData.applicantId}`, error);
+          }
+          
+          return {
+            id: appData.id,
+            applicantId: appData.applicantId,
+            status: appData.status,
+            message: appData.message,
+            skills: appData.skills || [],
+            createdAt: appData.createdAt?.toDate ? appData.createdAt.toDate() : new Date(appData.createdAt),
+            reviewedAt: appData.reviewedAt?.toDate ? appData.reviewedAt.toDate() : (appData.reviewedAt ? new Date(appData.reviewedAt) : undefined),
+            reviewedBy: appData.reviewedBy,
+            applicantName,
+            applicantEmail,
+            applicantPhoto
+          };
+        })
+      );
+      
+      return applications;
+    } catch (error) {
+      console.error('Error fetching team applications:', error);
+      return [];
+    }
+  }
+
+  // Approve team application - now using backend
+  static async approveTeamApplication(teamId: string, applicationId: string, reviewedBy: string): Promise<void> {
+    try {
+      const result = await teamFunction({
+        action: 'approveApplication',
+        teamId,
+        applicationId
+      });
+      
+      const data = result.data as any;
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to approve application');
+      }
+    } catch (error: any) {
+      console.error('Error approving application:', error);
+      throw new Error(error.message || 'Failed to approve application');
+    }
+  }
+
+  // Decline team application
+  static async declineTeamApplication(teamId: string, applicationId: string, reviewedBy: string): Promise<void> {
+    const applicationRef = doc(db, 'teams', teamId, 'applications', applicationId);
+    const applicationDoc = await getDoc(applicationRef);
+    
+    if (!applicationDoc.exists()) {
+      throw new Error('Application not found');
+    }
+    
+    const applicationData = applicationDoc.data();
+    
+    if (applicationData.status !== 'pending') {
+      throw new Error('Application has already been reviewed');
+    }
+    
+    // Update application status in team's applications subcollection
+    await updateDoc(applicationRef, {
+      status: 'declined',
+      reviewedAt: new Date(),
+      reviewedBy
+    });
+    
+    // Try to update application in user's profile (may not have permission, that's okay)
+    try {
+      const userApplicationRef = doc(db, 'users', applicationData.applicantId, 'applications', applicationId);
+      await updateDoc(userApplicationRef, {
+        status: 'declined',
+        reviewedAt: new Date(),
+        reviewedBy
+      });
+    } catch (error) {
+      // If we can't update the user's copy, that's okay - the team copy is the source of truth
+      console.warn('Could not update user application copy:', error);
+    }
+  }
+  
+  // Invite user from public profile - now using backend
+  static async inviteFromPublicProfile(teamId: string, invitedUserId: string, invitedBy: string, message?: string): Promise<string> {
+    try {
+      const result = await teamFunction({
+        action: 'invite',
+        teamId,
+        invitedUserId,
+        message: message || ''
+      });
+      
+      const data = result.data as any;
+      if (data.success) {
+        return data.invitationId;
+      } else {
+        throw new Error(data.message || 'Failed to create invitation');
+      }
+    } catch (error: any) {
+      console.error('Error creating invitation:', error);
+      throw new Error(error.message || 'Failed to create invitation');
+    }
+  }
+  
+  // Respond to invitation - now using backend
   static async respondToInvitation(invitationId: string, status: 'accepted' | 'declined', responseMessage?: string): Promise<void> {
     try {
-      // Find the invitation across all teams
-      const teamsQuery = query(collection(db, 'teams'));
-      const teamsSnap = await getDocs(teamsQuery);
+      const action = status === 'accepted' ? 'acceptInvite' : 'declineInvite';
+      const result = await teamFunction({
+        action,
+        invitationId,
+        responseMessage: responseMessage || ''
+      });
       
-      for (const teamDoc of teamsSnap.docs) {
-        const invitationRef = doc(db, 'teams', teamDoc.id, 'invitations', invitationId);
-        const invitationDoc = await getDoc(invitationRef);
-        
-        if (invitationDoc.exists()) {
-          const invitationData = invitationDoc.data();
-          
-          // Build update object, only include responseMessage if it's provided
-          const updateData: any = {
-            status,
-            updatedAt: new Date()
-          };
-          
-          if (responseMessage !== undefined && responseMessage.trim() !== '') {
-            updateData.responseMessage = responseMessage;
-          }
-          
-          // Update invitation in team's collection
-          await updateDoc(invitationRef, updateData);
-          
-          // Update the invitation in user's profile
-          const userInvitationRef = doc(db, 'users', invitationData.invitedUserId, 'invitations', invitationId);
-          await updateDoc(userInvitationRef, updateData);
-          
-          // If accepted, add user as team member
-          if (status === 'accepted') {
-            console.log(`Adding user ${invitationData.invitedUserId} to team ${teamDoc.id}`);
-            await this.addTeamMember(teamDoc.id, invitationData.invitedUserId, 'member');
-          }
-          break;
-        }
+      const data = result.data as any;
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to respond to invitation');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error responding to invitation:', error);
-      throw error;
+      throw new Error(error.message || 'Failed to respond to invitation');
     }
   }
   
@@ -623,3 +717,4 @@ export class TeamService {
     await deleteDoc(doc(db, 'teams', teamId));
   }
 }
+

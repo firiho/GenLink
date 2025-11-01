@@ -151,7 +151,7 @@ const handleAddChallenge = async (challengeId) => {
     // Check if user is logged in
     if (!user) {
       toast.error('You need to be logged in to join a challenge');
-      navigate('/login?redirect=' + encodeURIComponent(`/challenges/${id}`));
+      navigate('/signin?redirect=' + encodeURIComponent(`/challenge/${id}`));
       return;
     }
     
@@ -286,8 +286,6 @@ const handleJoinAsTeam = async (teamId: string) => {
       <Header />
       <div className="pt-16">
         <div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
           className="min-h-screen pb-20"
         >
           {/* Challenge Header */}

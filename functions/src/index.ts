@@ -14,3 +14,6 @@ export * from "./community";
 // Export username functions
 export * from "./usernames";
 
+// Export team functions
+export * from "./team";
+

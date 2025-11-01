@@ -17,6 +17,7 @@ import TeamsTab from '@/components/dashboard/TeamsTab';
 import SettingsTab from '@/components/dashboard/SettingsTab';
 import ProfileTab from '@/components/dashboard/ProfileTab';
 import ChallengesView from '@/components/dashboard/challenges/ChallengesView';
+import TeamManagement from '@/pages/TeamManagement';
 import { getDashboardTabFromPath, getDashboardRouteFromTab, type DashboardTab } from '@/lib/routing';
 
 const Dashboard = () => {
@@ -36,7 +37,9 @@ const Dashboard = () => {
     // Set initial tab from URL
     const initialTab = getDashboardTabFromPath(location.pathname);
     setActiveView(initialTab);
+  }, [location.pathname]); // Sync whenever pathname changes
 
+  useEffect(() => {
     // Handle browser back/forward buttons
     const handlePopState = () => {
       const newTab = getDashboardTabFromPath(window.location.pathname);
@@ -150,6 +153,13 @@ const Dashboard = () => {
     }
   ];
   
+  // Extract team ID from URL if on team management route
+  const getTeamIdFromPath = () => {
+    // Try both absolute (/dashboard/teams/:id) and relative (teams/:id) patterns
+    const match = location.pathname.match(/\/teams\/([^/]+)$/);
+    return match ? match[1] : null;
+  };
+
   const renderMainContent = () => {
     switch (activeView) {
       case 'overview':
@@ -169,6 +179,9 @@ const Dashboard = () => {
       
       case 'teams-invitations':
         return <TeamsTab initialTab="invitations" />;
+      
+      case 'team-manage':
+        return <TeamManagement teamId={getTeamIdFromPath()} />;
 
       case 'do-challenge':
         return <ChallengesView challengeId={viewData} onBack={() => handleViewChange('challenges')} setActiveView={handleViewChange} />;

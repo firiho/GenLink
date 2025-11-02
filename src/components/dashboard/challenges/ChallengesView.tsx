@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, getDoc, updateDoc, setDoc, increment, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, increment, arrayUnion, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -10,11 +10,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, Download, FileText, Info, MessageSquare, Trophy, Upload, Users } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Download, FileText, Info, MessageSquare, Trophy, Upload, Users, FolderPlus, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { TeamService } from '@/services/teamService';
 
 interface ChallengesViewProps {
   challengeId: string;
@@ -27,14 +28,12 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
   const { user } = useAuth();
   
   const [challenge, setChallenge] = useState(null);
-  const [submission, setSubmission] = useState(null);
+  const [userChallenge, setUserChallenge] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  const [progress, setProgress] = useState(0);
-  const [submissionUrl, setSubmissionUrl] = useState('');
-  const [submissionNote, setSubmissionNote] = useState('');
   const [hasPublicProfile, setHasPublicProfile] = useState(true);
+  const [userTeams, setUserTeams] = useState([]);
+  const [teamForChallenge, setTeamForChallenge] = useState(null);
 
   useEffect(() => {
     const fetchChallengeAndSubmission = async () => {
@@ -78,12 +77,11 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
         
         const challengeData = challengeSnap.data();
         
-        // Fetch user's submission for this challenge
-        const submissionId = `${user.uid}_${challengeId}`;
-        const submissionRef = doc(db, 'submissions', submissionId);
-        const submissionSnap = await getDoc(submissionRef);
+        // Check if user has joined this challenge (from users collection)
+        const userChallengeRef = doc(db, 'users', user.uid, 'challenges', challengeId);
+        const userChallengeSnap = await getDoc(userChallengeRef);
         
-        if (!submissionSnap.exists()) {
+        if (!userChallengeSnap.exists()) {
           toast.error('You have not joined this challenge');
           if (onBack) {
             onBack();
@@ -93,7 +91,29 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
           return;
         }
         
-        const submissionData = submissionSnap.data();
+        const userChallengeData = userChallengeSnap.data();
+        
+        // Check if user is part of a team for this challenge
+        const userTeams = await TeamService.getUserTeams(user.uid);
+        const teamForThisChallenge = userTeams.find(team => 
+          team.challengeId === challengeId && team.status === 'active'
+        );
+        
+        // Also check teams/challenges subcollection
+        if (!teamForThisChallenge) {
+          for (const team of userTeams) {
+            const teamChallengeRef = doc(db, 'teams', team.id, 'challenges', challengeId);
+            const teamChallengeSnap = await getDoc(teamChallengeRef);
+            if (teamChallengeSnap.exists()) {
+              setTeamForChallenge(team);
+              break;
+            }
+          }
+        } else {
+          setTeamForChallenge(teamForThisChallenge);
+        }
+        
+        setUserTeams(userTeams);
 
         // Format challenge data
         const formattedChallenge = {
@@ -114,10 +134,7 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
         
         // Set state with fetched data
         setChallenge(formattedChallenge);
-        setSubmission(submissionData);
-        setProgress(submissionData.progress || 0);
-        setSubmissionUrl(submissionData.submissionUrl || '');
-        setSubmissionNote(submissionData.note || '');
+        setUserChallenge(userChallengeData);
         
       } catch (error) {
         console.error('Error fetching challenge:', error);
@@ -130,74 +147,25 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
     fetchChallengeAndSubmission();
   }, [challengeId, user, navigate, onBack]);
 
-  const handleSubmission = async () => {
-    if (!challengeId || !user) return;
-    
-    if (!submissionUrl.trim()) {
-      toast.error('Please provide a submission URL');
-      return;
+  const handleCreateProject = () => {
+    // Navigate to projects tab with challenge context
+    if (teamForChallenge) {
+      // Warn user about double participation
+      const confirmed = window.confirm(
+        `Warning: You are already part of team "${teamForChallenge.name}" for this challenge. ` +
+        `Creating an individual project means you'll be participating twice. Continue anyway?`
+      );
+      if (!confirmed) return;
     }
     
-    // Check if the user has a public profile before submitting
-    if (!hasPublicProfile) {
-      toast.error('You need to create a public profile before submitting');
-      return;
-    }
-    
-    try {
-      setSubmitting(true);
-      
-      const submissionId = `${user.uid}_${challengeId}`;
-      const submissionRef = doc(db, 'submissions', submissionId);
-      
-      await updateDoc(submissionRef, {
-        submissionUrl: submissionUrl,
-        note: submissionNote,
-        status: 'submitted',
-        progress: 100,
-        updatedAt: new Date()
-      });
-      
-      // Also update the challenge status in the user's profile
-      const userChallengeRef = doc(db, 'users', user.uid, 'challenges', challengeId);
-      await updateDoc(userChallengeRef, {
-        status: 'submitted',
-        submittedAt: new Date()
-      });
-
-      // Try updating the participant count as the last step
-    try {
-        const challengeRef = doc(db, 'challenges', challengeId);
-        await updateDoc(challengeRef, {
-          participants: increment(1)
-        });
-      } catch (countError) {
-        console.error("Error updating participant count:", countError);
-      }
-
-        // Update the public profile participants count
-    const publicProfileRef = doc(db, 'profiles', user.uid);
-    await setDoc(publicProfileRef, {
-        total_submissions: increment(1),
-        total_active_challenges: increment(-1),
-        projectsCount: increment(1),
-        submissions: arrayUnion(submissionId)
-    }, { merge: true });
-
-      toast.success('Submission successful!');
-      setSubmission({
-        ...submission,
-        status: 'submitted',
-        progress: 100,
-        submissionUrl: submissionUrl,
-        note: submissionNote
-      });
-    } catch (error) {
-      console.error('Error submitting challenge:', error);
-      toast.error('Error submitting challenge');
-    } finally {
-      setSubmitting(false);
-    }
+    // Navigate to projects tab to create new project
+    setActiveView('projects');
+    // Store challenge context in sessionStorage or pass via route state
+    sessionStorage.setItem('projectChallengeContext', JSON.stringify({
+      challengeId,
+      challengeTitle: challenge.title,
+      teamId: teamForChallenge?.id || null
+    }));
   };
 
   const formatDate = (date) => {
@@ -226,7 +194,7 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
     return <ChallengeSkeleton />;
   }
 
-  if (!challenge || !submission) {
+  if (!challenge || !userChallenge) {
     return (
       <div className="flex flex-col items-center justify-center p-10">
         <Info className="h-10 w-10 text-slate-400 dark:text-slate-500 mb-4" />
@@ -242,7 +210,7 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
     );
   }
 
-  const isSubmitted = submission.status === 'submitted';
+  const isSubmitted = userChallenge.status === 'submitted';
   const isExpired = challenge.deadline && new Date(challenge.deadline) < new Date();
 
   return (
@@ -493,55 +461,36 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
               {!isSubmitted ? (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Submit Your Work</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Create Project</h3>
+                    
+                    {teamForChallenge && (
+                      <Alert className="mb-4 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
+                        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        <AlertTitle className="text-amber-800 dark:text-amber-300">Team Participation Warning</AlertTitle>
+                        <AlertDescription className="text-amber-700 dark:text-amber-400">
+                          You are already part of team "{teamForChallenge.name}" for this challenge. 
+                          Creating an individual project means you'll be participating twice.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
                     <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="submissionUrl" className="text-slate-700 dark:text-slate-300">Submission URL</Label>
-                        <Input 
-                          id="submissionUrl" 
-                          type="url" 
-                          placeholder="https://github.com/yourusername/project" 
-                          value={submissionUrl} 
-                          onChange={(e) => setSubmissionUrl(e.target.value)}
-                          className="mt-1 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white"
-                          disabled={isSubmitted || submitting || !hasPublicProfile}
-                        />
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                          Link to your GitHub repository, demo, or other submission
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="note" className="text-slate-700 dark:text-slate-300">Submission Note</Label>
-                        <Textarea 
-                          id="note" 
-                          placeholder="Describe your approach and any special instructions..." 
-                          value={submissionNote} 
-                          onChange={(e) => setSubmissionNote(e.target.value)}
-                          className="mt-1 resize-none bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white"
-                          disabled={isSubmitted || submitting || !hasPublicProfile}
-                          rows={4}
-                        />
-                      </div>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Create a project to work on this challenge. You can create it individually or as part of a team.
+                      </p>
                       
                       <Button 
                         className="w-full bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200" 
-                        onClick={hasPublicProfile ? handleSubmission : () => setActiveView('profile')}
-                        disabled={isSubmitted || submitting || !submissionUrl.trim() || isExpired || !hasPublicProfile}
+                        onClick={handleCreateProject}
+                        disabled={isSubmitted || isExpired}
                       >
-                        {!hasPublicProfile ? (
-                          <>Create Profile First</>
-                        ) : (
-                          <>
-                            <Upload className="h-4 w-4 mr-2" />
-                            Submit Challenge
-                          </>
-                        )}
+                        <FolderPlus className="h-4 w-4 mr-2" />
+                        Create Project
                       </Button>
                       
                       {isExpired && !isSubmitted && (
                         <p className="text-xs text-red-500 dark:text-red-400 text-center">
-                          This challenge has expired and can no longer be submitted.
+                          This challenge has expired and can no longer accept new projects.
                         </p>
                       )}
                     </div>
@@ -561,56 +510,18 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
                   </div>
                   
                   <div>
-                    <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-white">Your Submission</h3>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">Submission URL</h4>
-                        <a 
-                          href={submission.submissionUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:underline"
-                        >
-                          {submission.submissionUrl}
-                        </a>
-                      </div>
-                      
-                      {submission.note && (
-                        <div>
-                          <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">Submission Note</h4>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">{submission.note}</p>
-                        </div>
-                      )}
-                      
-                      <div>
-                        <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">Submitted On</h4>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          {formatDate(submission.updatedAt)}
-                        </p>
-                      </div>
-                    </div>
+                    <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-white">Project Submitted</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                      Your project has been submitted for this challenge. The organizers will review it and provide feedback soon.
+                    </p>
+                    <Button 
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setActiveView('projects')}
+                    >
+                      View Your Projects
+                    </Button>
                   </div>
-                  
-                  {submission.feedback && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-white">Feedback</h3>
-                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                        <div className="flex items-start">
-                          <MessageSquare className="h-4 w-4 text-blue-500 dark:text-blue-400 mt-0.5 mr-2" />
-                          <div>
-                            <p className="text-sm text-blue-800 dark:text-blue-300">{submission.feedback}</p>
-                            {submission.score && (
-                              <div className="mt-2">
-                                <span className="text-sm font-medium text-blue-800 dark:text-blue-300">Score: </span>
-                                <span className="text-sm text-blue-800 dark:text-blue-300">{submission.score}/100</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
             </CardContent>

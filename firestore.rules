@@ -13,11 +13,6 @@ service cloud.firestore {
       let challenge = get(/databases/$(database)/documents/challenges/$(challengeId)).data;
       return challenge.createdBy == request.auth.uid;
     }
-    
-    function isParticipant() {
-      let profile = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return profile.user_type == 'participant';
-    }
 
     function isTeamOwner(teamId) {
       let team = get(/databases/$(database)/documents/teams/$(teamId)).data;
@@ -29,7 +24,7 @@ service cloud.firestore {
              get(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid)).data.status == 'active';
     }
     
-    // Users (main profiles) and their subcollections
+    // Profiles and their subcollections
     match /users/{userId} {
       allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
       
@@ -67,7 +62,7 @@ service cloud.firestore {
       // Staff subcollection for organization members
       match /staff/{staffId} {
         // Allow reading staff list to authenticated users
-        allow read: if request.auth != null;
+        allow read: if request.auth != null && exists(/databases/$(database)/documents/organizations/$(organizationId)/staff/$(request.auth.uid))
         
         // Allow creating staff during organization creation
         allow create: if request.auth != null && (
@@ -78,16 +73,16 @@ service cloud.firestore {
         // Allow updating own profile or by organization admins
         allow update: if request.auth != null && (
           request.auth.uid == staffId ||
-          get(/databases/$(database)/documents/organizations/$(organizationId)/staff/$(request.auth.uid)).data.role in ['owner', 'admin']
+          get(/databases/$(database)/documents/organizations/$(organizationId)/staff/$(request.auth.uid)).data.permissions in ['owner', 'admin']
         );
         
         // Allow deletion by organization admins
         allow delete: if request.auth != null && 
-          get(/databases/$(database)/documents/organizations/$(organizationId)/staff/$(request.auth.uid)).data.role in ['owner', 'admin'];
+          get(/databases/$(database)/documents/organizations/$(organizationId)/staff/$(request.auth.uid)).data.permissions in ['owner', 'admin'];
       }
     }
     
-    // Public profiles (for teams, challenges, community)
+    // Public profiles
     match /profiles/{profileId} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == profileId;
@@ -116,37 +111,157 @@ service cloud.firestore {
                  isChallengeOrganizer(resource.data.challengeId)
                  );
       
-      // Allow creating submissions
+      // Allow creating submissions (for individual or team projects)
       allow create: if request.auth != null && 
-                   submissionId.split('_')[0] == request.auth.uid &&
+                   (submissionId.split('_')[0] == request.auth.uid ||
+                    (submissionId.matches('team_.*') && request.resource.data.teamId != null &&
+                     exists(/databases/$(database)/documents/teams/$(request.resource.data.teamId)/members/$(request.auth.uid)))) &&
                    request.resource.data.userId == request.auth.uid;
       
-      // Allow updating your own submissions
-      allow update: if request.auth != null && 
-                   request.resource.data.userId == request.auth.uid &&
-                   resource.data.userId == request.auth.uid;
+      // Allow updating your own submissions, team submissions where you're a member, or by challenge organizers (partners)
+      allow update: if request.auth != null && (
+                   (request.resource.data.userId == request.auth.uid &&
+                    resource.data.userId == request.auth.uid) ||
+                   (request.resource.data.teamId != null &&
+                    exists(/databases/$(database)/documents/teams/$(request.resource.data.teamId)/members/$(request.auth.uid))) ||
+                   // Allow challenge organizers (partners) or admins to update submissions for their challenges
+                   ((isChallengeOrganizer(resource.data.challengeId) || isAdmin()) &&
+                    // Ensure critical fields don't change - only review fields can be updated
+                    request.resource.data.challengeId == resource.data.challengeId &&
+                    request.resource.data.userId == resource.data.userId &&
+                    (!('projectId' in resource.data) || request.resource.data.projectId == resource.data.projectId) &&
+                    (!('teamId' in resource.data) || request.resource.data.teamId == resource.data.teamId))
+                   );
       
       // Allow deleting your own submissions
       allow delete: if request.auth != null && 
                    resource.data.userId == request.auth.uid;
     }
     
+    // Events collection
+    match /events/{eventId} {
+      // Helper function to check if user can read an event
+      function canReadEvent() {
+        // Organizer can always read their own events (any status, any visibility)
+        return (request.auth != null && resource.data.organizerId == request.auth.uid) ||
+        // Admin can always read
+        (request.auth != null && isAdmin()) ||
+        // Public and unlisted published events can be read by anyone (including unauthenticated)
+        // Unlisted events are accessible via direct link but not shown in community listings
+        ((resource.data.visibility == 'public' || resource.data.visibility == 'unlisted') && resource.data.status == 'published');
+      }
+      
+      // Helper function to check if user can write an event
+      function canWriteEvent() {
+        return request.auth != null && (
+          // Organizer can write
+          resource.data.organizerId == request.auth.uid ||
+          // Admin can write
+          isAdmin()
+        );
+      }
+      
+      // Allow reading individual events
+      allow get: if canReadEvent();
+      
+      // Allow listing/querying events - Firestore will filter results based on 'get' permissions
+      // This allows queries to run, but each document must still pass the 'get' rule
+      allow list: if request.auth != null;
+      
+      // Allow creating events for authenticated users
+      allow create: if request.auth != null && 
+                   request.resource.data.organizerId == request.auth.uid;
+      
+      // Allow updating: organizer or admin (full update)
+      allow update: if canWriteEvent() && 
+                   request.resource.data.organizerId == resource.data.organizerId;
+      
+      // Allow RSVP: authenticated users can update attendeeIds and attendees count
+      // This allows users to add/remove themselves from the attendees list
+      allow update: if request.auth != null &&
+                   // Ensure organizerId doesn't change
+                   request.resource.data.organizerId == resource.data.organizerId &&
+                   // Ensure critical immutable fields don't change (only check if they exist)
+                   (!('title' in resource.data) || request.resource.data.title == resource.data.title) &&
+                   (!('status' in resource.data) || request.resource.data.status == resource.data.status) &&
+                   (!('visibility' in resource.data) || request.resource.data.visibility == resource.data.visibility) &&
+                   (!('date' in resource.data) || request.resource.data.date == resource.data.date) &&
+                   (!('type' in resource.data) || request.resource.data.type == resource.data.type) &&
+                   // Allow updating attendees count (must be within reasonable range)
+                   request.resource.data.attendees >= 0 &&
+                   request.resource.data.attendees <= (resource.data.maxAttendees != null ? resource.data.maxAttendees : 10000);
+      
+      // Allow deleting: organizer or admin
+      allow delete: if request.auth != null && 
+                   (resource.data.organizerId == request.auth.uid || isAdmin());
+    }
+    
+    // Projects collection
+    match /projects/{projectId} {
+      // Helper function to check if user can read a project
+      function canReadProject() {
+        // Public submitted projects can be read by anyone (for showcase)
+        return (resource.data.visibility == 'public' && resource.data.status == 'submitted') ||
+        // For other cases, require authentication
+        (request.auth != null && (
+          // Owner can always read
+          resource.data.userId == request.auth.uid ||
+          // Admin can always read
+          isAdmin() ||
+          // Private projects: challenge maker or team members
+          (resource.data.visibility == 'private' && (
+            // Challenge maker
+            isChallengeOrganizer(resource.data.challengeId) ||
+            // Team members (if team project) - check membership and active status
+            (resource.data.teamId != null && 
+             exists(/databases/$(database)/documents/teams/$(resource.data.teamId)/members/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/teams/$(resource.data.teamId)/members/$(request.auth.uid)).data.status == 'active')
+          ))
+        ));
+      }
+      
+      // Allow reading individual projects
+      allow get: if canReadProject();
+      
+      // Allow listing projects - Firestore will filter results based on 'get' permissions
+      // This allows queries to run, but each document must still pass the 'get' rule
+      allow list: if request.auth != null;
+      
+      // Allow creating projects for authenticated participants
+      allow create: if request.auth != null && 
+                   request.resource.data.userId == request.auth.uid;
+      
+      // Allow updating: owner, team members (for team projects), or admin
+      allow update: if request.auth != null && (
+        // Owner can update
+        (resource.data.userId == request.auth.uid &&
+         request.resource.data.userId == request.auth.uid) ||
+        // Team members can update team projects
+        (resource.data.teamId != null &&
+         exists(/databases/$(database)/documents/teams/$(resource.data.teamId)/members/$(request.auth.uid))) ||
+        // Admin can update
+        isAdmin()
+      );
+      
+      // Allow deleting: owner or admin
+      allow delete: if request.auth != null && 
+                   (resource.data.userId == request.auth.uid || isAdmin());
+    }
+    
     
     // Main teams collection
     match /teams/{teamId} {
-      // Allow reading teams if:
-      // 1. Team is public (anyone can read, including unauthenticated)
-      // 2. User is authenticated and is in admins array
-      // 3. User is authenticated and has a team reference in their profile (is a member)
-      // 4. User is authenticated and is admin
-      allow read: if (resource != null && resource.data.visibility == 'public') ||
-                   (request.auth != null && (
-                     (resource != null && request.auth.uid in resource.data.admins) ||
-                     exists(/databases/$(database)/documents/users/$(request.auth.uid)/teams/$(teamId)) ||
-                     isAdmin()
-                   ));
+      // Allow reading teams:
+      // 1. Public teams can be read by anyone (including unauthenticated users for project showcase)
+      // 2. Authenticated users with proper permissions
+      allow get: if resource.data.visibility == 'public' ||
+                  (request.auth != null && (
+                    request.auth.uid in resource.data.admins ||
+                    exists(/databases/$(database)/documents/users/$(request.auth.uid)/teams/$(teamId)) ||
+                    isAdmin()
+                  ));
       
-      // Allow listing/querying teams for discovery (authenticated only)
+      // Allow listing/querying teams for discovery (requires auth)
       allow list: if request.auth != null;
 
       // Allow authenticated participants to create teams
@@ -176,11 +291,9 @@ service cloud.firestore {
 
       // Team members as subcollection
       match /members/{userId} {
-        // Allow reading members if:
-        // 1. User is authenticated (for any team)
-        // 2. Team is public (allow anyone to read members of public teams)
-        allow read: if request.auth != null || 
-                     get(/databases/$(database)/documents/teams/$(teamId)).data.visibility == 'public';
+        // Allow reading members if team is public (for project showcase) or user is authenticated
+        allow read: if (get(/databases/$(database)/documents/teams/$(teamId)).data.visibility == 'public') ||
+                     request.auth != null;
         
         // Allow creating member during team creation, by team admins, or when accepting invitation
         allow create: if request.auth != null && (
@@ -256,19 +369,23 @@ service cloud.firestore {
 
       // Team messages as subcollection
       match /messages/{messageId} {
-        // Allow reading messages if user is a team member
+        // All team members can read messages
         allow read: if isTeamMember(teamId) || isTeamOwner(teamId) || isAdmin();
         
-        // Allow creating messages if user is a team member
-        allow create: if request.auth != null && 
-                       (isTeamMember(teamId) || isTeamOwner(teamId) || isAdmin()) &&
-                       request.resource.data.userId == request.auth.uid &&
-                       request.resource.data.teamId == teamId &&
-                       request.resource.data.text is string;
+        // Only team members, owners, and admins can create messages
+        allow create: if isTeamMember(teamId) || isTeamOwner(teamId) || isAdmin();
         
-        // No updates or deletes allowed (messages are immutable)
-        allow update: if false;
-        allow delete: if false;
+        // Users can update their own messages, or team owners/admins can update any
+        allow update: if isTeamMember(teamId) || isTeamOwner(teamId) || isAdmin() &&
+                      (resource.data.userId == request.auth.uid || 
+                       isTeamOwner(teamId) || 
+                       isAdmin());
+        
+        // Users can delete their own messages, or team owners/admins can delete any
+        allow delete: if isTeamMember(teamId) || isTeamOwner(teamId) || isAdmin() &&
+                      (resource.data.userId == request.auth.uid || 
+                       isTeamOwner(teamId) || 
+                       isAdmin());
       }
     }
   }

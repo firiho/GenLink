@@ -166,11 +166,10 @@ const handleAddChallenge = async (challengeId) => {
     }
     
     // Check if user already joined this specific challenge
-    const submissionId = `${user.uid}_${challengeId}`;
-    const submissionRef = doc(db, 'submissions', submissionId);
-    const submissionSnap = await getDoc(submissionRef);
+    const userChallengeRef = doc(db, 'users', user.uid, 'challenges', challengeId);
+    const userChallengeSnap = await getDoc(userChallengeRef);
     
-    if (submissionSnap.exists()) {
+    if (userChallengeSnap.exists()) {
       toast.info('You have already joined this challenge');
       // Navigate to appropriate dashboard based on user role
       if (user?.role === 'partner') {
@@ -183,25 +182,11 @@ const handleAddChallenge = async (challengeId) => {
       return;
     }
     
-    // Add user's challenge to their profile first (this should have proper permissions)
-    const userChallengeRef = doc(db, 'users', user.uid, 'challenges', challengeId);
+    // Add user's challenge to their profile (no submission doc created yet)
     await setDoc(userChallengeRef, {
       challengeId: challengeId,
       joinedAt: new Date(),
       status: 'in-progress'
-    });
-    
-    // Create submission document next
-    await setDoc(submissionRef, {
-      userId: user.uid,
-      challengeId: challengeId,
-      status: 'in-progress',
-      progress: 0,
-      submissionUrl: '',
-      feedback: '',
-      score: 0,
-      createdAt: new Date(),
-      updatedAt: new Date()
     });
 
     const publicProfileRef = doc(db, 'profiles', user.uid);

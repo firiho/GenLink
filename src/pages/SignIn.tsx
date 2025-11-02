@@ -43,8 +43,8 @@ const SignIn = () => {
         return;
       }
 
-      // If there's a redirect URL, use it (for participants only, to avoid security issues)
-      if (redirectUrl && user.role === 'participant') {
+      // If there's a redirect URL, use it (allow all users, but they may be restricted on the target page)
+      if (redirectUrl) {
         console.log('Redirecting to:', redirectUrl);
         navigate(redirectUrl);
         return;

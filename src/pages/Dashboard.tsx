@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { signOut } from '@/services/auth';
 import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import { LayoutDashboard, Users, Trophy, Settings, LogOut, User} from 'lucide-react';
+import { LayoutDashboard, Users, Trophy, Settings, LogOut, User, FolderOpen, Calendar} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from "@/lib/utils";
 import MobileHeader from '@/components/dashboard/MobileHeader';
@@ -13,6 +13,12 @@ import AuthLoadingScreen from '@/components/ui/auth-loading-screen';
 import Logo from '@/components/Logo';
 import OverviewTab from '@/components/dashboard/OverviewTab';
 import ChallengesTab from '@/components/dashboard/challenges/ChallengesTab';
+import ProjectsTab from '@/components/dashboard/projects/ProjectsTab';
+import CreateProject from '@/components/dashboard/projects/CreateProject';
+import ProjectView from '@/components/dashboard/projects/ProjectView';
+import EventsTab from '@/components/dashboard/events/EventsTab';
+import CreateEvent from '@/components/dashboard/events/CreateEvent';
+import EventView from '@/components/dashboard/events/EventView';
 import TeamsTab from '@/components/dashboard/TeamsTab';
 import SettingsTab from '@/components/dashboard/SettingsTab';
 import ProfileTab from '@/components/dashboard/ProfileTab';
@@ -32,11 +38,57 @@ const Dashboard = () => {
   );
   const [viewData, setViewData] = useState(null);
 
+  // Extract team ID from URL if on team management route
+  const getTeamIdFromPath = () => {
+    // Try both absolute (/dashboard/teams/:id) and relative (teams/:id) patterns
+    const match = location.pathname.match(/\/teams\/([^/]+)$/);
+    return match ? match[1] : null;
+  };
+
+  // Extract project ID from URL if on project route
+  const getProjectIdFromPath = () => {
+    // Handle both /projects/:id and /projects/:id/edit
+    const match = location.pathname.match(/\/projects\/([^/]+)/);
+    return match ? match[1] : null;
+  };
+
+  // Extract challenge ID from URL if on challenge route
+  const getChallengeIdFromPath = () => {
+    const match = location.pathname.match(/\/challenges\/([^/]+)$/);
+    return match ? match[1] : null;
+  };
+
+  // Extract event ID from URL if on event route
+  const getEventIdFromPath = () => {
+    // Handle both /events/:id and /events/:id/edit
+    // Don't match "create" as an event ID
+    const match = location.pathname.match(/\/events\/([^/]+)/);
+    if (match && match[1] !== 'create') {
+      return match[1];
+    }
+    return null;
+  };
+
   // Sync state with URL on mount and browser navigation
   useEffect(() => {
     // Set initial tab from URL
     const initialTab = getDashboardTabFromPath(location.pathname);
     setActiveView(initialTab);
+    
+    // Extract project/team/challenge/event ID from URL if present
+    if (initialTab === 'project' || initialTab === 'edit-project') {
+      const projectId = getProjectIdFromPath();
+      if (projectId) setViewData(projectId);
+    } else if (initialTab === 'team-manage') {
+      const teamId = getTeamIdFromPath();
+      if (teamId) setViewData(teamId);
+    } else if (initialTab === 'challenge') {
+      const challengeId = getChallengeIdFromPath();
+      if (challengeId) setViewData(challengeId);
+    } else if (initialTab === 'event' || initialTab === 'edit-event') {
+      const eventId = getEventIdFromPath();
+      if (eventId) setViewData(eventId);
+    }
   }, [location.pathname]); // Sync whenever pathname changes
 
   useEffect(() => {
@@ -54,14 +106,31 @@ const Dashboard = () => {
   }, []); // Only run once on mount
 
   const handleViewChange = (view: DashboardTab, data = null) => {
-    // Update local state
+    // Update local state first
     setActiveView(view);
     setViewData(data);
     
     // Update URL without page reload
-    const route = getDashboardRouteFromTab(view);
-    if (route !== window.location.pathname) {
-      window.history.pushState(null, '', route);
+    let route = getDashboardRouteFromTab(view);
+    
+    // Handle routes that need IDs appended
+    if (view === 'project' && data) {
+      route = `/dashboard/projects/${data}`;
+    } else if (view === 'team-manage' && data) {
+      route = `/dashboard/teams/${data}`;
+    } else if (view === 'edit-project' && data) {
+      route = `/dashboard/projects/${data}/edit`;
+    } else if (view === 'challenge' && data) {
+      route = `/dashboard/challenges/${data}`;
+    } else if (view === 'event' && data) {
+      route = `/dashboard/events/${data}`;
+    } else if (view === 'edit-event' && data) {
+      route = `/dashboard/events/${data}/edit`;
+    }
+    
+    // Use React Router's navigate to ensure proper URL updates and component re-rendering
+    if (route !== location.pathname) {
+      navigate(route, { replace: false });
     }
   };
   
@@ -130,9 +199,19 @@ const Dashboard = () => {
           action: () => handleViewChange('challenges') 
         },
         { 
+          icon: FolderOpen, 
+          text: 'Projects', 
+          action: () => handleViewChange('projects') 
+        },
+        { 
           icon: Users, 
           text: 'Teams', 
           action: () => handleViewChange('teams') 
+        },
+        { 
+          icon: Calendar, 
+          text: 'Events', 
+          action: () => handleViewChange('events') 
         },
       ]
     },
@@ -152,13 +231,6 @@ const Dashboard = () => {
       ]
     }
   ];
-  
-  // Extract team ID from URL if on team management route
-  const getTeamIdFromPath = () => {
-    // Try both absolute (/dashboard/teams/:id) and relative (teams/:id) patterns
-    const match = location.pathname.match(/\/teams\/([^/]+)$/);
-    return match ? match[1] : null;
-  };
 
   const renderMainContent = () => {
     switch (activeView) {
@@ -168,23 +240,72 @@ const Dashboard = () => {
       case 'challenges':
         return <ChallengesTab setActiveView={handleViewChange}/>;
       
+      case 'projects':
+        return <ProjectsTab setActiveView={handleViewChange} />;
+      
+      case 'create-project':
+        return <CreateProject 
+          challengeContext={viewData}
+          onBack={() => handleViewChange('projects')}
+          setActiveView={handleViewChange}
+        />;
+      
+      case 'project':
+        return <ProjectView 
+          projectId={viewData || getProjectIdFromPath()}
+          onBack={() => handleViewChange('projects')}
+          setActiveView={handleViewChange}
+        />;
+      
+      case 'edit-project':
+        return <CreateProject 
+          projectId={viewData || getProjectIdFromPath()}
+          onBack={() => handleViewChange('project', viewData || getProjectIdFromPath())}
+          setActiveView={handleViewChange}
+        />;
+      
+      case 'events':
+        return <EventsTab setActiveView={handleViewChange} />;
+      
+      case 'create-event':
+        return <CreateEvent 
+          onBack={() => handleViewChange('events')}
+          setActiveView={handleViewChange}
+        />;
+      
+      case 'event':
+        return <EventView 
+          eventId={viewData || getEventIdFromPath()}
+          onBack={() => handleViewChange('events')}
+          setActiveView={handleViewChange}
+        />;
+      
+      case 'edit-event':
+        return <CreateEvent 
+          eventId={viewData || getEventIdFromPath()}
+          onBack={() => handleViewChange('event', viewData || getEventIdFromPath())}
+          setActiveView={handleViewChange}
+        />;
+      
       case 'profile':
         return <ProfileTab user={authUser} />;
       
       case 'teams':
-        return <TeamsTab />;
+        return <TeamsTab setActiveView={handleViewChange} />;
       
       case 'teams-discover':
-        return <TeamsTab initialTab="discover" />;
+        return <TeamsTab initialTab="discover" setActiveView={handleViewChange} />;
       
       case 'teams-invitations':
-        return <TeamsTab initialTab="invitations" />;
+        return <TeamsTab initialTab="invitations" setActiveView={handleViewChange} />;
       
       case 'team-manage':
-        return <TeamManagement teamId={getTeamIdFromPath()} />;
+        // Use viewData if available (from handleViewChange), otherwise try to get from URL
+        const teamIdForManage = viewData || getTeamIdFromPath();
+        return <TeamManagement teamId={teamIdForManage} />;
 
-      case 'do-challenge':
-        return <ChallengesView challengeId={viewData} onBack={() => handleViewChange('challenges')} setActiveView={handleViewChange} />;
+      case 'challenge':
+        return <ChallengesView challengeId={viewData || getChallengeIdFromPath()} onBack={() => handleViewChange('challenges')} setActiveView={handleViewChange} />;
 
       case 'settings':
         return <SettingsTab user={authUser} />;

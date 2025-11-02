@@ -40,9 +40,9 @@ export class TeamService {
       lastActivity: new Date(),
       hasSubmitted: false,
       tags: teamData.tags || [],
-      admins: [teamData.createdBy],
-      permissions: teamData.permissions
-    });
+      admins: [teamData.createdBy]
+      // Permissions are now implicit - no longer stored
+    } as any);
     
     // Add creator as owner
     await this.addTeamMember(teamRef.id, teamData.createdBy, 'owner');
@@ -674,10 +674,9 @@ export class TeamService {
       members: []
     });
     
-    // Update team active challenges count
+    // Update team last activity
     const teamRef = doc(db, 'teams', teamId);
     await updateDoc(teamRef, {
-      activeChallenges: increment(1),
       lastActivity: new Date()
     });
   }

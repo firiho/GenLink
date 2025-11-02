@@ -241,7 +241,7 @@ export default function OverviewTab({setActiveView, user}) {
                                 <RecentChallengeItem 
                                     key={challenge.id} 
                                     challenge={challenge} 
-                                    onClick={() => setActiveView('do-challenge', challenge.id)}
+                                    onClick={() => setActiveView('challenge', challenge.id)}
                                 />
                             ))}
                         </div>

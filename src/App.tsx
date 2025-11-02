@@ -23,7 +23,10 @@ import Onboarding from '@/pages/Onboarding';
 import UserProfile from '@/pages/UserProfile';
 import TeamDetails from '@/pages/TeamDetails';
 import EventDetails from '@/pages/EventDetails';
+import ProjectView from '@/components/dashboard/projects/ProjectView';
+import ProjectShowcase from '@/pages/ProjectShowcase';
 import { auth } from '@/lib/firebase';
+import { useParams } from 'react-router-dom';
 
 const PartnerRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -104,6 +107,27 @@ const ParticipantRoute = ({ children }) => {
   return user?.role === 'participant' && auth.currentUser?.emailVerified ? children : null;
 }
 
+const ProjectViewWrapper = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  
+  return (
+    <ParticipantRoute>
+      <ProjectView 
+        projectId={id || ''} 
+        onBack={() => navigate('/dashboard/projects')}
+        setActiveView={(view, data) => {
+          if (view === 'projects') {
+            navigate('/dashboard/projects');
+          } else {
+            navigate('/dashboard');
+          }
+        }}
+      />
+    </ParticipantRoute>
+  );
+};
+
 function App() {
   return (
     <ThemeProvider>
@@ -118,6 +142,8 @@ function App() {
             <Route path="/challenges" element={<Challenges />} />
             <Route path="/challenge/:id" element={<ChallengeView />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/p/:id" element={<ProjectShowcase />} />
+            <Route path="/project/:id" element={<ProjectViewWrapper />} />
             <Route path="/community" element={<Community />} />
             <Route path="/community/people" element={<Community />} />
             <Route path="/community/teams" element={<Community />} />

@@ -378,122 +378,116 @@ export default function PublicChallenges() {
     </div>
   );
 
-  // Challenge card in list view
+  // Challenge card in list view - compact and clickable
   const ChallengeCard = ({ challenge }) => (
-    <div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="bg-card rounded-lg border border-border hover:bg-accent/5 transition-all duration-300 overflow-hidden"
-    >
-      <div className="flex flex-col md:flex-row h-full">
-        <div className="relative md:w-64 flex-shrink-0">
-          <img 
-            src={challenge.image} 
-            alt={challenge.title}
-            className="w-full h-48 md:h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = "/placeholder-challenge.jpg";
-            }}
-          />
-          {challenge.featured && (
-            <Badge className="absolute top-3 right-3 bg-primary text-white">
-              <Trophy className="w-3 h-3 mr-1" />
-              Featured
-            </Badge>
-          )}
-          {challenge.daysLeft <= 3 && challenge.daysLeft > 0 && (
-            <Badge variant="destructive" className="absolute top-3 left-3">
-              Ending Soon
-            </Badge>
-          )}
-        </div>
-        
-        <div className="p-5 flex-1 flex flex-col">
-          <div className="flex-1">
-            <div className="flex flex-wrap gap-2 mb-2">
-              {challenge.categories.slice(0, 3).map(category => (
-                <Badge key={category} variant="secondary" className="text-xs">
-                  {category}
-                </Badge>
-              ))}
+    <Link to={`/challenge/${challenge.id}`}>
+      <div className="bg-card rounded-lg border border-border hover:border-accent/30 hover:bg-accent/5 transition-all duration-300 overflow-hidden cursor-pointer group">
+        <div className="flex gap-4 p-4">
+          {/* Thumbnail */}
+          <div className="relative w-24 h-24 flex-shrink-0 rounded-md overflow-hidden bg-muted">
+            <img 
+              src={challenge.image || "/placeholder-challenge.jpg"} 
+              alt={challenge.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder-challenge.jpg";
+              }}
+            />
+            {challenge.featured && (
+              <Badge className="absolute top-1 right-1 bg-primary text-white text-xs px-1.5 py-0">
+                <Trophy className="w-3 h-3 mr-0.5" />
+                Featured
+              </Badge>
+            )}
+            {challenge.daysLeft <= 3 && challenge.daysLeft > 0 && (
+              <Badge variant="destructive" className="absolute top-1 left-1 text-xs px-1.5 py-0">
+                Soon
+              </Badge>
+            )}
+          </div>
+          
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold mb-1.5 group-hover:text-accent transition-colors line-clamp-1 text-foreground">
+                  {challenge.title}
+                </h3>
+              </div>
+              <div className="text-sm font-semibold text-primary flex-shrink-0">
+                {challenge.total_prize > 0 ? `$${challenge.total_prize.toLocaleString()}` : challenge.prize}
+              </div>
             </div>
             
-            <h3 className="text-xl font-semibold mb-1 hover:text-primary transition-colors line-clamp-2">
-              {challenge.title}
-            </h3>
-            
-            <p className="text-gray-600 mb-2 flex items-center text-sm">
-              {challenge.organizerLogo && (
-                <img 
-                  src={challenge.organizerLogo}
-                  alt={challenge.organizer}
-                  className="w-4 h-4 mr-1.5 rounded-full object-contain"
-                />
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              {challenge.categories && challenge.categories.length > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  {challenge.categories[0]}
+                </Badge>
               )}
-              {challenge.organizer}
-            </p>
+            </div>
             
-            <p className="text-gray-500 text-sm mb-4 line-clamp-2">
+            {challenge.organizer && (
+              <p className="text-sm text-muted-foreground mb-2 flex items-center gap-1.5">
+                {challenge.organizerLogo && (
+                  <img 
+                    src={challenge.organizerLogo}
+                    alt={challenge.organizer}
+                    className="w-3.5 h-3.5 rounded-full object-contain"
+                  />
+                )}
+                <span className="line-clamp-1">{challenge.organizer}</span>
+              </p>
+            )}
+            
+            <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
               {challenge.description}
             </p>
             
-            <div className="flex flex-wrap gap-3 text-xs text-gray-500 mb-4">
+            <div className="flex items-center flex-wrap gap-3 text-xs text-muted-foreground">
               {challenge.daysLeft > 0 ? (
                 <div className="flex items-center">
-                  <Timer className="w-3.5 h-3.5 mr-1 text-blue-500" />
+                  <Timer className="w-3 h-3 mr-1" />
                   <span>{challenge.daysLeft} days left</span>
                 </div>
               ) : (
-                <div className="flex items-center text-gray-400">
-                  <Timer className="w-3.5 h-3.5 mr-1" />
+                <div className="flex items-center">
+                  <Timer className="w-3 h-3 mr-1" />
                   <span>Ended</span>
                 </div>
               )}
               
               <div className="flex items-center">
-                <Users className="w-3.5 h-3.5 mr-1 text-indigo-500" />
+                <Users className="w-3 h-3 mr-1" />
                 <span>{challenge.participants} participants</span>
               </div>
               
               {challenge.deadline && (
                 <div className="flex items-center">
-                  <CalendarDays className="w-3.5 h-3.5 mr-1 text-green-500" />
-                  <span>{format(new Date(challenge.deadline), 'MMM d, yyyy')}</span>
+                  <CalendarDays className="w-3 h-3 mr-1" />
+                  <span>{format(new Date(challenge.deadline), 'MMM d')}</span>
+                </div>
+              )}
+              
+              {challenge.skills && challenge.skills.length > 0 && (
+                <div className="flex items-center gap-1">
+                  {challenge.skills.slice(0, 2).map(skill => (
+                    <span key={skill} className="px-1.5 py-0.5 bg-accent/10 text-accent rounded text-xs">
+                      {skill}
+                    </span>
+                  ))}
+                  {challenge.skills.length > 2 && (
+                    <span className="text-xs text-muted-foreground">
+                      +{challenge.skills.length - 2}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
-            
-            {challenge.skills.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-4">
-                {challenge.skills.slice(0, 4).map(skill => (
-                  <span key={skill} className="text-xs px-2 py-0.5 bg-accent/10 text-accent rounded-full">
-                    {skill}
-                  </span>
-                ))}
-                {challenge.skills.length > 4 && (
-                  <span className="text-xs px-2 py-0.5 bg-accent/10 text-accent rounded-full">
-                    +{challenge.skills.length - 4} more
-                  </span>
-                )}
-              </div>
-            )}
           </div>
-          
-          <div className="flex items-center justify-between mt-2 pt-3 border-t border-gray-100">
-            <div className="text-primary font-semibold">
-              {challenge.total_prize > 0 ? `$${challenge.total_prize.toLocaleString()}` : challenge.prize}
-            </div>
-            <Link to={`/challenge/${challenge.id}`}>
-              <Button size="sm" className="group">
-                View Challenge
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-              </Button>
-            </Link>
-         </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 
   // Empty state when no challenges found

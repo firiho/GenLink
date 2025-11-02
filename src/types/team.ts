@@ -29,11 +29,9 @@ export interface Team {
   
   tags: string[];
   admins: string[];
-  permissions: {
-    canInviteMembers: boolean;
-    canRemoveMembers: boolean;
-    canEditTeam: boolean;
-  };
+  // Permissions are now implicit - no longer stored
+  // Admin (in admins array): can see, edit, and submit projects
+  // Team members: can see, chat, and edit projects (but NOT submit)
 }
 
 export interface TeamMember {
@@ -104,10 +102,5 @@ export interface CreateTeamData {
   initialMembers?: string[]; // Array of user IDs
   
   tags: string[];
-  permissions: {
-    canInviteMembers: boolean;
-    canRemoveMembers: boolean;
-    canEditTeam: boolean;
-    canManageChallenges: boolean;
-  };
+  // Permissions are now implicit - not required during creation
 }

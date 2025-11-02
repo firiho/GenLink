@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Team, TeamMember } from '@/types/team';
 import { TeamService } from '@/services/teamService';
 import { toast } from 'sonner';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,8 +41,10 @@ import {
   Share2,
   FileText,
   CheckCircle2,
-  XCircle
+  XCircle,
+  FolderOpen
 } from 'lucide-react';
+import TeamChat from '@/components/teams/TeamChat';
 
 interface PublicProfile {
   id: string;
@@ -98,10 +100,14 @@ export default function TeamManagement({ teamId }: TeamManagementProps) {
   const [applications, setApplications] = useState<Array<any>>([]);
   const [loadingApplications, setLoadingApplications] = useState(false);
   const [applicationFilter, setApplicationFilter] = useState<'all' | 'pending' | 'accepted' | 'declined'>('all');
+  const [teamProjects, setTeamProjects] = useState<Array<any>>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
 
-  // Check permissions
-  const isAdmin = currentUserMember?.role === 'admin' || currentUserMember?.role === 'owner';
-  const isOwner = currentUserMember?.role === 'owner';
+  // Check permissions - now implicit based on admins array
+  // Admin: user ID in team.admins array
+  // Member: user is in members subcollection with active status
+  const isAdmin = team?.admins?.includes(user?.uid || '') || false;
+  const isOwner = team?.createdBy === user?.uid;
   const isMember = !!currentUserMember;
 
   useEffect(() => {
@@ -111,6 +117,51 @@ export default function TeamManagement({ teamId }: TeamManagementProps) {
     }
     loadTeamData();
   }, [teamId, user]);
+
+  const loadTeamProjects = async () => {
+    if (!teamId) return;
+    
+    try {
+      setLoadingProjects(true);
+      const projectsQuery = query(
+        collection(db, 'projects'),
+        where('teamId', '==', teamId)
+      );
+      const projectsSnap = await getDocs(projectsQuery);
+      
+      const projectsData = [];
+      for (const projectDoc of projectsSnap.docs) {
+        const projectData = projectDoc.data();
+        // Get challenge title
+        let challengeTitle = 'Unknown Challenge';
+        if (projectData.challengeId) {
+          try {
+            const challengeRef = doc(db, 'challenges', projectData.challengeId);
+            const challengeSnap = await getDoc(challengeRef);
+            if (challengeSnap.exists()) {
+              challengeTitle = challengeSnap.data().title || challengeTitle;
+            }
+          } catch (error) {
+            console.error('Error fetching challenge:', error);
+          }
+        }
+        
+        projectsData.push({
+          id: projectDoc.id,
+          ...projectData,
+          challengeTitle,
+          createdAt: projectData.createdAt?.toDate ? projectData.createdAt.toDate() : new Date(projectData.createdAt),
+          updatedAt: projectData.updatedAt?.toDate ? projectData.updatedAt.toDate() : new Date(projectData.updatedAt),
+        });
+      }
+      
+      setTeamProjects(projectsData);
+    } catch (error) {
+      console.error('Error loading team projects:', error);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
 
   const loadTeamData = async () => {
     if (!user || !teamId) return;
@@ -139,6 +190,7 @@ export default function TeamManagement({ teamId }: TeamManagementProps) {
         status: data.status,
         visibility: data.visibility,
         tags: data.tags || [],
+        admins: data.admins || [data.createdBy], // Ensure admins array exists
         createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
         lastActivity: data.lastActivity?.toDate?.() || data.updatedAt?.toDate?.() || new Date(),
         createdBy: data.createdBy,
@@ -148,8 +200,6 @@ export default function TeamManagement({ teamId }: TeamManagementProps) {
         hasSubmitted: data.hasSubmitted || false,
         submittedAt: data.submittedAt?.toDate?.(),
         submissionUrl: data.submissionUrl,
-        activeChallenges: data.activeChallenges || 0,
-        completedChallenges: data.completedChallenges || 0,
         updatedAt: data.updatedAt?.toDate?.() || new Date(),
       };
       
@@ -198,6 +248,9 @@ export default function TeamManagement({ teamId }: TeamManagementProps) {
           console.error('Error fetching challenge:', err);
         }
       }
+      
+      // Load team projects
+      await loadTeamProjects();
       
     } catch (error) {
       console.error('Error loading team data:', error);
@@ -652,24 +705,6 @@ export default function TeamManagement({ teamId }: TeamManagementProps) {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-2">
-                  <Target className="h-4 w-4 text-blue-500" />
-                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">Active</span>
-                </div>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{team.activeChallenges}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <Trophy className="h-4 w-4 text-emerald-500" />
-                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">Won</span>
-                </div>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{team.completedChallenges}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-2 mb-2">
                   <Clock className="h-4 w-4 text-orange-500" />
                   <span className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase">Status</span>
                 </div>
@@ -724,6 +759,75 @@ export default function TeamManagement({ teamId }: TeamManagementProps) {
               </CardContent>
             </Card>
           )}
+
+          {/* Team Projects */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Team Projects
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingProjects ? (
+                <div className="space-y-3">
+                  <div className="h-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                  <div className="h-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                </div>
+              ) : teamProjects.length > 0 ? (
+                <div className="space-y-3">
+                  {teamProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold text-slate-900 dark:text-white">
+                            {project.title}
+                          </h4>
+                          <Badge variant="outline" className={project.status === 'submitted' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' : ''}>
+                            {project.status === 'submitted' ? 'Submitted' : project.status === 'in-progress' ? 'In Progress' : 'Draft'}
+                          </Badge>
+                          {project.visibility === 'private' && (
+                            <Badge variant="outline" className="border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300">
+                              Private
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-1">
+                          {project.description}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+                          {project.challengeTitle}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/dashboard/projects/${project.id}`)}
+                      >
+                        View
+                        <ExternalLink className="h-3 w-3 ml-2" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
+                  <p className="text-slate-600 dark:text-slate-400 mb-4">No projects yet</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/dashboard/projects/create`)}
+                  >
+                    Create Project
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Tags */}
           {team.tags && team.tags.length > 0 && (
@@ -1194,17 +1298,21 @@ export default function TeamManagement({ teamId }: TeamManagementProps) {
 
         {/* Chat Tab */}
         <TabsContent value="chat" className="space-y-6 mt-6">
-          <Card>
-            <CardContent className="py-16 text-center">
-              <div className="w-20 h-20 mx-auto mb-6 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center">
-                <MessageSquare className="h-10 w-10 text-slate-400" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Team Chat Coming Soon</h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Real-time team communication will be available soon. Stay tuned!
-              </p>
-            </CardContent>
-          </Card>
+          {teamId ? (
+            <TeamChat teamId={teamId} />
+          ) : (
+            <Card>
+              <CardContent className="py-16 text-center">
+                <div className="w-20 h-20 mx-auto mb-6 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center">
+                  <MessageSquare className="h-10 w-10 text-slate-400" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Team Chat</h3>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Loading chat...
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Settings Tab (Admin only) */}

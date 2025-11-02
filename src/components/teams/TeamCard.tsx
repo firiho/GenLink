@@ -199,24 +199,6 @@ export default function TeamCard({ team, onManage, onChat, onViewDetails, showAc
             </div>
           )}
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-            <div className="text-center p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50">
-              <div className="flex items-center justify-center mb-1">
-                <Target className="h-4 w-4 text-blue-500 mr-1" />
-                <span className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">Active</span>
-              </div>
-              <p className="text-xl font-bold text-slate-900 dark:text-white">{team.activeChallenges}</p>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50">
-              <div className="flex items-center justify-center mb-1">
-                <Trophy className="h-4 w-4 text-emerald-500 mr-1" />
-                <span className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">Won</span>
-              </div>
-              <p className="text-xl font-bold text-slate-900 dark:text-white">{team.completedChallenges}</p>
-            </div>
-          </div>
-
           {/* Actions - Hidden when showActions is false */}
           {showActions && isMember && (onChat || onManage) && (
             <div className="flex gap-2 pt-2">

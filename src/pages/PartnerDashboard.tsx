@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { signOut } from '@/services/auth';
 import { 
-  LayoutDashboard, FileText, Users, Settings, LogOut
+  LayoutDashboard, FileText, Users, Settings, LogOut, Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from "@/lib/utils";
@@ -17,6 +17,9 @@ import SubmissionsView from '@/components/partner-dashboard/SubmissionsView';
 import { SettingsView } from '@/components/partner-dashboard/SettingsView';
 import { ChallengesView } from '@/components/partner-dashboard/ChallengesView';
 import { NewChallengeForm } from '@/components/partner-dashboard/NewChallengeForm';
+import EventsTab from '@/components/dashboard/events/EventsTab';
+import CreateEvent from '@/components/dashboard/events/CreateEvent';
+import EventView from '@/components/dashboard/events/EventView';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import PreviewChallenge from '@/components/partner-dashboard/PreviewChallenge';
@@ -38,11 +41,26 @@ const PartnerDashboard = () => {
   const [viewData, setViewData] = useState(null);
   const previousView = useRef(activeView);
 
+  const getEventIdFromPath = () => {
+    // Don't match "create" as an event ID
+    const match = location.pathname.match(/\/events\/([^/]+)/);
+    if (match && match[1] !== 'create') {
+      return match[1];
+    }
+    return null;
+  };
+
   // Sync state with URL on mount and browser navigation
   useEffect(() => {
     // Set initial tab from URL
     const initialTab = getPartnerTabFromPath(location.pathname);
     setActiveView(initialTab);
+    
+    // Extract event ID from URL if present
+    if (initialTab === 'event' || initialTab === 'edit-event') {
+      const eventId = getEventIdFromPath();
+      if (eventId) setViewData(eventId);
+    }
 
     // Handle browser back/forward buttons
     const handlePopState = () => {
@@ -127,30 +145,93 @@ const PartnerDashboard = () => {
     
     setFetchingSubmissions(true);
     try {
-      // Get all submissions for challenges created by this partner
-      const submissionsQuery = query(
-        collection(db, 'submissions'),
-        where('challengeId', 'in', challengeIds.slice(0, 10)) // Firestore limits 'in' queries to 10 items
-      );
+      // Firestore limits 'in' queries to 10 items, so we need to batch if there are more
+      const allSubmissions = [];
       
-      const submissionsSnapshot = await getDocs(submissionsQuery);
+      // Process challenges in batches of 10
+      for (let i = 0; i < challengeIds.length; i += 10) {
+        const batch = challengeIds.slice(i, i + 10);
+        const submissionsQuery = query(
+          collection(db, 'submissions'),
+          where('challengeId', 'in', batch)
+        );
+        
+        const submissionsSnapshot = await getDocs(submissionsQuery);
+        allSubmissions.push(...submissionsSnapshot.docs);
+      }
       
-      const submissionsPromises = submissionsSnapshot.docs.map(async (submissionDoc) => {
+      const submissionsPromises = allSubmissions.map(async (submissionDoc) => {
         const data = submissionDoc.data();
         
+        // Get project data
+        let projectData = null;
+        let projectTitle = 'Untitled Project';
+        if (data.projectId) {
+          try {
+            const projectRef = doc(db, 'projects', data.projectId);
+            const projectSnap = await getDoc(projectRef);
+            if (projectSnap.exists()) {
+              projectData = projectSnap.data();
+              projectTitle = projectData.title || 'Untitled Project';
+            }
+          } catch (error) {
+            console.error('Error fetching project:', error);
+          }
+        }
         
-        // Get public profile for avatar
-        const publicProfileRef = doc(db, 'profiles', data.userId);
-        const publicProfileSnap = await getDoc(publicProfileRef);
-        const publicProfileData = publicProfileSnap.exists() ? publicProfileSnap.data() : {};
-        
-        console.log("Public Profile Data:", publicProfileData);
         // Get challenge data
         const challengeRef = doc(db, 'challenges', data.challengeId);
         const challengeSnap = await getDoc(challengeRef);
         const challengeData = challengeSnap.exists() ? challengeSnap.data() : {};
         
-        console.log("Challenge Data:", challengeData);
+        // Handle team submissions
+        let participant = null;
+        let participantType = 'individual';
+        
+        if (data.teamId) {
+          // Team submission - fetch team data
+          try {
+            const teamRef = doc(db, 'teams', data.teamId);
+            const teamSnap = await getDoc(teamRef);
+            if (teamSnap.exists()) {
+              const teamData = teamSnap.data();
+              participantType = 'team';
+              participant = {
+                uid: data.teamId,
+                name: teamData.name || 'Unnamed Team',
+                email: '', // Teams don't have emails
+                avatar: teamData.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(teamData.name || 'T')}`,
+                type: 'team'
+              };
+            }
+          } catch (error) {
+            console.error('Error fetching team:', error);
+            // Fallback to individual if team fetch fails
+            const publicProfileRef = doc(db, 'profiles', data.userId);
+            const publicProfileSnap = await getDoc(publicProfileRef);
+            const publicProfileData = publicProfileSnap.exists() ? publicProfileSnap.data() : {};
+            participant = {
+              uid: data.userId,
+              name: `${publicProfileData.firstName || ''} ${publicProfileData.lastName || ''}`.trim() || 'Anonymous User',
+              email: publicProfileData.email || 'No email provided',
+              avatar: publicProfileData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(publicProfileData.firstName || 'U')}`,
+              type: 'individual'
+            };
+          }
+        } else {
+          // Individual submission - fetch user profile
+          const publicProfileRef = doc(db, 'profiles', data.userId);
+          const publicProfileSnap = await getDoc(publicProfileRef);
+          const publicProfileData = publicProfileSnap.exists() ? publicProfileSnap.data() : {};
+          participant = {
+            uid: data.userId,
+            name: `${publicProfileData.firstName || ''} ${publicProfileData.lastName || ''}`.trim() || 'Anonymous User',
+            email: publicProfileData.email || 'No email provided',
+            avatar: publicProfileData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(publicProfileData.firstName || 'U')}`,
+            type: 'individual'
+          };
+        }
+        
         // Convert timestamps
         const submittedAt = data.createdAt?.toDate ? 
           data.createdAt.toDate().toISOString() : 
@@ -160,25 +241,28 @@ const PartnerDashboard = () => {
           data.updatedAt.toDate().toISOString() : 
           data.updatedAt;
         
+        const reviewedAt = data.reviewedAt?.toDate ? 
+          data.reviewedAt.toDate().toISOString() : 
+          data.reviewedAt;
+        
         return {
           id: submissionDoc.id,
-          title: challengeData.title || 'Unnamed Challenge',
+          projectId: data.projectId || null,
+          title: projectTitle,
           challenge: challengeData.title || 'Unnamed Challenge',
           challengeId: data.challengeId,
-          githubUrl: data.submissionUrl || '',
-          participant: {
-            uid: data.userId,
-            name: publicProfileData.name || 'Anonymous User',
-            email: publicProfileData.email || 'No email provided',
-            avatar: publicProfileData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(publicProfileData.firstName || 'U')}`
-          },
+          participant: participant,
+          participantType: participantType,
+          teamId: data.teamId || null,
           status: data.status || 'pending',
           submittedAt: submittedAt,
           lastUpdated: updatedAt,
+          reviewedAt: reviewedAt,
           tags: challengeData.tags || [],
-          score: data.score || 0,
+          score: data.score !== undefined ? data.score : null,
           feedback: data.feedback || '',
-          note: data.note || ''
+          note: data.note || '',
+          projectData: projectData // Store full project data for navigation
         };
       });
       
@@ -241,7 +325,15 @@ const PartnerDashboard = () => {
     setViewData(data);
     
     // Update URL without page reload
-    const route = getPartnerRouteFromTab(view);
+    let route = getPartnerRouteFromTab(view);
+    
+    // Handle routes that need IDs appended
+    if (view === 'event' && data) {
+      route = `/partner/dashboard/events/${data}`;
+    } else if (view === 'edit-event' && data) {
+      route = `/partner/dashboard/events/${data}/edit`;
+    }
+    
     if (route !== window.location.pathname) {
       window.history.pushState(null, '', route);
     }
@@ -316,6 +408,29 @@ const PartnerDashboard = () => {
             />
           );
 
+      case 'events':
+        return <EventsTab setActiveView={handleViewChange} />;
+
+      case 'create-event':
+        return <CreateEvent 
+          onBack={() => handleViewChange('events')}
+          setActiveView={handleViewChange}
+        />;
+
+      case 'event':
+        return <EventView 
+          eventId={viewData || getEventIdFromPath()}
+          onBack={() => handleViewChange('events')}
+          setActiveView={handleViewChange}
+        />;
+
+      case 'edit-event':
+        return <CreateEvent 
+          eventId={viewData || getEventIdFromPath()}
+          onBack={() => handleViewChange('event', viewData || getEventIdFromPath())}
+          setActiveView={handleViewChange}
+        />;
+
       default:
         return null;
     }
@@ -381,6 +496,18 @@ const PartnerDashboard = () => {
                   >
                     <Users className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
                     <span className="font-medium">Submissions</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start h-11 px-3 ${
+                      activeView === 'events' 
+                        ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                    } rounded-lg transition-all duration-200 group`}
+                    onClick={() => handleViewChange('events')}
+                  >
+                    <Calendar className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
+                    <span className="font-medium">Events</span>
                   </Button>
                 </div>
               </div>

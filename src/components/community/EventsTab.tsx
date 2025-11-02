@@ -180,8 +180,9 @@ interface Event {
   location: string;
   type: 'In-Person' | 'Online' | 'Hybrid';
   attendees: number;
-  maxAttendees: number;
-  category: string;
+  maxAttendees?: number;
+  category?: string;
+  thumbnail?: string | null;
 }
 
 // Initialize the cloud function
@@ -422,11 +423,21 @@ export const EventsTab = () => {
         </div>
       ) : events.length > 0 ? (
         <>
-          <div className="space-y-0 divide-y divide-border">
+          <div className="space-y-2">
             {events.map((event, index) => (
               <EventListItem
                 key={event.id}
-                {...event}
+                id={event.id}
+                title={event.title}
+                description={event.description}
+                date={event.date}
+                time={event.time}
+                location={event.location}
+                type={event.type}
+                attendees={event.attendees}
+                maxAttendees={event.maxAttendees}
+                category={event.category}
+                thumbnail={event.thumbnail}
                 onClick={() => window.location.href = `/e/${event.id}`}
                 index={index}
               />

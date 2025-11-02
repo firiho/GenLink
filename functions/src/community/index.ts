@@ -240,9 +240,10 @@ export const events = onCall({ region: config.region }, async (request) => {
     const limit = Math.min(data.limit || 24, 50);
     const db = admin.firestore();
     
-    // Query events ordered by date
+    // Query only public published events (unlisted events are not shown on community page)
     let query = db.collection("events")
       .where("status", "==", "published")
+      .where("visibility", "==", "public")
       .orderBy("date", "asc");
 
     // Apply date filter at query level for better performance
@@ -291,6 +292,7 @@ export const events = onCall({ region: config.region }, async (request) => {
         attendees: data.attendees || 0,
         maxAttendees: data.maxAttendees,
         category: data.category,
+        thumbnail: data.thumbnail || null,
       };
     });
 
@@ -342,6 +344,118 @@ export const events = onCall({ region: config.region }, async (request) => {
   } catch (error) {
     console.error("Error fetching events:", error);
     throw new HttpsError("internal", "Failed to fetch events");
+  }
+});
+
+/**
+ * Get paginated list of projects
+ * Returns projects that are submitted and public
+ * Optimized with indexed queries and cursor-based pagination
+ */
+export const projects = onCall({ region: config.region }, async (request) => {
+  const data = request.data as {
+    limit?: number;
+    cursor?: string;
+    searchQuery?: string;
+    categoryFilter?: string;
+  };
+
+  try {
+    const limit = Math.min(data.limit || 24, 50);
+    const db = admin.firestore();
+    
+    // Query public submitted projects
+    let query = db.collection("projects")
+      .where("status", "==", "submitted")
+      .where("visibility", "==", "public")
+      .orderBy("submittedAt", "desc");
+
+    if (data.cursor) {
+      const cursorDoc = await db.collection("projects").doc(data.cursor).get();
+      if (cursorDoc.exists) {
+        query = query.startAfter(cursorDoc) as any;
+      }
+    }
+
+    query = query.limit(limit + 1) as any;
+
+    const snapshot = await query.get();
+    const hasMore = snapshot.docs.length > limit;
+    const docs = hasMore ? snapshot.docs.slice(0, limit) : snapshot.docs;
+
+    // Fetch challenge data for each project to get categories
+    const projectsList = await Promise.all(
+      docs.map(async (doc) => {
+        const projectData = doc.data();
+        
+        // Get challenge data for category info
+        let challengeCategories = [];
+        let challengeTitle = "";
+        if (projectData.challengeId) {
+          try {
+            const challengeDoc = await db.collection("challenges").doc(projectData.challengeId).get();
+            if (challengeDoc.exists) {
+              const challengeData = challengeDoc.data();
+              challengeCategories = challengeData?.categories || [];
+              challengeTitle = challengeData?.title || "";
+            }
+          } catch (error) {
+            console.error("Error fetching challenge:", error);
+          }
+        }
+        
+        return {
+          id: doc.id,
+          title: projectData.title || "",
+          description: projectData.description || "",
+          readme: projectData.readme || "",
+          youtubeVideoId: projectData.youtubeVideoId || null,
+          challengeId: projectData.challengeId || null,
+          challengeTitle: challengeTitle || projectData.challengeTitle || "",
+          categories: challengeCategories,
+          userId: projectData.userId || null,
+          teamId: projectData.teamId || null,
+          status: projectData.status,
+          visibility: projectData.visibility,
+          createdAt: projectData.createdAt?.toDate?.() || new Date(projectData.createdAt),
+          updatedAt: projectData.updatedAt?.toDate?.() || new Date(projectData.updatedAt),
+          submittedAt: projectData.submittedAt?.toDate?.() || new Date(projectData.submittedAt),
+        };
+      })
+    );
+
+    // Apply filters
+    let filteredProjects = projectsList;
+
+    // Category filter - check if project's challenge has matching category
+    if (data.categoryFilter && data.categoryFilter !== "All") {
+      filteredProjects = filteredProjects.filter(project =>
+        project.categories?.some((cat: string) =>
+          cat.toLowerCase() === data.categoryFilter!.toLowerCase()
+        )
+      );
+    }
+
+    // Search filter
+    if (data.searchQuery && data.searchQuery.trim()) {
+      const query = data.searchQuery.toLowerCase();
+      filteredProjects = filteredProjects.filter(project =>
+        project.title.toLowerCase().includes(query) ||
+        project.description?.toLowerCase().includes(query) ||
+        project.challengeTitle?.toLowerCase().includes(query)
+      );
+    }
+
+    return {
+      success: true,
+      projects: filteredProjects,
+      hasMore,
+      nextCursor: hasMore && docs.length > 0 ? docs[docs.length - 1].id : null,
+      total: filteredProjects.length,
+    };
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    throw new HttpsError("internal", "Failed to fetch projects");
   }
 });
 

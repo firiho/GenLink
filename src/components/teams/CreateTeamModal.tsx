@@ -44,13 +44,7 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
     maxMembers: 5,
     visibility: 'public',
     initialMembers: [],
-    tags: [],
-    permissions: {
-      canInviteMembers: true,
-      canRemoveMembers: true,
-      canEditTeam: true,
-      canManageChallenges: true
-    }
+    tags: []
   });
 
   const [newTag, setNewTag] = useState('');
@@ -831,68 +825,6 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
                       </div>
 
 
-                      {/* Member Permissions */}
-                      <div className="space-y-3 pt-3 border-t">
-                        <Label className="text-sm font-semibold">Member Permissions</Label>
-                        
-                        <div className="space-y-3">
-                          <div className="flex items-center space-x-3">
-                            <Checkbox 
-                              id="canInviteMembers" 
-                              checked={teamData.permissions.canInviteMembers}
-                              onCheckedChange={(checked) => setTeamData(prev => ({ 
-                                ...prev, 
-                                permissions: { ...prev.permissions, canInviteMembers: checked === true }
-                              }))}
-                            />
-                            <Label htmlFor="canInviteMembers" className="text-sm cursor-pointer">
-                              Members can invite others
-                            </Label>
-                          </div>
-                          
-                          <div className="flex items-center space-x-3">
-                            <Checkbox 
-                              id="canRemoveMembers" 
-                              checked={teamData.permissions.canRemoveMembers}
-                              onCheckedChange={(checked) => setTeamData(prev => ({ 
-                                ...prev, 
-                                permissions: { ...prev.permissions, canRemoveMembers: checked === true }
-                              }))}
-                            />
-                            <Label htmlFor="canRemoveMembers" className="text-sm cursor-pointer">
-                              Members can remove others
-                            </Label>
-                          </div>
-                          
-                          <div className="flex items-center space-x-3">
-                            <Checkbox 
-                              id="canEditTeam" 
-                              checked={teamData.permissions.canEditTeam}
-                              onCheckedChange={(checked) => setTeamData(prev => ({ 
-                                ...prev, 
-                                permissions: { ...prev.permissions, canEditTeam: checked === true }
-                              }))}
-                            />
-                            <Label htmlFor="canEditTeam" className="text-sm cursor-pointer">
-                              Members can edit team info
-                            </Label>
-                          </div>
-                          
-                          <div className="flex items-center space-x-3">
-                            <Checkbox 
-                              id="canManageChallenges" 
-                              checked={teamData.permissions.canManageChallenges}
-                              onCheckedChange={(checked) => setTeamData(prev => ({ 
-                                ...prev, 
-                                permissions: { ...prev.permissions, canManageChallenges: checked === true }
-                              }))}
-                            />
-                            <Label htmlFor="canManageChallenges" className="text-sm cursor-pointer">
-                              Members can manage challenges
-                            </Label>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
 

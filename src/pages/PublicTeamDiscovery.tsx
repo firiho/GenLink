@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import TeamDiscovery from '@/components/teams/TeamDiscovery';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, TrendingUp, Award, Globe } from 'lucide-react';
+import { Users, TrendingUp, Globe } from 'lucide-react';
 
 export default function PublicTeamDiscoveryPage() {
   const [teams, setTeams] = useState<Team[]>([]);
@@ -13,8 +13,7 @@ export default function PublicTeamDiscoveryPage() {
   const [stats, setStats] = useState({
     totalTeams: 0,
     activeTeams: 0,
-    totalMembers: 0,
-    completedChallenges: 0
+    totalMembers: 0
   });
 
   useEffect(() => {
@@ -26,13 +25,11 @@ export default function PublicTeamDiscoveryPage() {
         
         // Calculate stats
         const totalMembers = publicTeams.reduce((sum, team) => sum + team.currentMembers, 0);
-        const completedChallenges = publicTeams.reduce((sum, team) => sum + team.completedChallenges, 0);
         
         setStats({
           totalTeams: publicTeams.length,
           activeTeams: publicTeams.filter(team => team.status === 'active').length,
-          totalMembers,
-          completedChallenges
+          totalMembers
         });
       } catch (error) {
         console.error('Error fetching teams:', error);
@@ -81,14 +78,6 @@ export default function PublicTeamDiscoveryPage() {
                 <Globe className="h-6 w-6 text-purple-500 mx-auto mb-2" />
                 <div className="text-2xl font-bold text-slate-900 dark:text-white">{stats.totalMembers}</div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">Members</div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-              <CardContent className="p-4 text-center">
-                <Award className="h-6 w-6 text-amber-500 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-slate-900 dark:text-white">{stats.completedChallenges}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">Won</div>
               </CardContent>
             </Card>
           </div>

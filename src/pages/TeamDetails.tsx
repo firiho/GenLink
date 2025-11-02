@@ -19,8 +19,10 @@ import {
   Trophy,
   Target,
   UserPlus,
-  Clock
+  Clock,
+  MapPin
 } from 'lucide-react';
+import { Event } from '@/types/event';
 
 interface TeamMemberWithProfile {
   id: string;
@@ -72,6 +74,8 @@ const TeamDetails = () => {
   const [isMember, setIsMember] = useState(false);
   const [hasPendingApplication, setHasPendingApplication] = useState(false);
   const [requesting, setRequesting] = useState(false);
+  const [teamEvents, setTeamEvents] = useState<Event[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
 
   useEffect(() => {
     const fetchTeamDetails = async () => {
@@ -158,6 +162,44 @@ const TeamDetails = () => {
           } else {
             setIsMember(false);
             setHasPendingApplication(false);
+          }
+          
+          // Fetch events created by team members (events are isolated, but we show events by team members)
+          try {
+            setLoadingEvents(true);
+            // Get team member IDs
+            const membersSnap = await getDocs(collection(db, 'teams', id, 'members'));
+            const memberIds = membersSnap.docs.map(doc => doc.id);
+            
+            if (memberIds.length > 0) {
+              // Query events where organizerId is one of the team members
+              // Note: Firestore 'in' queries are limited to 10 items, so we need to batch
+              const allEvents: Event[] = [];
+              
+              for (let i = 0; i < memberIds.length; i += 10) {
+                const batch = memberIds.slice(i, i + 10);
+                const eventsQuery = query(
+                  collection(db, 'events'),
+                  where('organizerId', 'in', batch),
+                  where('status', '==', 'published'),
+                  where('visibility', '==', 'public')
+                );
+                const eventsSnap = await getDocs(eventsQuery);
+                const eventsList = eventsSnap.docs.map(eventDoc => ({
+                  id: eventDoc.id,
+                  ...eventDoc.data(),
+                  createdAt: eventDoc.data().createdAt?.toDate ? eventDoc.data().createdAt.toDate() : new Date(eventDoc.data().createdAt),
+                  updatedAt: eventDoc.data().updatedAt?.toDate ? eventDoc.data().updatedAt.toDate() : new Date(eventDoc.data().updatedAt),
+                })) as Event[];
+                allEvents.push(...eventsList);
+              }
+              
+              setTeamEvents(allEvents);
+            }
+          } catch (err) {
+            console.error('Error fetching team member events:', err);
+          } finally {
+            setLoadingEvents(false);
           }
         } else {
           setError(true);
@@ -395,6 +437,83 @@ const TeamDetails = () => {
               <p className="text-sm md:text-base text-muted-foreground whitespace-pre-wrap leading-relaxed">{team.description}</p>
             </div>
           )}
+
+          {/* Team Events */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              Team Events ({teamEvents.length})
+            </h2>
+            {loadingEvents ? (
+              <div className="text-center py-8">
+                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+              </div>
+            ) : teamEvents.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {teamEvents.map((event) => {
+                  const eventDate = new Date(event.date);
+                  const isPast = eventDate < new Date();
+                  
+                  return (
+                    <div
+                      key={event.id}
+                      onClick={() => navigate(`/e/${event.id}`)}
+                      className="flex flex-col gap-3 p-4 rounded-lg bg-accent/5 hover:bg-accent/10 border border-border hover:border-primary/50 transition-all cursor-pointer group"
+                    >
+                      {event.thumbnail && (
+                        <div className="w-full h-32 rounded-lg overflow-hidden">
+                          <img src={event.thumbnail} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h3 className="font-semibold group-hover:text-primary transition-colors mb-2 line-clamp-2">
+                          {event.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                          {event.description}
+                        </p>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span>{eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>{event.time}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <MapPin className="h-3.5 w-3.5" />
+                            <span className="truncate">{event.location}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-2 border-t border-border">
+                        <span className={`text-xs font-medium px-2 py-1 rounded ${
+                          event.type === 'In-Person' 
+                            ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
+                            : event.type === 'Online'
+                            ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                            : 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300'
+                        }`}>
+                          {event.type}
+                        </span>
+                        {isPast && (
+                          <span className="text-xs text-muted-foreground">Past Event</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-accent/5 flex items-center justify-center">
+                  <Calendar className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground text-sm">No events created by this team yet</p>
+              </div>
+            )}
+          </div>
 
           {/* Team Members */}
           <div className="bg-card border border-border rounded-lg p-6">

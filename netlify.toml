@@ -1,7 +1,6 @@
 [build]
   command = "npm run build && netlify deploy --prod"
   publish = "dist"
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF functions/"
 
 [[redirects]]
   from = "/*"

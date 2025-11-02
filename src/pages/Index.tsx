@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import FeaturedChallenges from '@/components/FeaturedChallenges';
+import FeaturedProjects from '@/components/FeaturedProjects';
 
 const Index = () => {
   const winners = [
@@ -46,6 +47,9 @@ const Index = () => {
       
       {/* Featured Hackathons Section with Enhanced Design */}
       <FeaturedChallenges />
+
+      {/* Featured Projects Section */}
+      <FeaturedProjects />
 
       {/* Innovation Champions Section */}
       <section className="py-24 relative">

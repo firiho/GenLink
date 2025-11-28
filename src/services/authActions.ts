@@ -4,7 +4,10 @@ import {
   applyActionCode,
   verifyPasswordResetCode,
   checkActionCode,
-  sendEmailVerification as firebaseSendEmailVerification
+  sendEmailVerification as firebaseSendEmailVerification,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
@@ -87,6 +90,28 @@ export const verifyEmail = async (oobCode: string): Promise<void> => {
     await applyActionCode(auth, oobCode);
   } catch (error: any) {
     console.error('Error verifying email:', error);
+    throw new Error(getAuthErrorMessage(error.code));
+  }
+};
+
+/**
+ * Update user password
+ */
+export const updateUserPassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+  const user = auth.currentUser;
+  if (!user || !user.email) {
+    throw new Error('No user is currently signed in');
+  }
+
+  try {
+    // Re-authenticate user first
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+    
+    // Update password
+    await updatePassword(user, newPassword);
+  } catch (error: any) {
+    console.error('Error updating password:', error);
     throw new Error(getAuthErrorMessage(error.code));
   }
 };

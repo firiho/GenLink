@@ -17,3 +17,6 @@ export * from "./usernames";
 // Export team functions
 export * from "./team";
 
+// Export notification functions
+export * from "./notifications";
+

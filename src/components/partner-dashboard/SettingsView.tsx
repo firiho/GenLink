@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Plus, Building2, Globe,
   CreditCard, Upload, ChevronRight, Check,
@@ -13,6 +13,9 @@ import { User } from '@/types/user';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WelcomeSection from '../dashboard/WelcomeSection';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useNotifications } from '@/contexts/NotificationContext';
+import { NotificationPreferences } from '@/types/notification';
+import { toast } from 'sonner';
 
 interface SettingsViewProps {
   user: User | null;
@@ -24,6 +27,26 @@ export const SettingsView = ({ user, onSaveChanges }: SettingsViewProps) => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { theme, setTheme, actualTheme } = useTheme();
+  const { preferences: contextPreferences, updatePreferences } = useNotifications();
+  
+  const preferences = contextPreferences || {
+    emailNotifications: true,
+    pushNotifications: true,
+    marketingEmails: false,
+    teamInvites: true,
+    challengeUpdates: true
+  };
+
+  const handlePreferenceChange = async (key: keyof NotificationPreferences, value: boolean) => {
+    const newPreferences = { ...preferences, [key]: value };
+    try {
+      await updatePreferences(newPreferences);
+      toast.success('Preferences updated');
+    } catch (error) {
+      console.error('Failed to update preferences:', error);
+      toast.error('Failed to update preferences');
+    }
+  };
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme);
@@ -426,53 +449,44 @@ export const SettingsView = ({ user, onSaveChanges }: SettingsViewProps) => {
           <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 sm:p-6">
             <h3 className="text-lg font-semibold mb-6 text-slate-900 dark:text-white">Notification Preferences</h3>
             <div className="space-y-6">
-              <div className="space-y-4">
-                <h4 className="font-medium text-slate-900 dark:text-white">Email Notifications</h4>
                 {[
-                  {
-                    title: 'New Submissions',
-                    description: 'Get notified when a new submission is received'
-                  },
-                  {
-                    title: 'Challenge Updates',
-                    description: 'Receive updates about your active challenges'
-                  },
-                  {
-                    title: 'Team Activity',
-                    description: 'Stay informed about team member actions'
-                  }
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
+                    {
+                        key: 'emailNotifications',
+                        title: 'Email Notifications',
+                        description: 'Receive notifications via email'
+                    },
+                    {
+                        key: 'pushNotifications',
+                        title: 'Push Notifications',
+                        description: 'Receive push notifications on your device'
+                    },
+                    {
+                        key: 'marketingEmails',
+                        title: 'Marketing Emails',
+                        description: 'Receive updates about new features and promotions'
+                    },
+                    {
+                        key: 'teamInvites',
+                        title: 'Team Invites',
+                        description: 'Get notified when someone invites you to a team'
+                    },
+                    {
+                        key: 'challengeUpdates',
+                        title: 'Challenge Updates',
+                        description: 'Get notified about changes to your challenges'
+                    }
+                ].map((setting) => (
+                  <div key={setting.key} className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-slate-900 dark:text-white">{item.title}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">{item.description}</p>
+                      <p className="font-medium text-slate-900 dark:text-white">{setting.title}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">{setting.description}</p>
                     </div>
-                    <Switch />
+                    <Switch 
+                        checked={preferences[setting.key as keyof NotificationPreferences]} 
+                        onCheckedChange={(checked) => handlePreferenceChange(setting.key as keyof NotificationPreferences, checked)}
+                    />
                   </div>
                 ))}
-              </div>
-
-              <div className="pt-6 border-t border-slate-200 dark:border-slate-700 space-y-4">
-                <h4 className="font-medium text-slate-900 dark:text-white">Push Notifications</h4>
-                {[
-                  {
-                    title: 'Mobile Notifications',
-                    description: 'Receive notifications on your mobile device'
-                  },
-                  {
-                    title: 'Browser Notifications',
-                    description: 'Get instant notifications in your browser'
-                  }
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-slate-900 dark:text-white">{item.title}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">{item.description}</p>
-                    </div>
-                    <Switch />
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </TabsContent>

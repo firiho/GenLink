@@ -17,8 +17,10 @@ import { httpsCallable } from 'firebase/functions';
 import { useNavigate } from 'react-router-dom';
 import Logo from '@/components/Logo';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Onboarding = () => {
+  const { refreshUser } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -441,6 +443,9 @@ const Onboarding = () => {
         onboardingComplete: true,
         updated_at: new Date().toISOString(),
       });
+
+      // Refresh user data in context to reflect onboarding status
+      await refreshUser();
 
       toast.success('Welcome to GenLink! 🎉');
       navigate('/dashboard');

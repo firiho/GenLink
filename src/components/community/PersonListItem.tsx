@@ -28,7 +28,7 @@ export const PersonListItem = ({
   return (
     <div className="group">
       <div 
-        className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card hover:bg-accent/5 transition-all duration-200 cursor-pointer"
+        className="flex items-center gap-4 py-4 px-2 hover:bg-accent/5 transition-all duration-200 cursor-pointer rounded-md"
         onClick={onClick}
       >
         {/* Main Content */}

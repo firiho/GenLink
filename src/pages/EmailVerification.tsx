@@ -8,16 +8,18 @@ import Logo from '@/components/Logo';
 import { auth } from '@/lib/firebase';
 import { sendEmailVerification } from '@/services/authActions';
 import { signOut } from '@/services/auth';
-import { getUserType } from '@/services/user';
+import { useAuth } from '@/contexts/AuthContext';
 
 const EmailVerification = () => {
-  const [user, setUser] = useState(auth.currentUser);
+  const { user: authUser, loading } = useAuth();
   const [isSending, setIsSending] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (loading) return;
+
     // Check if user is logged in
     if (!auth.currentUser) {
       navigate('/signin');
@@ -25,44 +27,22 @@ const EmailVerification = () => {
     }
 
     // Check if email is already verified
-    if (auth.currentUser.emailVerified) {
-      // Redirect based on user role using centralized function
-      const checkUserRole = async () => {
-        try {
-          const userData = await getUserType();
-          
-          if (!userData) {
-            navigate('/signin');
-            return;
-          }
-
-          // Get full user data to check status
-          const { getCurrentUser } = await import('@/services/user');
-          const fullUserData = await getCurrentUser();
-          
-          if (fullUserData?.userType === 'partner') {
-            // Check partner status
-            if (fullUserData.status === 'pending') {
-              navigate('/partner-pending');
-            } else {
-              navigate('/partner/dashboard');
-            }
-          } else if (fullUserData?.userType === 'admin') {
-            navigate('/admin/dashboard');
-          } else {
-            // Participant
-            navigate('/dashboard');
-          }
-        } catch (error) {
-          console.error('Error checking user role:', error);
-          navigate('/signin');
+    if (auth.currentUser.emailVerified && authUser) {
+      if (authUser.userType === 'partner') {
+        // Check partner status
+        if (authUser.status === 'pending') {
+          navigate('/partner-pending');
+        } else {
+          navigate('/partner/dashboard');
         }
-      };
-      checkUserRole();
+      } else if (authUser.userType === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        // Participant
+        navigate('/dashboard');
+      }
     }
-
-    setUser(auth.currentUser);
-  }, [navigate]);
+  }, [navigate, loading, authUser]);
 
   useEffect(() => {
     if (cooldown > 0) {
@@ -85,13 +65,13 @@ const EmailVerification = () => {
   };
 
   const handleCheckVerification = async () => {
-    if (!user) return;
+    if (!auth.currentUser) return;
     
     setIsChecking(true);
     try {
-      await user.reload();
+      await auth.currentUser.reload();
       
-      if (user.emailVerified) {
+      if (auth.currentUser.emailVerified) {
         toast.success('Email verified successfully!');
         
         // Get full user data to check type and status
@@ -178,7 +158,7 @@ const EmailVerification = () => {
               We've sent a verification link to
             </p>
             <p className="text-foreground font-medium mt-1">
-              {user?.email}
+              {auth?.currentUser?.email}
             </p>
           </div>
 

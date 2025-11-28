@@ -261,9 +261,9 @@ export const PeopleTab = () => {
       {/* People Display */}
       {isInitialLoad ? (
         /* Loading Skeletons */
-        <div className="space-y-3">
+        <div className="space-y-0 divide-y divide-border">
           {[...Array(10)].map((_, index) => (
-            <div key={index} className="flex items-center gap-4 py-4 border-b border-border last:border-0">
+            <div key={index} className="flex items-center gap-4 py-4 px-2">
               <Skeleton className="h-14 w-14 rounded-full flex-shrink-0" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-5 w-48" />

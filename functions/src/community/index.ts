@@ -20,6 +20,7 @@ export const people = onCall({ region: config.region }, async (request) => {
     const limit = Math.min(data.limit || 24, 50);
     const db = admin.firestore();
     let query = db.collection(config.collections.profiles)
+      .where("visibility", "==", "public")
       .orderBy("contributions", "desc");
 
     // Apply cursor for pagination

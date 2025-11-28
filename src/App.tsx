@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Toaster } from 'sonner';
 import { useEffect } from 'react';
@@ -132,64 +133,66 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/challenges" element={<Challenges />} />
-            <Route path="/challenge/:id" element={<ChallengeView />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/p/:id" element={<ProjectShowcase />} />
-            <Route path="/project/:id" element={<ProjectViewWrapper />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/community/people" element={<Community />} />
-            <Route path="/community/teams" element={<Community />} />
-            <Route path="/community/events" element={<Community />} />
-            <Route path="/u/:id" element={<UserProfile />} />
-            <Route path="/t/:id" element={<TeamDetails />} />
-            <Route path="/e/:id" element={<EventDetails />} />
-            <Route path="/verify" element={<VerifyAction />} />
-            <Route path="/email-verification" element={<EmailVerification />} />
-            <Route 
-              path="/onboarding" 
-              element={
-                <ParticipantRoute>
-                  <Onboarding />
-                </ParticipantRoute>
-              } 
-            />
-            {/* Dashboard routes with wildcards for deep linking */}
-            <Route 
-              path="/dashboard/*" 
-              element={
-                <ParticipantRoute>
-                  <Dashboard />
-                </ParticipantRoute>
-              }
-            />
-            <Route path="/partner-pending" element={<PartnerPending />} />
-            <Route 
-              path="/partner/dashboard/*" 
-              element={
-                <PartnerRoute>
-                  <PartnerDashboard />
-                </PartnerRoute>
-              } 
-            />
-            <Route 
-              path="/admin/dashboard/*" 
-              element={
-                <AdminRoute>
-                  <AdminDashboard />
-                </AdminRoute>
-              }
-            />
-          </Routes>
-          <Toaster />
-        </Router>
+        <NotificationProvider>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/challenges" element={<Challenges />} />
+              <Route path="/challenge/:id" element={<ChallengeView />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/p/:id" element={<ProjectShowcase />} />
+              <Route path="/project/:id" element={<ProjectViewWrapper />} />
+              <Route path="/community" element={<Community />} />
+              <Route path="/community/people" element={<Community />} />
+              <Route path="/community/teams" element={<Community />} />
+              <Route path="/community/events" element={<Community />} />
+              <Route path="/u/:id" element={<UserProfile />} />
+              <Route path="/t/:id" element={<TeamDetails />} />
+              <Route path="/e/:id" element={<EventDetails />} />
+              <Route path="/verify" element={<VerifyAction />} />
+              <Route path="/email-verification" element={<EmailVerification />} />
+              <Route 
+                path="/onboarding" 
+                element={
+                  <ParticipantRoute>
+                    <Onboarding />
+                  </ParticipantRoute>
+                } 
+              />
+              {/* Dashboard routes with wildcards for deep linking */}
+              <Route 
+                path="/dashboard/*" 
+                element={
+                  <ParticipantRoute>
+                    <Dashboard />
+                  </ParticipantRoute>
+                }
+              />
+              <Route path="/partner-pending" element={<PartnerPending />} />
+              <Route 
+                path="/partner/dashboard/*" 
+                element={
+                  <PartnerRoute>
+                    <PartnerDashboard />
+                  </PartnerRoute>
+                } 
+              />
+              <Route 
+                path="/admin/dashboard/*" 
+                element={
+                  <AdminRoute>
+                    <AdminDashboard />
+                  </AdminRoute>
+                }
+              />
+            </Routes>
+            <Toaster />
+          </Router>
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

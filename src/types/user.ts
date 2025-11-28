@@ -18,6 +18,7 @@ export interface User extends SupabaseUser {
   position?: string;
   createdAt?: string;
   onboardingComplete?: boolean;
+  profileVisibility?: 'public' | 'private';
 }
 
 export interface Challenge {

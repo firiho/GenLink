@@ -56,7 +56,7 @@ export const EventListItem = ({
       className="group cursor-pointer"
       onClick={onClick}
     >
-      <div className="flex gap-3 p-3 rounded-lg border border-border bg-card hover:bg-accent/5 hover:border-primary/20 transition-all duration-200">
+      <div className="flex gap-3 py-4 px-2 hover:bg-accent/5 transition-all duration-200 rounded-md">
         {/* Thumbnail */}
         <div className="flex-shrink-0">
           {thumbnail && thumbnail.trim() ? (

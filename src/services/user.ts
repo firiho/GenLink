@@ -5,8 +5,9 @@
  * This service fetches only the authenticated user's data.
  */
 
-import { auth, functions } from '@/lib/firebase';
+import { auth, functions, db } from '@/lib/firebase';
 import { httpsCallable } from 'firebase/functions';
+import { doc, updateDoc } from 'firebase/firestore';
 import { User } from '@/types/user';
 
 // Cloud function reference
@@ -42,11 +43,36 @@ export const getCurrentUser = async (): Promise<User | null> => {
       userType: data.userData.userType,
       status: data.userData.status,
       organization: data.userData.organization,
+      profileVisibility: data.userData.profileVisibility,
       ...data.userData,
     } as User;
   } catch (error) {
     console.error('Error fetching user data:', error);
     return null;
+  }
+};
+
+/**
+ * Update user data
+ */
+export const updateUser = async (data: Partial<User>): Promise<boolean> => {
+  const user = auth.currentUser;
+  if (!user) return false;
+
+  try {
+    // Update profile visibility in profiles collection
+    if (data.profileVisibility) {
+      const profileRef = doc(db, 'profiles', user.uid);
+      await updateDoc(profileRef, {
+        visibility: data.profileVisibility,
+        updated_at: new Date().toISOString()
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating user:', error);
+    return false;
   }
 };
 

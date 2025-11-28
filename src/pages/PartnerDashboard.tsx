@@ -23,6 +23,7 @@ import EventView from '@/components/dashboard/events/EventView';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import PreviewChallenge from '@/components/partner-dashboard/PreviewChallenge';
+import NotificationsPage from '@/components/dashboard/NotificationsPage';
 import { getPartnerTabFromPath, getPartnerRouteFromTab, type PartnerTab } from '@/lib/routing';
 
 const PartnerDashboard = () => {
@@ -397,39 +398,11 @@ const PartnerDashboard = () => {
           <SettingsView 
             user={authUser} 
             onSaveChanges={() => {}}
-          />  
+          />
         );
 
-        case 'preview-challenge':
-          return (
-            <PreviewChallenge 
-              challenge={viewData?.challenge}
-              setActiveView={handleViewChange}
-            />
-          );
-
-      case 'events':
-        return <EventsTab setActiveView={handleViewChange} />;
-
-      case 'create-event':
-        return <CreateEvent 
-          onBack={() => handleViewChange('events')}
-          setActiveView={handleViewChange}
-        />;
-
-      case 'event':
-        return <EventView 
-          eventId={viewData || getEventIdFromPath()}
-          onBack={() => handleViewChange('events')}
-          setActiveView={handleViewChange}
-        />;
-
-      case 'edit-event':
-        return <CreateEvent 
-          eventId={viewData || getEventIdFromPath()}
-          onBack={() => handleViewChange('event', viewData || getEventIdFromPath())}
-          setActiveView={handleViewChange}
-        />;
+      case 'notifications':
+        return <NotificationsPage />;
 
       default:
         return null;

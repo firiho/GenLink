@@ -24,6 +24,7 @@ import SettingsTab from '@/components/dashboard/SettingsTab';
 import ProfileTab from '@/components/dashboard/ProfileTab';
 import ChallengesView from '@/components/dashboard/challenges/ChallengesView';
 import TeamManagement from '@/pages/TeamManagement';
+import NotificationsPage from '@/components/dashboard/NotificationsPage';
 import { getDashboardTabFromPath, getDashboardRouteFromTab, type DashboardTab } from '@/lib/routing';
 
 const Dashboard = () => {
@@ -82,7 +83,7 @@ const Dashboard = () => {
     } else if (initialTab === 'team-manage') {
       const teamId = getTeamIdFromPath();
       if (teamId) setViewData(teamId);
-    } else if (initialTab === 'challenge') {
+    } else if (initialTab === 'challenge' ) {
       const challengeId = getChallengeIdFromPath();
       if (challengeId) setViewData(challengeId);
     } else if (initialTab === 'event' || initialTab === 'edit-event') {
@@ -144,10 +145,7 @@ const Dashboard = () => {
   useEffect(() => {
     const checkOnboarding = async () => {
       if (!loading && authUser) {
-        const { getCurrentUser } = await import('@/services/user');
-        const userData = await getCurrentUser();
-        
-        if (userData && !userData.onboardingComplete) {
+        if (!authUser.onboardingComplete) {
           navigate('/onboarding');
         } else {
           setCheckingOnboarding(false);
@@ -293,9 +291,6 @@ const Dashboard = () => {
       case 'teams':
         return <TeamsTab setActiveView={handleViewChange} />;
       
-      case 'teams-discover':
-        return <TeamsTab initialTab="discover" setActiveView={handleViewChange} />;
-      
       case 'teams-invitations':
         return <TeamsTab initialTab="invitations" setActiveView={handleViewChange} />;
       
@@ -306,6 +301,9 @@ const Dashboard = () => {
 
       case 'challenge':
         return <ChallengesView challengeId={viewData || getChallengeIdFromPath()} onBack={() => handleViewChange('challenges')} setActiveView={handleViewChange} />;
+
+      case 'notifications':
+        return <NotificationsPage />;
 
       case 'settings':
         return <SettingsTab user={authUser} />;
@@ -404,4 +402,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

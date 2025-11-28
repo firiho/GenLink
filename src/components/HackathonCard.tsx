@@ -1,7 +1,6 @@
-import { Badge } from './ui/badge';
-import { Calendar, Users, Award, ArrowUpRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Calendar, Users, Trophy, ArrowRight, Timer } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface HackathonCardProps {
   challengeId: string;
@@ -22,72 +21,67 @@ export const HackathonCard = ({
   daysLeft,
   image
 }: HackathonCardProps) => {
-  const navigate = useNavigate();
-
-  const handleViewChallenge = () => {
-    console.log(`Navigating to challenge with ID: ${challengeId}`);
-    navigate(`/challenge/${challengeId}`);
-  };
-
   return (
-    <div
-      className="group h-full"
+    <Link 
+      to={`/challenge/${challengeId}`}
+      className="group block h-full"
     >
-      <div className="h-full rounded-lg border border-border bg-card hover:bg-accent/5 transition-all duration-200 overflow-hidden">
-        {/* Clean Image Container */}
+      <div className="h-full rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 hover:-translate-y-1 flex flex-col">
+        {/* Image Section */}
         <div className="relative h-48 overflow-hidden">
           <img 
             src={image} 
             alt={title} 
-            className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105" 
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-90" />
           
-          {/* Time Badge */}
-          <div className="absolute top-4 right-4">
-            <span className="px-2 py-1 rounded-md bg-accent/90 text-accent-foreground text-xs font-medium">
-              <Calendar className="h-3 w-3 mr-1 inline" />
+          <div className="absolute top-3 right-3">
+            <Badge variant="secondary" className="bg-background/80 backdrop-blur-md border-white/10 text-xs font-medium shadow-sm">
+              <Timer className="w-3 h-3 mr-1" />
               {daysLeft} days left
-            </span>
+            </Badge>
           </div>
+        </div>
 
-          {/* Organizer Badge */}
-          <div className="absolute bottom-4 left-4">
-            <span className="px-2 py-1 rounded-md bg-background/80 text-foreground text-xs font-medium">
+        {/* Content Section */}
+        <div className="p-6 flex flex-col flex-grow relative">
+          {/* Organizer */}
+          <div className="mb-3 flex items-center gap-2">
+            <div className="h-6 w-6 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent border border-accent/20">
+              {organizer.charAt(0)}
+            </div>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               {organizer}
             </span>
           </div>
-        </div>
 
-        {/* Clean Content */}
-        <div className="p-6">
-          <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-accent transition-colors duration-200 line-clamp-2">
+          {/* Title */}
+          <h3 className="text-xl font-bold mb-4 text-foreground group-hover:text-accent transition-colors line-clamp-2">
             {title}
           </h3>
-          
-          {/* Stats */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center text-muted-foreground">
-              <Users className="h-4 w-4 mr-1" />
-              <span className="text-sm">{participants.toLocaleString()} participants</span>
+
+          <div className="mt-auto pt-4 border-t border-border/50 grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Users className="w-3 h-3" /> Participants
+              </span>
+              <span className="font-semibold text-sm">{participants.toLocaleString()}</span>
             </div>
-            <div className="flex items-center text-accent font-semibold">
-              <Award className="h-4 w-4 mr-1" />
-              <span className="text-sm">{prize}</span>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Trophy className="w-3 h-3" /> Prize Pool
+              </span>
+              <span className="font-semibold text-sm text-accent">{prize}</span>
             </div>
           </div>
-
-          {/* Action Button */}
-          <Button 
-            variant="outline" 
-            className="w-full border-border hover:bg-accent/5 text-foreground hover:text-accent transition-all duration-200"
-            onClick={handleViewChallenge}
-          >
-            View Challenge
-            <ArrowUpRight className="h-4 w-4 ml-2" />
-          </Button>
+          
+          {/* Hover Indicator */}
+          <div className="absolute bottom-6 right-6 opacity-0 transform translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+            <ArrowRight className="w-5 h-5 text-accent" />
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };

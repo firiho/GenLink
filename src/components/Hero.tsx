@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Code, Terminal, Zap } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
+import { HeroBackground } from './ui/hero-background';
 
 const CountUpAnimation = ({ end, duration = 2, suffix = "" }) => {
   const [count, setCount] = useState(0);
@@ -38,38 +39,15 @@ const CountUpAnimation = ({ end, duration = 2, suffix = "" }) => {
 export const Hero = () => {
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-background">
-      {/* Enhanced Subtle Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Enhanced Grid Pattern */}
-        <div className="absolute inset-0 bg-tech-grid opacity-[0.03]" />
-        
-        {/* Multi-layered gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/6 via-transparent to-primary/6" />
-        <div className="absolute inset-0 bg-gradient-to-tl from-transparent via-accent/4 to-transparent" />
-        
-        {/* Floating gradient orbs with subtle animation */}
-        <div className="absolute w-full h-full">
-          <div
-            className="absolute top-1/3 left-1/5 w-80 h-80 bg-gradient-to-br from-accent/12 to-accent/6 rounded-full blur-3xl animate-pulse"
-          />
-          <div
-            className="absolute bottom-1/3 right-1/5 w-96 h-96 bg-gradient-to-br from-primary/10 to-primary/6 rounded-full blur-3xl animate-pulse"
-            style={{ animationDelay: '2s' }}
-          />
-          <div
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-accent/8 to-primary/8 rounded-full blur-3xl animate-pulse"
-            style={{ animationDelay: '4s' }}
-          />
-        </div>
-        
-        {/* Subtle overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/8 to-background/15" />
-      </div>
+      <HeroBackground />
       
       {/* Content */}
-      <div className="relative z-20 h-full flex items-center justify-center pt-32 md:pt-40">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto text-center">
+      <div className="relative z-20 h-full flex items-center justify-center pt-32 md:pt-40 pointer-events-none">
+        <div className="container mx-auto px-4 pointer-events-auto">
+          <div className="max-w-5xl mx-auto text-center relative">
+            {/* Text Backdrop for better readability against 3D background */}
+            <div className="absolute inset-0 -m-20 bg-background/30 backdrop-blur-[2px] rounded-[3rem] -z-10 mask-radial-faded" />
+            
             <div
               className="space-y-12"
             >

@@ -1,4 +1,4 @@
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -64,7 +64,6 @@ export default function FeaturedProjects() {
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-16 text-center lg:text-left">
           <div className="flex-1 mb-8 lg:mb-0">
             <div className="flex justify-center lg:justify-start items-center gap-2 mb-6">
-              <Sparkles className="w-5 h-5 text-accent" />
               <span className="px-3 py-1 rounded-full bg-accent/10 text-accent border border-accent/20 text-sm font-medium">
                 Featured Projects
               </span>
@@ -122,51 +121,75 @@ export default function FeaturedProjects() {
               };
 
               const formattedDate = formatDate(project.submittedAt);
+              const youtubeId = project.youtubeVideoId;
+              const thumbnailUrl = youtubeId 
+                ? `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg` 
+                : null;
 
               return (
                 <Link
                   key={project.id}
                   to={`/p/${project.id}`}
-                  className="group relative transform transition-all duration-200 hover:-translate-y-1"
+                  className="group block h-full"
                 >
-                  <div className="p-6 rounded-lg border border-border bg-card hover:border-accent/30 hover:shadow-lg transition-all duration-300 h-full">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="text-xl font-bold mb-2 group-hover:text-accent transition-colors line-clamp-2">
-                          {project.title}
-                        </h3>
-                        {project.challengeTitle && (
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Submitted for <span className="font-medium text-foreground">{project.challengeTitle}</span>
-                          </p>
-                        )}
-                      </div>
+                  <div className="h-full rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5 hover:-translate-y-1 flex flex-col">
+                    {/* Image or Pattern Header */}
+                    <div className="relative h-48 overflow-hidden bg-muted/30">
+                      {thumbnailUrl ? (
+                        <>
+                          <img 
+                            src={thumbnailUrl} 
+                            alt={project.title} 
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-90" />
+                          {/* Play Icon Overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <div className="w-12 h-12 rounded-full bg-accent/90 flex items-center justify-center text-white shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                              </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent/5 to-primary/5 group-hover:from-accent/10 group-hover:to-primary/10 transition-colors">
+                        </div>
+                      )}
                       
-                      <p className="text-sm text-muted-foreground line-clamp-3">
+                      {/* Category Badge */}
+                      {project.categories && project.categories.length > 0 && (
+                          <div className="absolute top-3 right-3">
+                              <span className="px-2 py-1 rounded-md bg-background/80 backdrop-blur-md border border-white/10 text-xs font-medium shadow-sm">
+                                  {project.categories[0]}
+                              </span>
+                          </div>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6 flex flex-col flex-grow relative">
+                      {/* Challenge Context */}
+                      {project.challengeTitle && (
+                          <div className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider line-clamp-1">
+                              {project.challengeTitle}
+                          </div>
+                      )}
+
+                      <h3 className="text-xl font-bold mb-3 text-foreground group-hover:text-accent transition-colors line-clamp-2">
+                        {project.title}
+                      </h3>
+                      
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
                         {project.description}
                       </p>
                       
-                      <div className="flex items-center justify-between pt-4 border-t border-border">
-                        {formattedDate && (
-                          <span className="text-xs text-muted-foreground">
-                            {formattedDate}
-                          </span>
-                        )}
-                        <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-accent transition-colors" />
+                      <div className="mt-auto pt-4 border-t border-border/50 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">
+                                  {formattedDate ? `Submitted ${formattedDate}` : 'Recently submitted'}
+                              </span>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-accent transition-colors transform group-hover:translate-x-1" />
                       </div>
-                    
-                    {project.categories && project.categories.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {project.categories.slice(0, 2).map((category) => (
-                          <span
-                            key={category}
-                            className="px-2 py-1 rounded-md bg-accent/10 text-accent text-xs font-medium border border-accent/20"
-                          >
-                            {category}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                     </div>
                   </div>
                 </Link>

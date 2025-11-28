@@ -381,6 +381,7 @@ export const getUser = onCall({ region: config.region }, async (request) => {
           skills: profile?.skills,
           total_active_challenges: profile?.total_active_challenges,
           total_submissions: profile?.total_submissions,
+          profileVisibility: profile?.visibility || "private",
         };
       }
     } else if (userData.user_type === "partner" && userData.organization_id) {

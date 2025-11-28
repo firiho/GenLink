@@ -16,6 +16,7 @@ export interface AuthUser extends User {
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,6 +24,46 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchUserData = async (firebaseUser: any) => {
+    try {
+        // Use centralized user data fetch
+        const userData = await getCurrentUser();
+        
+        console.log('User data fetched:', userData);
+
+        if (userData) {
+          const authUser: AuthUser = {
+            uid: firebaseUser.uid,
+            email: userData.email || '',
+            id: userData.id,
+            userType: userData.userType || 'partner',
+            status: userData.status,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            aud: '',
+            created_at: userData.createdAt || '',
+            app_metadata: {},
+            user_metadata: {},
+            role: userData.userType || 'partner',
+            onboardingComplete: userData.onboardingComplete
+          };
+
+          setUser(authUser);
+        } else {
+          setUser(null);
+        }
+    } catch (error) {
+      console.error('Auth error:', error);
+      setUser(null);
+    }
+  };
+
+  const refreshUser = async () => {
+    if (auth.currentUser) {
+      await fetchUserData(auth.currentUser);
+    }
+  };
 
   useEffect(() => {
     console.log("AuthProvider mounted");
@@ -43,31 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       try {
         if (firebaseUser) {
-          // Use centralized user data fetch
-          const userData = await getCurrentUser();
-          
-          console.log('User data fetched:', userData);
-
-          if (userData) {
-            const authUser: AuthUser = {
-              uid: firebaseUser.uid,
-              email: userData.email || '',
-              id: userData.id,
-              userType: userData.userType || 'partner',
-              status: userData.status,
-              firstName: userData.firstName,
-              lastName: userData.lastName,
-              aud: '',
-              created_at: userData.createdAt || '',
-              app_metadata: {},
-              user_metadata: {},
-              role: userData.userType || 'partner'
-            };
-
-            setUser(authUser);
-          } else {
-            setUser(null);
-          }
+          await fetchUserData(firebaseUser);
         } else {
           setUser(null);
         }
@@ -86,7 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
-  const value = { user, loading };
+  const value = { user, loading, refreshUser };
   // Only log the final state, not intermediate states
   if (!loading) {
     console.log("AuthProvider state:", value);

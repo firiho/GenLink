@@ -1,4 +1,4 @@
-import { Bell, Key, Mail, Shield, User, Globe, Palette, Save, Settings as SettingsIcon } from 'lucide-react';
+import { Bell, Key, Mail, Shield, User, Globe, Palette, Save, Settings as SettingsIcon, Users, Megaphone, Check, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -6,14 +6,122 @@ import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useState, useEffect } from 'react';
+import { useNotifications } from '@/contexts/NotificationContext';
+import { updateUser } from '@/services/user';
+import { updateUserPassword } from '@/services/authActions';
+import { NotificationPreferences } from '@/types/notification';
+import { toast } from 'sonner';
 
 export default function SettingsTab({user}) {
   const { theme, setTheme, actualTheme } = useTheme();
+  const { preferences: contextPreferences, updatePreferences } = useNotifications();
+  
+  const preferences = contextPreferences || {
+    emailNotifications: true,
+    pushNotifications: true,
+    marketingEmails: false,
+    teamInvites: true,
+    challengeUpdates: true
+  };
+
+  const [loading, setLoading] = useState(false);
+  const [visibility, setVisibility] = useState<'public' | 'private'>(user?.profileVisibility || 'private');
+  
+  // Password state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    special: false
+  });
+
+  useEffect(() => {
+    setPasswordRequirements({
+      length: newPassword.length >= 8,
+      uppercase: /[A-Z]/.test(newPassword),
+      lowercase: /[a-z]/.test(newPassword),
+      number: /\d/.test(newPassword),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(newPassword)
+    });
+  }, [newPassword]);
+
+  // Update visibility state when user prop changes
+  useEffect(() => {
+    if (user?.profileVisibility) {
+      setVisibility(user.profileVisibility);
+    }
+  }, [user]);
+
+  const handlePreferenceChange = async (key: keyof NotificationPreferences, value: boolean) => {
+    const newPreferences = { ...preferences, [key]: value };
+    try {
+      await updatePreferences(newPreferences);
+      toast.success('Preferences updated');
+    } catch (error) {
+      console.error('Failed to update preferences:', error);
+      toast.error('Failed to update preferences');
+    }
+  };
+
+  const handleVisibilityChange = async (newVisibility: 'public' | 'private') => {
+    const oldVisibility = visibility;
+    setVisibility(newVisibility);
+    try {
+        const success = await updateUser({ profileVisibility: newVisibility });
+        if (success) {
+            toast.success(`Profile is now ${newVisibility}`);
+        } else {
+            toast.error('Failed to update profile visibility');
+            setVisibility(oldVisibility);
+        }
+    } catch (error) {
+        console.error('Failed to update visibility:', error);
+        toast.error('Failed to update profile visibility');
+        setVisibility(oldVisibility);
+    }
+  };
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme);
     // Optional: Add a toast notification
     // toast.success(`Theme changed to ${newTheme === 'system' ? 'System' : newTheme === 'dark' ? 'Dark' : 'Light'}`);
+  };
+
+  const handlePasswordChange = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        toast.error('Please fill in all password fields');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        toast.error('New passwords do not match');
+        return;
+    }
+
+    if (!Object.values(passwordRequirements).every(Boolean)) {
+        toast.error('Please meet all password requirements');
+        return;
+    }
+
+    setLoading(true);
+    try {
+        await updateUserPassword(currentPassword, newPassword);
+        toast.success('Password updated successfully');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+    } catch (error: any) {
+        console.error('Failed to update password:', error);
+        toast.error(error.message || 'Failed to update password');
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (
@@ -118,6 +226,8 @@ export default function SettingsTab({user}) {
                                     type="password"
                                     className="w-full bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600"
                                     placeholder="Enter current password"
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
                                 />
                             </div>
                             
@@ -127,7 +237,19 @@ export default function SettingsTab({user}) {
                                     type="password"
                                     className="w-full bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600"
                                     placeholder="Enter new password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
                                 />
+                                <div className="mt-3 space-y-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300">Password requirements:</p>
+                                    <ul className="space-y-1.5">
+                                        <RequirementItem met={passwordRequirements.length} text="At least 8 characters" />
+                                        <RequirementItem met={passwordRequirements.uppercase} text="One uppercase letter" />
+                                        <RequirementItem met={passwordRequirements.lowercase} text="One lowercase letter" />
+                                        <RequirementItem met={passwordRequirements.number} text="One number" />
+                                        <RequirementItem met={passwordRequirements.special} text="One special character" />
+                                    </ul>
+                                </div>
                             </div>
                             
                             <div>
@@ -136,15 +258,19 @@ export default function SettingsTab({user}) {
                                     type="password"
                                     className="w-full bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600"
                                     placeholder="Confirm new password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
                                 />
                             </div>
                             
                             <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
                                 <Button 
                                     className="w-full bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200"
+                                    onClick={handlePasswordChange}
+                                    disabled={loading}
                                 >
                                     <Key className="h-4 w-4 mr-2" />
-                                    Update Password
+                                    {loading ? 'Updating...' : 'Update Password'}
                                 </Button>
                             </div>
                         </div>
@@ -166,26 +292,38 @@ export default function SettingsTab({user}) {
                     
                     <div className="space-y-4">
                         {[
+                            // {
+                            //     key: 'emailNotifications',
+                            //     title: 'Email Notifications',
+                            //     description: 'Receive notifications via email',
+                            //     icon: Mail
+                            // },
                             {
+                                key: 'pushNotifications',
+                                title: 'Push Notifications',
+                                description: 'Receive push notifications on your device',
+                                icon: Bell
+                            },
+                            // {
+                            //     key: 'marketingEmails',
+                            //     title: 'Marketing Emails',
+                            //     description: 'Receive updates about new features and promotions',
+                            //     icon: Megaphone
+                            // },
+                            {
+                                key: 'teamInvites',
+                                title: 'Team Invites',
+                                description: 'Get notified when someone invites you to a team',
+                                icon: Users
+                            },
+                            {
+                                key: 'challengeUpdates',
                                 title: 'Challenge Updates',
                                 description: 'Get notified about changes to your challenges',
-                                icon: Bell,
-                                enabled: true
-                            },
-                            {
-                                title: 'Team Messages',
-                                description: 'Receive messages from your team members',
-                                icon: Mail,
-                                enabled: true
-                            },
-                            {
-                                title: 'Security Alerts',
-                                description: 'Get important security notifications',
-                                icon: Shield,
-                                enabled: true
+                                icon: Globe
                             }
-                        ].map((setting, index) => (
-                            <div key={setting.title} className="flex items-start justify-between gap-4 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-200">
+                        ].map((setting) => (
+                            <div key={setting.key} className="flex items-start justify-between gap-4 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors duration-200">
                                 <div className="flex items-start gap-3">
                                     <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
                                         <setting.icon className="h-4 w-4 text-slate-600 dark:text-slate-400" />
@@ -195,7 +333,10 @@ export default function SettingsTab({user}) {
                                         <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{setting.description}</p>
                                     </div>
                                 </div>
-                                <Switch defaultChecked={setting.enabled} />
+                                <Switch 
+                                    checked={preferences[setting.key as keyof NotificationPreferences]} 
+                                    onCheckedChange={(checked) => handlePreferenceChange(setting.key as keyof NotificationPreferences, checked)}
+                                />
                             </div>
                         ))}
                     </div>
@@ -274,46 +415,42 @@ export default function SettingsTab({user}) {
                                     <p className="text-xs text-slate-600 dark:text-slate-400">Control who can see your profile</p>
                                 </div>
                                 <Badge variant="outline" className="border-blue-200 text-blue-700 bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-900/20">
-                                    Public
+                                    {visibility === 'public' ? 'Public' : 'Private'}
                                 </Badge>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
-                                {['Public', 'Private'].map((visibility) => (
+                                {['Public', 'Private'].map((option) => (
                                     <button
-                                        key={visibility}
+                                        key={option}
+                                        onClick={() => handleVisibilityChange(option.toLowerCase() as 'public' | 'private')}
                                         className={`p-2 rounded-lg text-xs font-medium transition-colors duration-200 ${
-                                            visibility === 'Public' 
+                                            visibility === option.toLowerCase()
                                                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300' 
                                                 : 'bg-white dark:bg-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-500'
                                         }`}
                                     >
-                                        {visibility}
+                                        {option}
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        
-                        <Button 
-                            variant="outline" 
-                            className="w-full justify-start hover:bg-slate-50 dark:hover:bg-slate-700/50"
-                        >
-                            <Globe className="h-4 w-4 mr-2" />
-                            Data & Privacy Settings
-                        </Button>
                     </div>
                 </div>
             </TabsContent>
         </Tabs>
-
-        {/* Save Button */}
-        <div
-            className="flex justify-end"
-        >
-            <Button className="bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-200">
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-            </Button>
-        </div>
     </div>
   )
+}
+
+function RequirementItem({ met, text }: { met: boolean; text: string }) {
+    return (
+        <li className={`flex items-center text-xs transition-colors duration-200 ${met ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>
+            {met ? (
+                <Check className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+            ) : (
+                <div className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-slate-600 mr-3 ml-1 flex-shrink-0" />
+            )}
+            {text}
+        </li>
+    );
 }

@@ -163,6 +163,11 @@
   .animate-fade-in {
     animation: fade-in 1s ease-out forwards;
   }
+
+  .mask-radial-faded {
+    mask-image: radial-gradient(circle at center, black 40%, transparent 70%);
+    -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 70%);
+  }
 }
 
 @keyframes ken-burns {

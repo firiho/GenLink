@@ -3,9 +3,9 @@
  * Handles URL-to-state mapping and state-to-URL mapping
  */
 
-export type DashboardTab = 'overview' | 'challenges' | 'challenge' | 'projects' | 'create-project' | 'project' | 'edit-project' | 'events' | 'create-event' | 'event' | 'edit-event' | 'teams' | 'teams-discover' | 'teams-invitations' | 'team-manage' | 'profile' | 'settings';
-export type PartnerTab = 'overview' | 'challenges' | 'submissions' | 'events' | 'create-event' | 'event' | 'edit-event' | 'settings' | 'create-challenge' | 'preview-challenge';
-export type AdminTab = 'overview' | 'partners' | 'communities' | 'support' | 'analytics' | 'settings';
+export type DashboardTab = 'overview' | 'challenges' | 'challenge' | 'projects' | 'create-project' | 'project' | 'edit-project' | 'events' | 'create-event' | 'event' | 'edit-event' | 'teams' | 'teams-discover' | 'teams-invitations' | 'team-manage' | 'profile' | 'settings' | 'notifications';
+export type PartnerTab = 'overview' | 'challenges' | 'submissions' | 'events' | 'create-event' | 'event' | 'edit-event' | 'settings' | 'create-challenge' | 'preview-challenge' | 'notifications';
+export type AdminTab = 'overview' | 'partners' | 'communities' | 'support' | 'analytics' | 'settings' | 'notifications';
 
 /**
  * Parse URL pathname to determine which tab should be active for regular dashboard
@@ -31,6 +31,7 @@ export const getDashboardTabFromPath = (pathname: string): DashboardTab => {
   if (pathname.includes('/teams')) return 'teams';
   if (pathname.includes('/profile')) return 'profile';
   if (pathname.includes('/settings')) return 'settings';
+  if (pathname.includes('/notifications')) return 'notifications';
   return 'overview'; // default
 };
 
@@ -47,7 +48,9 @@ export const getPartnerTabFromPath = (pathname: string): PartnerTab => {
   if (pathname.match(/\/events\/[^/]+\/edit$/)) return 'edit-event';
   if (pathname.match(/\/events\/[^/]+$/)) return 'event';
   if (pathname.includes('/events')) return 'events';
+  if (pathname.includes('/notifications')) return 'notifications';
   return 'overview'; // default
+
 };
 
 /**
@@ -84,6 +87,7 @@ export const getDashboardRouteFromTab = (tab: DashboardTab): string => {
     'team-manage': '/dashboard/teams', // This will be overridden with actual team ID
     profile: '/dashboard/profile',
     settings: '/dashboard/settings',
+    notifications: '/dashboard/notifications',
   };
   return routes[tab] || '/dashboard';
 };
@@ -103,6 +107,7 @@ export const getPartnerRouteFromTab = (tab: PartnerTab): string => {
     settings: '/partner/dashboard/settings',
     'create-challenge': '/partner/dashboard/create-challenge',
     'preview-challenge': '/partner/dashboard/preview-challenge',
+    notifications: '/partner/dashboard/notifications',
   };
   return routes[tab] || '/partner/dashboard';
 };

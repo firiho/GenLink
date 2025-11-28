@@ -10,6 +10,7 @@ export interface Event {
   type: 'In-Person' | 'Online' | 'Hybrid';
   category?: string;
   organizerName: string;
+  organizationId: string;
   organizerId: string;
   organizerInfo?: {
     name: string;
@@ -36,6 +37,12 @@ export interface CreateEventData {
   thumbnail?: string;
   location: string;
   locationDetails?: string;
+  organizerId: string;
+  organizationId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  attendees: string[];
+  status: string;
   date: string;
   time: string;
   type: 'In-Person' | 'Online' | 'Hybrid';

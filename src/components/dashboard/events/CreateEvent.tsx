@@ -101,48 +101,46 @@ export default function CreateEvent({ eventId, onBack, setActiveView }: CreateEv
         // Update existing event
         const eventRef = doc(db, 'events', eventId);
         await updateDoc(eventRef, {
-          title: title.trim(),
-          description: description.trim(),
-          thumbnail: thumbnail.trim() || null,
-          location: location.trim(),
-          locationDetails: locationDetails.trim() || null,
-          date: date.trim(),
-          time: time.trim(),
-          type: type,
-          category: category.trim() || null,
+          title,
+          description,
+          thumbnail,
+          location,
+          locationDetails,
+          date,
+          time,
+          type,
+          category,
           maxAttendees: maxAttendees || null,
-          visibility: visibility,
-          updatedAt: new Date()
+          visibility,
+          updatedAt: new Date(),
+          updatedBy: user.uid
         });
-
-        toast.success('Event updated successfully!');
-        setActiveView('event', eventId);
+        toast.success('Event updated successfully');
       } else {
         // Create new event
-        const eventData: CreateEventData & { organizerId: string; organizerName: string; status: string; attendees: number; createdAt: Date; updatedAt: Date } = {
-          title: title.trim(),
-          description: description.trim(),
-          thumbnail: thumbnail.trim() || undefined,
-          location: location.trim(),
-          locationDetails: locationDetails.trim() || undefined,
-          date: date.trim(),
-          time: time.trim(),
-          type: type,
-          category: category.trim() || undefined,
-          organizerName: organizerName,
+        const eventData: CreateEventData = {
+          title,
+          description,
+          thumbnail,
+          location,
+          locationDetails,
+          date,
+          time,
+          type,
+          category,
+          maxAttendees: maxAttendees || null,
+          visibility,
           organizerId: user.uid,
-          maxAttendees: maxAttendees || undefined,
-          visibility: visibility,
-          status: 'published',
-          attendees: 0,
+          organizerName,
+          organizationId: user.organization?.id, // Add organization ID
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          attendees: [],
+          status: 'upcoming'
         };
 
-        const docRef = await addDoc(collection(db, 'events'), eventData);
-
-        toast.success('Event created successfully!');
-        setActiveView('event', docRef.id);
+        await addDoc(collection(db, 'events'), eventData);
+        toast.success('Event created successfully');
       }
     } catch (error) {
       console.error('Error creating event:', error);

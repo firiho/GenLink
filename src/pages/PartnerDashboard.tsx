@@ -25,6 +25,7 @@ import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firesto
 import PreviewChallenge from '@/components/partner-dashboard/PreviewChallenge';
 import NotificationsPage from '@/components/dashboard/NotificationsPage';
 import { getPartnerTabFromPath, getPartnerRouteFromTab, type PartnerTab } from '@/lib/routing';
+import { PERMISSIONS } from '@/constants/permissions';
 
 const PartnerDashboard = () => {
   const navigate = useNavigate();
@@ -41,6 +42,10 @@ const PartnerDashboard = () => {
   const [fetchingSubmissions, setFetchingSubmissions] = useState(true);
   const [viewData, setViewData] = useState(null);
   const previousView = useRef(activeView);
+
+  const hasPermission = (permission: string) => {
+    return authUser?.permissions?.includes(permission);
+  };
 
   const getEventIdFromPath = () => {
     // Don't match "create" as an event ID
@@ -62,30 +67,18 @@ const PartnerDashboard = () => {
       const eventId = getEventIdFromPath();
       if (eventId) setViewData(eventId);
     }
-
-    // Handle browser back/forward buttons
-    const handlePopState = () => {
-      const newTab = getPartnerTabFromPath(window.location.pathname);
-      setActiveView(newTab);
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, []); // Only run once on mount
+  }, [location.pathname]);
 
   // Extract the fetch function so we can reuse it
   const fetchChallenges = async () => {
-    if (!authUser || !authUser.uid) return;
+    if (!authUser || !authUser.organization?.id) return;
     
     setFetchingChallenges(true);
     try {
-      // Query challenges where createdBy equals current user's UID
+      // Query challenges where organizationId equals current user's organization ID
       const challengesQuery = query(
         collection(db, 'challenges'), 
-        where('createdBy', '==', authUser.uid)
+        where('organizationId', '==', authUser.organization.id)
       );
       
       const querySnapshot = await getDocs(challengesQuery);
@@ -366,6 +359,7 @@ const PartnerDashboard = () => {
         );
 
       case 'challenges':
+        if (!hasPermission(PERMISSIONS.MANAGE_CHALLENGES)) return <div className="p-8 text-center text-slate-500">Access Denied</div>;
         return (
           <ChallengesView 
             challenges={challenges} 
@@ -375,6 +369,7 @@ const PartnerDashboard = () => {
         );
 
       case 'submissions':
+        if (!hasPermission(PERMISSIONS.MANAGE_SUBMISSIONS)) return <div className="p-8 text-center text-slate-500">Access Denied</div>;
         return (
           <SubmissionsView 
             submissions={submissions} 
@@ -385,6 +380,7 @@ const PartnerDashboard = () => {
         );
 
         case 'create-challenge':
+          if (!hasPermission(PERMISSIONS.MANAGE_CHALLENGES)) return <div className="p-8 text-center text-slate-500">Access Denied</div>;
           return (
             <NewChallengeForm 
               setActiveView={handleViewChange}
@@ -403,6 +399,41 @@ const PartnerDashboard = () => {
 
       case 'notifications':
         return <NotificationsPage />;
+
+      case 'events':
+        if (!hasPermission(PERMISSIONS.MANAGE_EVENTS)) return <div className="p-8 text-center text-slate-500">Access Denied</div>;
+        return (
+          <EventsTab setActiveView={handleViewChange} />
+        );
+
+      case 'create-event':
+        if (!hasPermission(PERMISSIONS.MANAGE_EVENTS)) return <div className="p-8 text-center text-slate-500">Access Denied</div>;
+        return (
+          <CreateEvent 
+            onBack={() => handleViewChange('events')} 
+            setActiveView={handleViewChange}
+          />
+        );
+
+      case 'edit-event':
+        if (!hasPermission(PERMISSIONS.MANAGE_EVENTS)) return <div className="p-8 text-center text-slate-500">Access Denied</div>;
+        return (
+          <CreateEvent 
+            eventId={viewData} 
+            onBack={() => handleViewChange('events')} 
+            setActiveView={handleViewChange}
+          />
+        );
+
+      case 'event':
+        if (!hasPermission(PERMISSIONS.MANAGE_EVENTS)) return <div className="p-8 text-center text-slate-500">Access Denied</div>;
+        return (
+          <EventView 
+            eventId={viewData} 
+            onBack={() => handleViewChange('events')} 
+            setActiveView={handleViewChange}
+          />
+        );
 
       default:
         return null;
@@ -446,42 +477,51 @@ const PartnerDashboard = () => {
                     <LayoutDashboard className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
                     <span className="font-medium">Overview</span>
                   </Button>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start h-11 px-3 ${
-                      activeView === 'challenges' 
-                        ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 shadow-sm'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                    } rounded-lg transition-all duration-200 group`}
-                    onClick={() => handleViewChange('challenges')}
-                  >
-                    <FileText className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
-                    <span className="font-medium">Challenges</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start h-11 px-3 ${
-                      activeView === 'submissions' 
-                        ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 shadow-sm'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                    } rounded-lg transition-all duration-200 group`}
-                    onClick={() => handleViewChange('submissions')}
-                  >
-                    <Users className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
-                    <span className="font-medium">Submissions</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start h-11 px-3 ${
-                      activeView === 'events' 
-                        ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 shadow-sm'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                    } rounded-lg transition-all duration-200 group`}
-                    onClick={() => handleViewChange('events')}
-                  >
-                    <Calendar className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
-                    <span className="font-medium">Events</span>
-                  </Button>
+                  
+                  {hasPermission(PERMISSIONS.MANAGE_CHALLENGES) && (
+                    <Button
+                      variant="ghost"
+                      className={`w-full justify-start h-11 px-3 ${
+                        activeView === 'challenges' 
+                          ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 shadow-sm'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      } rounded-lg transition-all duration-200 group`}
+                      onClick={() => handleViewChange('challenges')}
+                    >
+                      <FileText className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
+                      <span className="font-medium">Challenges</span>
+                    </Button>
+                  )}
+
+                  {hasPermission(PERMISSIONS.MANAGE_SUBMISSIONS) && (
+                    <Button
+                      variant="ghost"
+                      className={`w-full justify-start h-11 px-3 ${
+                        activeView === 'submissions' 
+                          ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 shadow-sm'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      } rounded-lg transition-all duration-200 group`}
+                      onClick={() => handleViewChange('submissions')}
+                    >
+                      <Users className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
+                      <span className="font-medium">Submissions</span>
+                    </Button>
+                  )}
+
+                  {hasPermission(PERMISSIONS.MANAGE_EVENTS) && (
+                    <Button
+                      variant="ghost"
+                      className={`w-full justify-start h-11 px-3 ${
+                        activeView === 'events' 
+                          ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 shadow-sm'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      } rounded-lg transition-all duration-200 group`}
+                      onClick={() => handleViewChange('events')}
+                    >
+                      <Calendar className="mr-3 h-4 w-4 transition-transform group-hover:scale-110" />
+                      <span className="font-medium">Events</span>
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -553,7 +593,7 @@ const PartnerDashboard = () => {
       )}  
       </main>
       {/* Rest of the component render code */}
-      <MobileTabNav activeView={activeView} setActiveView={handleViewChange} />
+      <MobileTabNav activeView={activeView} setActiveView={handleViewChange} user={authUser} />
     </div>
   );
 };

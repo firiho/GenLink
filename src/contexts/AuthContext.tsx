@@ -10,7 +10,6 @@ export interface AuthUser extends User {
   status?: 'pending' | 'approved';
   firstName?: string;
   lastName?: string;
-  role?: 'partner' | 'participant' | 'admin';
 }
 
 interface AuthContextType {
@@ -37,7 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             uid: firebaseUser.uid,
             email: userData.email || '',
             id: userData.id,
-            userType: userData.userType || 'partner',
+            userType: userData.userType || 'participant',
             status: userData.status,
             firstName: userData.firstName,
             lastName: userData.lastName,
@@ -45,8 +44,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             created_at: userData.createdAt || '',
             app_metadata: {},
             user_metadata: {},
-            role: userData.userType || 'partner',
-            onboardingComplete: userData.onboardingComplete
+            organization: userData.organization || null,
+            onboardingComplete: userData.onboardingComplete,
+            permissions: userData.permissions || []
           };
 
           setUser(authUser);

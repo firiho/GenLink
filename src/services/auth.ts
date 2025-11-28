@@ -84,7 +84,6 @@ export const signIn = async ({ email, password }: SignInCredentials) => {
     return { 
       user: {
         ...firebaseUser,
-        role: data.userData.userType,
         status: data.userData.status,
         emailVerified: firebaseUser.emailVerified,
         ...data.userData

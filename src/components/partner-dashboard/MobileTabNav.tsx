@@ -7,18 +7,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PERMISSIONS } from '@/constants/permissions';
+import { User } from '@/types/user';
 
-const MobileTabNav = ({ activeView, setActiveView }) => {
+interface MobileTabNavProps {
+  activeView: string;
+  setActiveView: (view: string) => void;
+  user: User | null;
+}
+
+const MobileTabNav = ({ activeView, setActiveView, user }: MobileTabNavProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const hasPermission = (permission: string) => {
+    return user?.permissions?.includes(permission);
+  };
 
   const mainTabs = [
     { icon: LayoutDashboard, label: 'Overview', value: 'overview' },
-    { icon: Trophy, label: 'Challenges', value: 'challenges' },
-    { icon: Users, label: 'Submissions', value: 'submissions' },
+    ...(hasPermission(PERMISSIONS.MANAGE_CHALLENGES) ? [{ icon: Trophy, label: 'Challenges', value: 'challenges' }] : []),
+    ...(hasPermission(PERMISSIONS.MANAGE_SUBMISSIONS) ? [{ icon: Users, label: 'Submissions', value: 'submissions' }] : []),
   ];
 
   const menuTabs = [
-    { icon: Calendar, label: 'Events', value: 'events' },
+    ...(hasPermission(PERMISSIONS.MANAGE_EVENTS) ? [{ icon: Calendar, label: 'Events', value: 'events' }] : []),
     { icon: Settings, label: 'Settings', value: 'settings' }
   ];
 

@@ -27,15 +27,25 @@ export default function EventsTab({setActiveView}) {
             try {
                 setIsLoading(true);
                 
-                // Get events where user is organizer
-                const eventsQuery = query(
-                    collection(db, 'events'),
-                    where('organizerId', '==', user.uid)
-                );
+                let eventsQuery;
+                
+                if (user.userType === 'partner' && user.organization?.id) {
+                    // Get events where organizationId matches user's organization
+                    eventsQuery = query(
+                        collection(db, 'events'),
+                        where('organizationId', '==', user.organization.id)
+                    );
+                } else {
+                    // Get events where organizerId matches user ID
+                    eventsQuery = query(
+                        collection(db, 'events'),
+                        where('organizerId', '==', user.uid)
+                    );
+                } 
                 const eventsSnap = await getDocs(eventsQuery);
                 
                 const eventsList = eventsSnap.docs.map(doc => {
-                    const eventData = doc.data();
+                    const eventData = doc.data() as Record<string, any>;
                     return {
                         id: doc.id,
                         ...eventData,

@@ -9,9 +9,14 @@ service cloud.firestore {
       return profile.user_type == 'admin';
     }
     
+    function isOrgMember(orgId) {
+      return exists(/databases/$(database)/documents/organizations/$(orgId)/staff/$(request.auth.uid));
+    }
+
     function isChallengeOrganizer(challengeId) {
       let challenge = get(/databases/$(database)/documents/challenges/$(challengeId)).data;
-      return challenge.createdBy == request.auth.uid;
+      return challenge.createdBy == request.auth.uid || 
+             ('organizationId' in challenge && isOrgMember(challenge.organizationId));
     }
 
     function isTeamOwner(teamId) {
@@ -57,7 +62,11 @@ service cloud.firestore {
     // Organizations collection
     match /organizations/{organizationId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      // Allow write if user is an admin or a staff member of the organization
+      allow write: if request.auth != null && (
+        isAdmin() || 
+        isOrgMember(organizationId)
+      );
       
       // Staff subcollection for organization members
       match /staff/{staffId} {
@@ -93,9 +102,15 @@ service cloud.firestore {
       allow read: if true;
       
       // Allow partners to create and write challenges
-      allow write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.user_type == 'partner' && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved';
+      allow write: if request.auth != null && (
+        // Original creator logic (kept for backward compatibility or individual partners)
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.user_type == 'partner' && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved') ||
+        // Organization member logic
+        ('organizationId' in request.resource.data && isOrgMember(request.resource.data.organizationId)) ||
+        // Allow updating if user is member of the organization that owns the challenge
+        ('organizationId' in resource.data && isOrgMember(resource.data.organizationId))
+      );
       
       // Special case for incrementing participant count only
       allow update: if request.auth != null && 
@@ -143,7 +158,10 @@ service cloud.firestore {
       // Helper function to check if user can read an event
       function canReadEvent() {
         // Organizer can always read their own events (any status, any visibility)
-        return (request.auth != null && resource.data.organizerId == request.auth.uid) ||
+        return (request.auth != null && (
+          resource.data.organizerId == request.auth.uid ||
+          ('organizationId' in resource.data && isOrgMember(resource.data.organizationId))
+        )) ||
         // Admin can always read
         (request.auth != null && isAdmin()) ||
         // Public and unlisted published events can be read by anyone (including unauthenticated)
@@ -156,6 +174,8 @@ service cloud.firestore {
         return request.auth != null && (
           // Organizer can write
           resource.data.organizerId == request.auth.uid ||
+          // Organization staff can write
+          ('organizationId' in resource.data && isOrgMember(resource.data.organizationId)) ||
           // Admin can write
           isAdmin()
         );
@@ -169,8 +189,10 @@ service cloud.firestore {
       allow list: if request.auth != null;
       
       // Allow creating events for authenticated users
-      allow create: if request.auth != null && 
-                   request.resource.data.organizerId == request.auth.uid;
+      allow create: if request.auth != null && (
+        request.resource.data.organizerId == request.auth.uid ||
+        ('organizationId' in request.resource.data && isOrgMember(request.resource.data.organizationId))
+      );
       
       // Allow updating: organizer or admin (full update)
       allow update: if canWriteEvent() && 
@@ -258,7 +280,8 @@ service cloud.firestore {
                   (request.auth != null && (
                     request.auth.uid in resource.data.admins ||
                     exists(/databases/$(database)/documents/users/$(request.auth.uid)/teams/$(teamId)) ||
-                    isAdmin()
+                    isAdmin() ||
+                    isChallengeOrganizer(resource.data.challengeId)
                   ));
       
       // Allow listing/querying teams for discovery (requires auth)

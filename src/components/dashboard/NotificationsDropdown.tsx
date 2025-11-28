@@ -159,7 +159,7 @@ const NotificationsDropdown = () => {
           <div
             className={cn(
               "absolute right-0 mt-3 w-80 sm:w-96 rounded-lg shadow-lg z-50",
-              "bg-card/95 backdrop-blur-sm border border-border py-2 pointer-events-auto"
+              "bg-white dark:bg-slate-900 backdrop-blur-sm border border-slate-200 dark:border-slate-800 py-2 pointer-events-auto"
             )}
             onClick={(e) => e.stopPropagation()}
           >
@@ -253,7 +253,7 @@ const NotificationsDropdown = () => {
               <div className="px-6 py-4 border-t border-border/50">
                 <Button
                   variant="ghost"
-                  className="w-full text-primary hover:bg-accent/10 text-sm font-medium"
+                  className="w-full text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-medium"
                   onClick={handleViewAll}
                 >
                   View all notifications

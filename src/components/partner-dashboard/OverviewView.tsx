@@ -1,12 +1,11 @@
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
 import { ChevronRight, FileText, Clock, UserPlus, Users, DollarSign, Award, Plus, InboxIcon, Settings, Activity, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Trophy } from 'lucide-react';
 import { Stats } from './Stats';
 import WelcomeSection from '../dashboard/WelcomeSection';
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import { PERMISSIONS } from '@/constants/permissions';
 
 export const OverviewView = ({
   recentChallenges,
@@ -14,52 +13,18 @@ export const OverviewView = ({
   setActiveView,
   user
 }) => {
-  const [statsData, setStatsData] = useState({
-    active_challenges: '0',
-    total_participants: '0',
-    total_prize_pool: '$0',
-    completion_rate: '0%'
-  });
-  const [loading, setLoading] = useState(true);
-  const [orgName, setOrgName] = useState('');
+  const hasPermission = (permission: string) => {
+    return user?.permissions?.includes(permission);
+  };
 
-  useEffect(() => {
-    const fetchOrganizationStats = async () => {
-      try {
-        setLoading(true);
-        const db = getFirestore();
-        
-        // Query organizations collection where id field matches user.uid
-        const orgQuery = query(
-          collection(db, 'organizations'),
-          where('created_by', '==', user?.uid)
-        );
-        
-        const querySnapshot = await getDocs(orgQuery);
-        
-        if (!querySnapshot.empty) {
-          const orgData = querySnapshot.docs[0].data();
-          setStatsData({
-            active_challenges: orgData.active_challenges?.toString() || '0',
-            total_participants: orgData.total_participants?.toString() || '0',
-            total_prize_pool: `$${orgData.total_prize_pool?.toLocaleString() || '0'}`,
-            completion_rate: `${orgData.completion_rate || 0}%`
-          });
-          setOrgName(orgData.name || 'Hey Partner!');
-        } else {
-          console.log("No organization found for this user");
-        }
-      } catch (error) {
-        console.error("Error fetching organization stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?.uid) {
-      fetchOrganizationStats();
-    }
-  }, [user]);
+  const statsData = {
+    active_challenges: user?.organization?.active_challenges?.toString() || '0',
+    total_participants: user?.organization?.total_participants?.toString() || '0',
+    total_prize_pool: `$${user?.organization?.total_prize_pool?.toLocaleString() || '0'}`,
+    completion_rate: `${user?.organization?.completion_rate || 0}%`
+  };
+  
+  const orgName = user?.organization?.name || 'Hey Partner!';
 
   const stats = [
     {
@@ -104,123 +69,127 @@ export const OverviewView = ({
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       <WelcomeSection title={orgName} subtitle={'Here is what\'s happening with your GenLink'} />
       {/* Stats Grid */}
-      <Stats stats={stats} loading={loading}/>
+      <Stats stats={stats} loading={false}/>
 
       {/* Recent Sections - Updated for better mobile view */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {/* Recent Challenges Section */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
-          <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Recent Challenges</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={onViewAllChallenges}
-                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-all duration-200 group self-start sm:self-auto"
-              >
-                View All
-                <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-200" />
-              </Button>
+        {hasPermission(PERMISSIONS.MANAGE_CHALLENGES) && (
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+            <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Recent Challenges</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onViewAllChallenges}
+                  className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-all duration-200 group self-start sm:self-auto"
+                >
+                  View All
+                  <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-200" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-4 sm:p-6">
+              {recentChallenges.length > 0 ? (
+                <div className="space-y-3">
+                  {recentChallenges.slice(0, 3).map((challenge) => (
+                    <div
+                      key={challenge.id}
+                      onClick={() => setActiveView('preview-challenge', { challenge })}
+                      className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg flex-shrink-0">
+                          <Trophy className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm mb-1 truncate text-slate-900 dark:text-white">
+                            {challenge.title}
+                          </h4>
+                          <div className="flex items-center space-x-3 text-sm text-slate-500 dark:text-slate-400">
+                            <span>{challenge.participants} participants</span>
+                            <span>•</span>
+                            <span>{challenge.daysLeft} days left</span>
+                          </div>
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-xs",
+                            challenge.status === 'active' 
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' 
+                              : 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                          )}
+                        >
+                          {challenge.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-slate-500 dark:text-slate-400">
+                  No challenges yet
+                </div>
+              )}
             </div>
           </div>
-          <div className="p-4 sm:p-6">
-            {recentChallenges.length > 0 ? (
-              <div className="space-y-3">
-                {recentChallenges.slice(0, 3).map((challenge) => (
-                  <div
-                    key={challenge.id}
-                    onClick={() => setActiveView('preview-challenge', { challenge })}
-                    className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg flex-shrink-0">
-                        <Trophy className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm mb-1 truncate text-slate-900 dark:text-white">
-                          {challenge.title}
-                        </h4>
-                        <div className="flex items-center space-x-3 text-sm text-slate-500 dark:text-slate-400">
-                          <span>{challenge.participants} participants</span>
-                          <span>•</span>
-                          <span>{challenge.daysLeft} days left</span>
-                        </div>
-                      </div>
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          "rounded-full px-2 py-0.5 text-xs",
-                          challenge.status === 'active' 
-                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' 
-                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
-                        )}
-                      >
-                        {challenge.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 text-slate-500 dark:text-slate-400">
-                No challenges yet
-              </div>
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Recent Activity and Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Recent Submissions */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
-          <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Recent Submissions</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setActiveView('submissions')}
-                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-all duration-200 group self-start sm:self-auto"
-              >
-                View All <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-200" />
-              </Button>
+        {hasPermission(PERMISSIONS.MANAGE_SUBMISSIONS) && (
+          <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+            <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Recent Submissions</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setActiveView('submissions')}
+                  className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-all duration-200 group self-start sm:self-auto"
+                >
+                  View All <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-200" />
+                </Button>
+              </div>
             </div>
-          </div>
-          <div className="p-4 sm:p-6">
-            {recentSubmissions.length > 0 ? (
-              <div className="space-y-3">
-                {recentSubmissions.slice(0, 3).map((submission) => (
-                  <div 
-                    key={submission.id} 
-                    className="flex items-start p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg cursor-pointer border border-slate-200 dark:border-slate-700 transition-colors duration-200"
-                    onClick={() => {}}
-                  >
-                    <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg mr-4">
-                      <FileText className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-slate-900 dark:text-white">{submission.title}</p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{submission.participant.name}</p>
-                      <div className="flex items-center mt-2">
-                        <Badge variant="secondary" className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                          {submission.status}
-                        </Badge>
-                        <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
-                          {new Date(submission.submittedAt).toLocaleDateString()}
-                        </span>
+            <div className="p-4 sm:p-6">
+              {recentSubmissions.length > 0 ? (
+                <div className="space-y-3">
+                  {recentSubmissions.slice(0, 3).map((submission) => (
+                    <div 
+                      key={submission.id} 
+                      className="flex items-start p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg cursor-pointer border border-slate-200 dark:border-slate-700 transition-colors duration-200"
+                      onClick={() => {}}
+                    >
+                      <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg mr-4">
+                        <FileText className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-slate-900 dark:text-white">{submission.title}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{submission.participant.name}</p>
+                        <div className="flex items-center mt-2">
+                          <Badge variant="secondary" className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                            {submission.status}
+                          </Badge>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
+                            {new Date(submission.submittedAt).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 text-slate-500 dark:text-slate-400">
-                No submissions yet
-              </div>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-slate-500 dark:text-slate-400">
+                  No submissions yet
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Quick Actions */}
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
@@ -229,22 +198,26 @@ export const OverviewView = ({
           </div>
           <div className="p-4 sm:p-6">
             <div className="space-y-3">
-              <Button 
-                onClick={() => setActiveView('create-challenge')}
-                className="w-full justify-start text-left text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
-                variant="outline"
-              >
-                <Plus className="mr-2 h-5 w-5" />
-                Create New Challenge
-              </Button>
-              <Button 
-                onClick={() => setActiveView('submissions')}
-                className="w-full justify-start text-left text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
-                variant="outline"
-              >
-                <InboxIcon className="mr-2 h-5 w-5" />
-                Review Submissions ({recentSubmissions.filter(s => s.status === 'pending').length})
-              </Button>
+              {hasPermission(PERMISSIONS.MANAGE_CHALLENGES) && (
+                <Button 
+                  onClick={() => setActiveView('create-challenge')}
+                  className="w-full justify-start text-left text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
+                  variant="outline"
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  Create New Challenge
+                </Button>
+              )}
+              {hasPermission(PERMISSIONS.MANAGE_SUBMISSIONS) && (
+                <Button 
+                  onClick={() => setActiveView('submissions')}
+                  className="w-full justify-start text-left text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
+                  variant="outline"
+                >
+                  <InboxIcon className="mr-2 h-5 w-5" />
+                  Review Submissions ({recentSubmissions.filter(s => s.status === 'pending').length})
+                </Button>
+              )}
               <Button 
                 onClick={() => setActiveView('settings')}
                 className="w-full justify-start text-left text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"

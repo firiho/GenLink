@@ -107,30 +107,46 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
       
       setIsLoading(true);
       try {
-        const orgQuery = query(collection(db, 'organizations'), where('created_by', '==', user.uid));
-        const orgSnapshot = await getDocs(orgQuery);
-        const orgDoc = orgSnapshot.docs.length > 0 ? orgSnapshot.docs[0] : null;
-  
-        console.log('Organization document:', orgDoc?.exists(), orgDoc?.data());
-        
-        // Create a single update to the state
-        setChallengeData(prevData => {
-          const updatedData = { ...prevData, createdBy: user.uid };
-          
-          // If org data exists, update the company info
-          if (orgDoc && orgDoc.exists()) {
-            const orgData = orgDoc.data();
+        // Use organization from user context if available
+        if (user.organization) {
+          setChallengeData(prevData => {
+            const updatedData = { ...prevData, createdBy: user.uid };
+            
             updatedData.companyInfo = {
               ...updatedData.companyInfo,
-              name: orgData.name || updatedData.companyInfo.name,
-              logoUrl: orgData.logoUrl || updatedData.companyInfo.logoUrl,
-              website: orgData.website || updatedData.companyInfo.website,
+              name: user.organization.name || updatedData.companyInfo.name,
+              logoUrl: user.organization.logo || updatedData.companyInfo.logoUrl,
+              website: user.organization.website || updatedData.companyInfo.website,
               contactEmail: user.email || updatedData.companyInfo.contactEmail
             };
-          }
+            
+            return updatedData;
+          });
+        } else {
+          // Fallback to querying if not in context (legacy behavior)
+          const orgQuery = query(collection(db, 'organizations'), where('created_by', '==', user.uid));
+          const orgSnapshot = await getDocs(orgQuery);
+          const orgDoc = orgSnapshot.docs.length > 0 ? orgSnapshot.docs[0] : null;
+    
+          console.log('Organization document:', orgDoc?.exists(), orgDoc?.data());
           
-          return updatedData;
-        });
+          setChallengeData(prevData => {
+            const updatedData = { ...prevData, createdBy: user.uid };
+            
+            if (orgDoc && orgDoc.exists()) {
+              const orgData = orgDoc.data();
+              updatedData.companyInfo = {
+                ...updatedData.companyInfo,
+                name: orgData.name || updatedData.companyInfo.name,
+                logoUrl: orgData.logoUrl || updatedData.companyInfo.logoUrl,
+                website: orgData.website || updatedData.companyInfo.website,
+                contactEmail: user.email || updatedData.companyInfo.contactEmail
+              };
+            }
+            
+            return updatedData;
+          });
+        }
   
       } catch (error) {
         console.error("Error fetching organization data:", error);
@@ -334,7 +350,10 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
         ...rest,
         status,
         companyInfo,
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        organizationId: user?.organization?.id,
+        // Keep original creator if editing, otherwise set to current user
+        createdBy: challengeData.createdBy || user?.uid
       };
       
       // Save to firebase

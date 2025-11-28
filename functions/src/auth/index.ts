@@ -23,6 +23,15 @@ interface SignInData {
   uid: string;
 }
 
+interface CreateStaffData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  position: string;
+  permissions: string[];
+  organizationId: string;
+}
+
 /**
  * Sign Up - Creates user profile and related documents after Firebase Auth
  * Call this immediately after createUserWithEmailAndPassword
@@ -80,7 +89,14 @@ export const signUp = onCall({ region: config.region }, async (request) => {
           email: data.email,
           phone: "",
           position: data.position ? sanitizeString(data.position) : "",
-          permissions: ["owner", "admin", "create_challenges", "manage_submissions", "view_analytics"],
+          permissions: [
+            "manage_challenges",
+            "manage_submissions",
+            "manage_events",
+            "view_analytics",
+            "manage_team",
+            "manage_organization",
+          ],
           status: "active",
           created_at: timestamp,
           updated_at: timestamp,
@@ -311,7 +327,6 @@ export const adminSignIn = onCall({ region: config.region }, async (request) => 
         id: data.uid,
         email: authUser.email,
         userType: userData.user_type,
-        role: userData.user_type,
       },
       message: "Admin sign in successful",
     };
@@ -416,7 +431,15 @@ export const getUser = onCall({ region: config.region }, async (request) => {
           id: org?.id,
           name: org?.name,
           type: org?.type,
+          logo: org?.logo,
+          industry: org?.industry,
+          website: org?.website,
+          description: org?.description,
           status: org?.status,
+          active_challenges: org?.active_challenges || 0,
+          total_participants: org?.total_participants || 0,
+          total_prize_pool: org?.total_prize_pool || 0,
+          completion_rate: org?.completion_rate || 0,
         };
       }
     }
@@ -450,5 +473,122 @@ export const getUser = onCall({ region: config.region }, async (request) => {
     }
     
     throw new HttpsError("internal", "Failed to retrieve user data.");
+  }
+});
+
+/**
+ * Create Staff User - Adds a new staff member to an organization
+ * Only accessible by owners and admins
+ */
+export const createStaffUser = onCall({ region: config.region }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  const data = request.data as CreateStaffData;
+  validateRequired(data, ["email", "firstName", "lastName", "permissions", "organizationId"]);
+
+  const db = admin.firestore();
+  const callerUid = request.auth.uid;
+
+  // Verify caller permissions
+  // We check the staff record of the caller
+  const callerStaffDoc = await db.collection(config.collections.organizations)
+    .doc(data.organizationId)
+    .collection("staff")
+    .doc(callerUid)
+    .get();
+
+  if (!callerStaffDoc.exists) {
+      throw new HttpsError("permission-denied", "Caller staff profile not found or not part of this organization");
+  }
+  
+  const callerStaffData = callerStaffDoc.data();
+  const hasPermission = callerStaffData?.permissions?.includes("manage_team");
+  
+  if (!hasPermission) {
+    throw new HttpsError("permission-denied", "Insufficient permissions to add staff members");
+  }
+
+  try {
+    // Create user in Firebase Auth
+    const userRecord = await admin.auth().createUser({
+      email: data.email,
+      emailVerified: false,
+      displayName: `${data.firstName} ${data.lastName}`,
+      disabled: false,
+    });
+
+    const timestamp = new Date().toISOString();
+
+    // Create user document in "users" collection
+    const userDocData = {
+      user_type: "partner",
+      status: "approved",
+      organization_id: data.organizationId,
+      created_at: timestamp,
+      updated_at: timestamp,
+    };
+
+    await db.collection(config.collections.users).doc(userRecord.uid).set(userDocData);
+
+    // Add to organization's staff subcollection
+    await db.collection(config.collections.organizations)
+      .doc(data.organizationId)
+      .collection("staff")
+      .doc(userRecord.uid)
+      .set({
+        userId: userRecord.uid,
+        firstName: sanitizeString(data.firstName),
+        lastName: sanitizeString(data.lastName),
+        email: data.email,
+        phone: "",
+        position: data.position ? sanitizeString(data.position) : "",
+        permissions: data.permissions,
+        status: "active",
+        created_at: timestamp,
+        updated_at: timestamp,
+        addedBy: callerUid,
+      });
+
+    // Send password reset email via REST API
+    // This ensures the email is sent directly to the user
+    const apiKey = "AIzaSyDY5Bj_H3w9e2jQ-ir0wJuKOcmZf1sFx1E";
+    const resetUrl = `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getOobConfirmationCode?key=${apiKey}`;
+    
+    try {
+      const response = await fetch(resetUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requestType: "PASSWORD_RESET",
+          email: data.email
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json() as any;
+        console.error("Failed to send password reset email:", errorData);
+      } else {
+        console.log(`Password reset email sent to ${data.email}`);
+      }
+    } catch (emailError) {
+      console.error("Error sending password reset email:", emailError);
+    }
+
+    return {
+      success: true,
+      message: "Staff member created and invitation sent",
+      userId: userRecord.uid
+    };
+
+  } catch (error: any) {
+    console.error("Error creating staff member:", error);
+    if (error.code === "auth/email-already-exists") {
+      throw new HttpsError("already-exists", "A user with this email already exists.");
+    }
+    throw new HttpsError("internal", error.message);
   }
 });

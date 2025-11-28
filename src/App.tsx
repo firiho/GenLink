@@ -37,11 +37,11 @@ const PartnerRoute = ({ children }) => {
     if (!loading) {
       if (!user) {
         navigate('/signin');
-      } else if (user.role !== 'partner') {
+      } else if (user.userType !== 'partner') {
         // Silently redirect to appropriate dashboard based on role
-        if (user.role === 'admin') {
+        if (user.userType === 'admin') {
           navigate('/admin/dashboard');
-        } else if (user.role === 'participant') {
+        } else if (user.userType === 'participant') {
           navigate('/dashboard');
         } else {
           navigate('/signin');
@@ -57,7 +57,7 @@ const PartnerRoute = ({ children }) => {
     return <AuthLoadingScreen />;
   }
 
-  return user?.role === 'partner' && auth.currentUser?.emailVerified ? children : null;
+  return user?.userType === 'partner' && auth.currentUser?.emailVerified ? children : null;
 };
 
 const AdminRoute = ({ children }) => {
@@ -65,7 +65,7 @@ const AdminRoute = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'admin')) {
+    if (!loading && (!user || user.userType !== 'admin')) {
       navigate('/signin');
     }
   }, [user, loading, navigate]);
@@ -74,7 +74,7 @@ const AdminRoute = ({ children }) => {
     return <AuthLoadingScreen />;
   }
 
-  return user?.role === 'admin' ? children : null;
+  return user?.userType === 'admin' ? children : null;
 }
 
 const ParticipantRoute = ({ children }) => {
@@ -85,11 +85,11 @@ const ParticipantRoute = ({ children }) => {
     if (!loading) {
       if (!user) {
         navigate('/signin');
-      } else if (user.role !== 'participant') {
+      } else if (user.userType !== 'participant') {
         // Silently redirect to appropriate dashboard based on role
-        if (user.role === 'admin') {
+        if (user.userType === 'admin') {
           navigate('/admin/dashboard');
-        } else if (user.role === 'partner') {
+        } else if (user.userType === 'partner') {
           navigate('/partner/dashboard');
         } else {
           navigate('/signin');

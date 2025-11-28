@@ -1,8 +1,10 @@
 import { User as SupabaseUser } from '@supabase/supabase-js'
 
 export interface Organization {
+  id: string;
   name: string;
   logo?: string;
+  website?: string;
 }
 
 export interface User extends SupabaseUser {
@@ -19,6 +21,7 @@ export interface User extends SupabaseUser {
   createdAt?: string;
   onboardingComplete?: boolean;
   profileVisibility?: 'public' | 'private';
+  permissions?: string[];
 }
 
 export interface Challenge {

@@ -4,9 +4,13 @@
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import { config } from "../config";
 import { validateRequired, sanitizeString, isValidEmail } from "../utils/validation";
 import { v4 as uuidv4 } from "uuid";
+
+// Define the secret for the Firebase Web API key
+const webApiKey = defineSecret("WEB_API_KEY");
 
 interface SignUpData {
   email: string;
@@ -480,7 +484,7 @@ export const getUser = onCall({ region: config.region }, async (request) => {
  * Create Staff User - Adds a new staff member to an organization
  * Only accessible by owners and admins
  */
-export const createStaffUser = onCall({ region: config.region }, async (request) => {
+export const createStaffUser = onCall({ region: config.region, secrets: [webApiKey] }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
   }
@@ -553,7 +557,7 @@ export const createStaffUser = onCall({ region: config.region }, async (request)
 
     // Send password reset email via REST API
     // This ensures the email is sent directly to the user
-    const apiKey = "AIzaSyDY5Bj_H3w9e2jQ-ir0wJuKOcmZf1sFx1E";
+    const apiKey = webApiKey.value();
     const resetUrl = `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getOobConfirmationCode?key=${apiKey}`;
     
     try {

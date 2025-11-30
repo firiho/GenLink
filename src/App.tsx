@@ -105,7 +105,7 @@ const ParticipantRoute = ({ children }) => {
     return <AuthLoadingScreen />;
   }
 
-  return user?.role === 'participant' && auth.currentUser?.emailVerified ? children : null;
+  return user?.userType === 'participant' && auth.currentUser?.emailVerified ? children : null;
 }
 
 const ProjectViewWrapper = () => {

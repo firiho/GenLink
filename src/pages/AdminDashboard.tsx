@@ -125,7 +125,7 @@ const AdminDashboard = () => {
   }
   
   // Only redirect to admin login if we're not loading and there's no user or user is not admin
-  if (!loading && (!authUser || authUser.role !== 'admin')) {
+  if (!loading && (!authUser || authUser.userType !== 'admin')) {
     return <Navigate to="/admin/login" />;
   }
 

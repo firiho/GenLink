@@ -172,9 +172,9 @@ const handleAddChallenge = async (challengeId) => {
     if (userChallengeSnap.exists()) {
       toast.info('You have already joined this challenge');
       // Navigate to appropriate dashboard based on user role
-      if (user?.role === 'partner') {
+      if (user?.userType === 'partner') {
         navigate('/partner/dashboard');
-      } else if (user?.role === 'admin') {
+      } else if (user?.userType === 'admin') {
         navigate('/admin/dashboard');
       } else {
         navigate('/dashboard');
@@ -196,9 +196,9 @@ const handleAddChallenge = async (challengeId) => {
     
     toast.success('Challenge added to your dashboard successfully!');
     // Navigate to appropriate dashboard based on user role
-    if (user?.role === 'partner') {
+    if (user?.userType === 'partner') {
       navigate('/partner/dashboard');
-    } else if (user?.role === 'admin') {
+    } else if (user?.userType === 'admin') {
       navigate('/admin/dashboard');
     } else {
       navigate('/dashboard');

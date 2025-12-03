@@ -52,9 +52,9 @@ export const Header = () => {
   };
 
   const handleDashboardClick = () => {
-    if (user?.role === 'partner') {
+    if (user?.userType === 'partner') {
       navigate('/partner/dashboard');
-    } else if (user?.role === 'admin') {
+    } else if (user?.userType === 'admin') {
       navigate('/admin/dashboard');
     } else {
       navigate('/dashboard');

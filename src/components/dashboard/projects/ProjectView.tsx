@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { doc, getDoc, updateDoc, increment, arrayUnion, setDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment, arrayUnion, arrayRemove, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -147,11 +147,16 @@ export default function ProjectView({ projectId, onBack, setActiveView }: Projec
         });
       }
 
-      // Update public profile
+      // Update participant stats in stats collection - stats/{userId}
+      const userStatsRef = doc(db, 'stats', user.uid);
+      await setDoc(userStatsRef, {
+        'totalSubmissions.submissionIds': arrayUnion(submissionId),
+        'activeChallenges.activeChallengeIds': arrayRemove(project.challengeId)
+      }, { merge: true });
+
+      // Also update public profile for display purposes
       const publicProfileRef = doc(db, 'profiles', user.uid);
       await setDoc(publicProfileRef, {
-        total_submissions: increment(1),
-        total_active_challenges: increment(-1),
         projectsCount: increment(1),
         submissions: arrayUnion(submissionId)
       }, { merge: true });

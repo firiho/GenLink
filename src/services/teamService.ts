@@ -374,6 +374,11 @@ export class TeamService {
           joinedAt: new Date(),
           status: 'active'
         }, { merge: true });
+
+        // Update user's stats in stats collection - stats/{userId}
+        await setDoc(doc(db, 'stats', userId), {
+          'activeTeams.activeTeamIds': arrayUnion(teamId)
+        }, { merge: true });
         
         // Update team member count and add to admins if owner/admin role
         const teamRef = doc(db, 'teams', teamId);
@@ -666,6 +671,18 @@ export class TeamService {
   
   // Join challenge as team
   static async joinChallengeAsTeam(teamId: string, challengeId: string): Promise<void> {
+    // Get team members to update their stats
+    const teamRef = doc(db, 'teams', teamId);
+    const teamSnap = await getDoc(teamRef);
+    const teamData = teamSnap.data();
+    const memberIds = teamData?.memberIds || [];
+    
+    // Get challenge to find organization
+    const challengeRef = doc(db, 'challenges', challengeId);
+    const challengeSnap = await getDoc(challengeRef);
+    const challengeData = challengeSnap.data();
+    const organizationId = challengeData?.organizationId;
+    
     await setDoc(doc(db, 'teams', teamId, 'challenges', challengeId), {
       challengeId,
       status: 'active',
@@ -675,10 +692,27 @@ export class TeamService {
     });
     
     // Update team last activity
-    const teamRef = doc(db, 'teams', teamId);
     await updateDoc(teamRef, {
       lastActivity: new Date()
     });
+    
+    // Update each team member's stats in stats collection - stats/{userId}
+    for (const memberId of memberIds) {
+      const memberStatsRef = doc(db, 'stats', memberId);
+      await setDoc(memberStatsRef, {
+        'activeChallenges.activeChallengeIds': arrayUnion(challengeId)
+      }, { merge: true });
+    }
+    
+    // Update organization stats in stats collection - stats/org_{orgId}
+    if (organizationId && memberIds.length > 0) {
+      const orgStatsRef = doc(db, 'stats', `org_${organizationId}`);
+      for (const memberId of memberIds) {
+        await setDoc(orgStatsRef, {
+          'totalParticipants.participantIds': arrayUnion(memberId)
+        }, { merge: true });
+      }
+    }
   }
   
   // Update team

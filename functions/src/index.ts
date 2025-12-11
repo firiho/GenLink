@@ -26,3 +26,6 @@ export * from "./support";
 // Export testing functions
 export * from "./testing";
 
+// Export scheduled functions
+export * from "./scheduled";
+

@@ -365,6 +365,7 @@ const PartnerDashboard = () => {
             challenges={challenges} 
             setActiveView={handleViewChange}
             refreshChallenges={fetchChallenges}
+            user={authUser}
           />
         );
 

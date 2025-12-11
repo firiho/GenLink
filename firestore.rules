@@ -97,6 +97,26 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == profileId;
     }
     
+    // Stats collection - platform statistics
+    // Structure:
+    //   stats/public - Landing page stats (public read)
+    //   stats/{userId} - Participant stats (owner read, authenticated write)
+    //   stats/org_{orgId} - Partner/org stats (org members read, authenticated write)
+    match /stats/{statId} {
+      // Read rules:
+      // - 'public' document is readable by anyone
+      // - User stats (statId == their userId) are readable by that user
+      // - Org stats (statId starts with 'org_') are readable by org members
+      allow read: if statId == 'public' || 
+                     (request.auth != null && request.auth.uid == statId) ||
+                     (request.auth != null && statId.matches('org_.*') && isOrgMember(statId.replace('org_', '')));
+      
+      // Write rules:
+      // - Any authenticated user can write (stats are updated by various actions)
+      // - The stats structure uses idempotent operations (arrayUnion/arrayRemove)
+      allow write: if request.auth != null;
+    }
+    
     // Challenges collection
     match /challenges/{challengeId} {
       allow read: if true;

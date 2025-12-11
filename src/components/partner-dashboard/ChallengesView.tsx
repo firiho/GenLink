@@ -7,12 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WelcomeSection from '../dashboard/WelcomeSection';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, getDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
 
 export const ChallengesView = ({
   challenges,
   setActiveView,
-  refreshChallenges // Optional prop to refresh challenges after status changes
+  refreshChallenges, // Optional prop to refresh challenges after status changes
+  user // User object with organization info
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -25,12 +26,44 @@ export const ChallengesView = ({
     try {
       setIsUpdating(true);
       
-      // Update the challenge status in Firestore
+      // Get the challenge data to get the prize amount
       const challengeRef = doc(db, 'challenges', challengeId);
+      const challengeSnap = await getDoc(challengeRef);
+      const challengeData = challengeSnap.data();
+      const prizeAmount = challengeData?.total_prize || 0;
+      const organizationId = challengeData?.organizationId || user?.organization?.id;
+      
+      // Update the challenge status in Firestore
       await updateDoc(challengeRef, {
         status: 'active',
         updatedAt: new Date()
       });
+      
+      // Update organization stats in stats collection - stats/org_{orgId}
+      // Use arrayUnion for idempotent tracking of both active challenges and prize pool
+      // Prize is only added if challengeId is not already in prizeAddedChallengeIds
+      if (organizationId) {
+        const orgStatsRef = doc(db, 'stats', `org_${organizationId}`);
+        
+        // First check if prize was already added for this challenge
+        const orgStatsSnap = await getDoc(orgStatsRef);
+        const orgStatsData = orgStatsSnap.data();
+        const prizeAddedIds = orgStatsData?.totalPrizePool?.prizeAddedChallengeIds || [];
+        const prizeAlreadyAdded = prizeAddedIds.includes(challengeId);
+        
+        // Build update object - always add to active challenges (idempotent)
+        const updateData: any = {
+          'activeChallenges.activeChallengeIds': arrayUnion(challengeId)
+        };
+        
+        // Only add prize if not already added for this challenge
+        if (!prizeAlreadyAdded && prizeAmount > 0) {
+          updateData['totalPrizePool.value'] = increment(prizeAmount);
+          updateData['totalPrizePool.prizeAddedChallengeIds'] = arrayUnion(challengeId);
+        }
+        
+        await setDoc(orgStatsRef, updateData, { merge: true });
+      }
       
       toast.success('Challenge published successfully!');
       
@@ -53,12 +86,26 @@ export const ChallengesView = ({
     try {
       setIsUpdating(true);
       
-      // Update the challenge status in Firestore
+      // Get the challenge data to get the organization ID
       const challengeRef = doc(db, 'challenges', challengeId);
+      const challengeSnap = await getDoc(challengeRef);
+      const challengeData = challengeSnap.data();
+      const organizationId = challengeData?.organizationId || user?.organization?.id;
+      
+      // Update the challenge status in Firestore
       await updateDoc(challengeRef, {
         status: 'completed',
         updatedAt: new Date()
       });
+      
+      // Update organization stats in stats collection - stats/org_{orgId}
+      // Note: We don't decrement prize pool since that money was already allocated
+      if (organizationId) {
+        const orgStatsRef = doc(db, 'stats', `org_${organizationId}`);
+        await setDoc(orgStatsRef, {
+          'activeChallenges.activeChallengeIds': arrayRemove(challengeId)
+        }, { merge: true });
+      }
       
       toast.success('Challenge archived successfully!');
       
@@ -229,8 +276,6 @@ const ChallengeCard = ({
 }: ChallengeCardProps) => {
   return (
     <div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
       className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-200 dark:border-slate-800"
     >
       <div className="flex items-start justify-between">

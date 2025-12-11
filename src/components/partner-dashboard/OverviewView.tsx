@@ -6,6 +6,10 @@ import { Trophy } from 'lucide-react';
 import { Stats } from './Stats';
 import WelcomeSection from '../dashboard/WelcomeSection';
 import { PERMISSIONS } from '@/constants/permissions';
+import { PartnerStats, parseStatValue, formatStatNumber, formatStatCurrency, formatStatPercentage } from '@/types/stats';
+import { useState, useEffect } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export const OverviewView = ({
   recentChallenges,
@@ -13,48 +17,80 @@ export const OverviewView = ({
   setActiveView,
   user
 }) => {
+  const [orgStats, setOrgStats] = useState<PartnerStats>({});
+  const [loading, setLoading] = useState(true);
+
   const hasPermission = (permission: string) => {
     return user?.permissions?.includes(permission);
   };
 
-  const statsData = {
-    active_challenges: user?.organization?.active_challenges?.toString() || '0',
-    total_participants: user?.organization?.total_participants?.toString() || '0',
-    total_prize_pool: `$${user?.organization?.total_prize_pool?.toLocaleString() || '0'}`,
-    completion_rate: `${user?.organization?.completion_rate || 0}%`
-  };
+  // Fetch stats from stats collection - stats/org_{orgId}
+  useEffect(() => {
+    const fetchStats = async () => {
+      const orgId = user?.organization?.id;
+      if (!orgId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const statsDocRef = doc(db, 'stats', `org_${orgId}`);
+        const statsSnapshot = await getDoc(statsDocRef);
+        
+        if (statsSnapshot.exists()) {
+          setOrgStats(statsSnapshot.data() || {});
+        }
+      } catch (error) {
+        console.error('Error fetching org stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [user?.organization?.id]);
+  
+  // Parse stats with change calculations
+  const activeChallenges = parseStatValue(orgStats.activeChallenges);
+  const totalParticipants = parseStatValue(orgStats.totalParticipants);
+  const totalPrizePool = parseStatValue(orgStats.totalPrizePool);
+  const completionRate = parseStatValue(orgStats.completionRate);
   
   const orgName = user?.organization?.name || 'Hey Partner!';
 
   const stats = [
     {
       label: 'Active Challenges',
-      value: statsData.active_challenges,
-      change: '+0 this month',
+      value: formatStatNumber(activeChallenges.value),
+      change: activeChallenges.changeText,
+      isPositive: activeChallenges.isPositive,
       icon: Trophy,
       color: 'text-blue-500',
       bg: 'bg-blue-500/10'
     },
     {
       label: 'Total Participants',
-      value: statsData.total_participants,
-      change: '+0 this month',
+      value: formatStatNumber(totalParticipants.value),
+      change: totalParticipants.changeText,
+      isPositive: totalParticipants.isPositive,
       icon: Users,
       color: 'text-green-500',
       bg: 'bg-green-500/10'
     },
     {
       label: 'Total Prize Pool',
-      value: statsData.total_prize_pool,
-      change: '+$0 this month',
+      value: formatStatCurrency(totalPrizePool.value),
+      change: totalPrizePool.changeText,
+      isPositive: totalPrizePool.isPositive,
       icon: DollarSign,
       color: 'text-purple-500',
       bg: 'bg-purple-500/10'
     },
     {
       label: 'Completion Rate',
-      value: statsData.completion_rate,
-      change: '+0% this month',
+      value: formatStatPercentage(completionRate.value),
+      change: completionRate.changeText,
+      isPositive: completionRate.isPositive,
       icon: Award,
       color: 'text-orange-500',
       bg: 'bg-orange-500/10'

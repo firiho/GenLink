@@ -12,17 +12,13 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import { set } from 'date-fns';
+import { ParticipantStats, parseStatValue, formatStatNumber, formatStatPercentage } from '@/types/stats';
 
 export default function OverviewTab({setActiveView, user}) {
     const [showAllChallenges, setShowAllChallenges] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('all');
-    const [statsData, setStatsData] = useState({
-        active_challenges: '0',
-        total_active_team_members: '0',
-        total_submissions: '0',
-        success_rate: '0%'
-    });
+    const [profileStats, setProfileStats] = useState<ParticipantStats>({});
     const [loading, setLoading] = useState(true);
     const [userChallenges, setUserChallenges] = useState([]);
     const [recentChallenges, setRecentChallenges] = useState([]);
@@ -35,20 +31,15 @@ export default function OverviewTab({setActiveView, user}) {
                 setLoading(true);
                 const db = getFirestore();
                 
-                // Using direct document reference with user.uid
-                const profileDocRef = doc(db, 'profiles', user?.uid);
-                const profileSnapshot = await getDoc(profileDocRef);
+                // Fetch stats from stats collection - stats/{userId}
+                const statsDocRef = doc(db, 'stats', user?.uid);
+                const statsSnapshot = await getDoc(statsDocRef);
                 
-                if (profileSnapshot.exists()) {
-                    const profileData = profileSnapshot.data();
-                    setStatsData({
-                        active_challenges: profileData.active_challenges?.toString() || '0',
-                        total_active_team_members: profileData.total_active_team_members?.toString() || '0',
-                        total_submissions: profileData.total_submissions?.toString() || '0',
-                        success_rate: `${profileData.success_rate || 0}%`
-                    });
+                if (statsSnapshot.exists()) {
+                    const statsData = statsSnapshot.data();
+                    setProfileStats(statsData || {});
                 } else {
-                    console.log("No profile document found for this user");
+                    console.log("No stats document found for this user");
                 }
             } catch (error) {
                 console.error("Error fetching stats:", error);
@@ -143,35 +134,45 @@ export default function OverviewTab({setActiveView, user}) {
         fetchUserChallenges();
     }, [user]);
 
+    // Parse stats with change calculations
+    const activeChallenges = parseStatValue(profileStats.activeChallenges);
+    const activeTeams = parseStatValue(profileStats.activeTeams);
+    const totalSubmissions = parseStatValue(profileStats.totalSubmissions);
+    const successRate = parseStatValue(profileStats.successRate);
+
     const stats = [
         { 
             label: 'Active Challenges', 
-            value: statsData.active_challenges, 
-            change: '+0 this month',
+            value: formatStatNumber(activeChallenges.value), 
+            change: activeChallenges.changeText,
+            isPositive: activeChallenges.isPositive,
             icon: Trophy,
             color: 'text-purple-500',
             bg: 'bg-purple-500/10'
         },
         { 
-            label: 'Team Members', 
-            value: statsData.total_active_team_members, 
-            change: '+0 this month',
+            label: 'Active Teams', 
+            value: formatStatNumber(activeTeams.value), 
+            change: activeTeams.changeText,
+            isPositive: activeTeams.isPositive,
             icon: Users,
             color: 'text-blue-500',
             bg: 'bg-blue-500/10'
         },
         { 
             label: 'Total Submissions', 
-            value: statsData.total_submissions, 
-            change: '+0 this week',
+            value: formatStatNumber(totalSubmissions.value), 
+            change: totalSubmissions.changeText,
+            isPositive: totalSubmissions.isPositive,
             icon: Target,
             color: 'text-green-500',
             bg: 'bg-green-500/10'
         },
         { 
             label: 'Success Rate', 
-            value: statsData.success_rate, 
-            change: '+0% this month',
+            value: formatStatPercentage(successRate.value), 
+            change: successRate.changeText,
+            isPositive: successRate.isPositive,
             icon: Star,
             color: 'text-yellow-500',
             bg: 'bg-yellow-500/10'

@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Code, Terminal, Zap } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
 import { HeroBackground } from './ui/hero-background';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { PublicStats } from '@/types/stats';
 
 const CountUpAnimation = ({ end, duration = 2, suffix = "" }) => {
   const [count, setCount] = useState(0);
@@ -37,6 +40,48 @@ const CountUpAnimation = ({ end, duration = 2, suffix = "" }) => {
 };
 
 export const Hero = () => {
+  const [publicStats, setPublicStats] = useState<PublicStats>({});
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPublicStats = async () => {
+      try {
+        const statsDocRef = doc(db, 'stats', 'public');
+        const statsSnapshot = await getDoc(statsDocRef);
+        
+        if (statsSnapshot.exists()) {
+          setPublicStats(statsSnapshot.data() as PublicStats);
+        }
+      } catch (err) {
+        console.error('Error fetching public stats:', err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchPublicStats();
+  }, []);
+
+  // Get stat values with fallbacks
+  const challengesCount = publicStats.challenges?.value ?? 0;
+  const developersCount = publicStats.developers?.value ?? 0;
+  const prizesCount = publicStats.prizes?.value ?? 0;
+
+  // Format large numbers for display
+  const formatDevelopers = (num: number) => {
+    if (num >= 1000) return { value: Math.floor(num / 1000), suffix: 'K+' };
+    return { value: num, suffix: '+' };
+  };
+
+  const formatPrizes = (num: number) => {
+    if (num >= 1000000) return { value: Math.floor(num / 1000000), suffix: 'M+' };
+    if (num >= 1000) return { value: Math.floor(num / 1000), suffix: 'K+' };
+    return { value: num, suffix: '+' };
+  };
+
+  const devStats = formatDevelopers(developersCount);
+  const prizeStats = formatPrizes(prizesCount);
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-background">
       <HeroBackground />
@@ -119,7 +164,7 @@ export const Hero = () => {
                   </div>
                   <div className="text-left">
                     <div className="text-2xl font-bold text-foreground">
-                      <CountUpAnimation end={50} duration={2} suffix="+" />
+                      <CountUpAnimation end={challengesCount} duration={2} suffix="+" />
                     </div>
                     <div className="text-sm text-muted-foreground font-medium">Challenges</div>
                   </div>
@@ -136,7 +181,7 @@ export const Hero = () => {
                   </div>
                   <div className="text-left">
                     <div className="text-2xl font-bold text-foreground">
-                      <CountUpAnimation end={10} duration={2} suffix="K+" />
+                      <CountUpAnimation end={devStats.value} duration={2} suffix={devStats.suffix} />
                     </div>
                     <div className="text-sm text-muted-foreground font-medium">Developers</div>
                   </div>
@@ -153,7 +198,7 @@ export const Hero = () => {
                   </div>
                   <div className="text-left">
                     <div className="text-2xl font-bold text-foreground">
-                      $<CountUpAnimation end={2} duration={2} suffix="M+" />
+                      $<CountUpAnimation end={prizeStats.value} duration={2} suffix={prizeStats.suffix} />
                     </div>
                     <div className="text-sm text-muted-foreground font-medium">Prizes</div>
                   </div>

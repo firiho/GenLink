@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, query, where, setDoc, getDocs, updateDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, setDoc, getDocs, updateDoc, increment, arrayUnion } from 'firebase/firestore';
 import { format, isValid } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
@@ -99,7 +99,8 @@ export default function ChallengeView() {
           maxTeamSize: data.maxTeamSize || 1,
           createdAt: createdAt,
           status: data.status || 'active',
-          termsAndConditions: data.termsAndConditions || ''
+          termsAndConditions: data.termsAndConditions || '',
+          organizationId: data.organizationId || null
         };
         
         setChallenge(challengeData);
@@ -189,10 +190,19 @@ const handleAddChallenge = async (challengeId) => {
       status: 'in-progress'
     });
 
-    const publicProfileRef = doc(db, 'profiles', user.uid);
-    await setDoc(publicProfileRef, {
-        total_active_challenges: increment(1)
+    // Update participant stats in stats collection - stats/{userId}
+    const userStatsRef = doc(db, 'stats', user.uid);
+    await setDoc(userStatsRef, {
+      'activeChallenges.activeChallengeIds': arrayUnion(challengeId)
     }, { merge: true });
+
+    // Update organization stats in stats collection - stats/org_{orgId}
+    if (challenge?.organizationId) {
+      const orgStatsRef = doc(db, 'stats', `org_${challenge.organizationId}`);
+      await setDoc(orgStatsRef, {
+        'totalParticipants.participantIds': arrayUnion(user.uid)
+      }, { merge: true });
+    }
     
     toast.success('Challenge added to your dashboard successfully!');
     // Navigate to appropriate dashboard based on user role

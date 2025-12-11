@@ -278,6 +278,14 @@ async function handleAcceptInvite(
       status: "active",
     }, { merge: true });
 
+  // Update user's stats in stats collection - stats/{userId}
+  await db
+    .collection("stats")
+    .doc(userId)
+    .set({
+      "activeTeams.activeTeamIds": admin.firestore.FieldValue.arrayUnion(teamId),
+    }, { merge: true });
+
   // Update team member count and last activity
   await db.collection("teams").doc(teamId).update({
     currentMembers: admin.firestore.FieldValue.increment(1),
@@ -603,6 +611,14 @@ async function handleApproveApplication(
       status: "active",
     }, { merge: true });
 
+  // Update user's stats in stats collection - stats/{userId}
+  await db
+    .collection("stats")
+    .doc(applicationData.applicantId)
+    .set({
+      "activeTeams.activeTeamIds": admin.firestore.FieldValue.arrayUnion(teamId),
+    }, { merge: true });
+
   // Update team member count and last activity
   await db.collection("teams").doc(teamId).update({
     currentMembers: admin.firestore.FieldValue.increment(1),
@@ -682,6 +698,14 @@ async function handleRemoveMember(
     .doc(teamId)
     .delete();
 
+  // Update user's stats in stats collection - stats/{userId}
+  await db
+    .collection("stats")
+    .doc(memberUserId)
+    .set({
+      "activeTeams.activeTeamIds": admin.firestore.FieldValue.arrayRemove(teamId),
+    }, { merge: true });
+
   // If member was an admin, remove from admins array
   if (admins.includes(memberUserId)) {
     await db.collection("teams").doc(teamId).update({
@@ -756,6 +780,14 @@ async function handleLeaveTeam(
     .collection("teams")
     .doc(teamId)
     .delete();
+
+  // Update user's stats in stats collection - stats/{userId}
+  await db
+    .collection("stats")
+    .doc(userId)
+    .set({
+      "activeTeams.activeTeamIds": admin.firestore.FieldValue.arrayRemove(teamId),
+    }, { merge: true });
 
   // If member was an admin, remove from admins array
   if (admins.includes(userId)) {

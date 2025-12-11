@@ -7,9 +7,10 @@ import {
     ChevronRight, ArrowUpRight, CheckCircle, XCircle
   } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, limit, doc, getDoc, getCountFromServer } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
+import { parseStatValue, formatStatNumber, StatValue } from '@/types/stats';
 
 interface SupportTicket {
   id: string;
@@ -21,16 +22,67 @@ interface SupportTicket {
   createdAt: Date;
 }
 
+interface AdminStatsData {
+  pendingApplications: number;
+  activePartners: number;
+  openTickets: number;
+  totalUsers: StatValue | null;
+}
+
 export default function Overview({ setActiveView }) {
   const { actualTheme } = useTheme();
-  const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pendingPartners, setPendingPartners] = useState([]);
   const [openTickets, setOpenTickets] = useState<SupportTicket[]>([]);
-  const [openTicketCount, setOpenTicketCount] = useState(0);
+  const [statsData, setStatsData] = useState<AdminStatsData>({
+    pendingApplications: 0,
+    activePartners: 0,
+    openTickets: 0,
+    totalUsers: null
+  });
 
   useEffect(() => {
+    // Fetch counts directly from collections
+    const fetchCounts = async () => {
+      try {
+        // Count pending applications
+        const pendingQuery = query(
+          collection(db, 'organizations'),
+          where('status', '==', 'pending')
+        );
+        const pendingSnapshot = await getCountFromServer(pendingQuery);
+        
+        // Count active partners
+        const activeQuery = query(
+          collection(db, 'organizations'),
+          where('status', 'in', ['approved', 'active'])
+        );
+        const activeSnapshot = await getCountFromServer(activeQuery);
+        
+        // Count open tickets
+        const ticketsQuery = query(
+          collection(db, 'support_tickets'),
+          where('status', 'in', ['open', 'in-progress'])
+        );
+        const ticketsSnapshot = await getCountFromServer(ticketsQuery);
+        
+        // Get total users from public stats
+        const publicStatsRef = doc(db, 'stats', 'public');
+        const publicStatsSnap = await getDoc(publicStatsRef);
+        const publicStats = publicStatsSnap.data();
+        
+        setStatsData({
+          pendingApplications: pendingSnapshot.data().count,
+          activePartners: activeSnapshot.data().count,
+          openTickets: ticketsSnapshot.data().count,
+          totalUsers: publicStats?.developers || null
+        });
+      } catch (err) {
+        console.error('Error fetching counts:', err);
+      }
+    };
+
     const fetchPendingApplications = async () => {
       try {
         const q = query(
@@ -48,18 +100,12 @@ export default function Overview({ setActiveView }) {
           appliedDate: new Date(doc.data().created_at).toLocaleDateString()
         }));
         setPendingPartners(partners);
-        console.log('Fetched pending applications:', partners);
-        setPendingCount(querySnapshot.size);
       } catch (err) {
         console.error('Error fetching pending applications:', err);
         setError(err.message);
         toast.error(err.message);
-      } finally {
-        setLoading(false);
       }
     };
-
-    fetchPendingApplications();
 
     // Fetch open support tickets
     const fetchOpenTickets = async () => {
@@ -84,21 +130,67 @@ export default function Overview({ setActiveView }) {
           };
         });
         setOpenTickets(tickets);
-        
-        // Get total count of open tickets
-        const countQuery = query(
-          collection(db, 'support_tickets'),
-          where('status', 'in', ['open', 'in-progress'])
-        );
-        const countSnapshot = await getDocs(countQuery);
-        setOpenTicketCount(countSnapshot.size);
       } catch (err) {
         console.error('Error fetching support tickets:', err);
       }
     };
 
-    fetchOpenTickets();
+    const fetchAllData = async () => {
+      setLoading(true);
+      await Promise.all([
+        fetchCounts(),
+        fetchPendingApplications(),
+        fetchOpenTickets()
+      ]);
+      setLoading(false);
+    };
+
+    fetchAllData();
   }, []);
+
+  // Parse total users from public stats (has prev for change calculation)
+  const totalUsers = parseStatValue(statsData.totalUsers);
+
+  const stats = [
+    { 
+      label: 'Pending Applications', 
+      value: formatStatNumber(statsData.pendingApplications), 
+      change: '',
+      isPositive: true,
+      icon: Timer,
+      color: 'text-yellow-500',
+      bg: 'bg-yellow-500/10',
+      onClick: () => setActiveView('partners')
+    },
+    { 
+      label: 'Active Partners', 
+      value: formatStatNumber(statsData.activePartners), 
+      change: '',
+      isPositive: true,
+      icon: Building2,
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/10'
+    },
+    { 
+      label: 'Open Tickets', 
+      value: formatStatNumber(statsData.openTickets), 
+      change: '',
+      isPositive: true,
+      icon: MessagesSquare,
+      color: 'text-purple-500',
+      bg: 'bg-purple-500/10',
+      onClick: () => setActiveView('support')
+    },
+    { 
+      label: 'Total Users', 
+      value: formatStatNumber(totalUsers.value), 
+      change: totalUsers.changeText,
+      isPositive: totalUsers.isPositive,
+      icon: Users,
+      color: 'text-green-500',
+      bg: 'bg-green-500/10'
+    }
+  ];
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">
@@ -107,43 +199,6 @@ export default function Overview({ setActiveView }) {
       )}>Loading...</div>
     </div>;
   }
-
-  const stats = [
-    { 
-      label: 'Pending Applications', 
-      value: loading ? '...' : String(pendingCount), 
-      change: 'View applications',
-      icon: Timer,
-      color: 'text-yellow-500',
-      bg: 'bg-yellow-500/10',
-      onClick: () => setActiveView('partners')
-    },
-    { 
-      label: 'Active Partners', 
-      value: '156', 
-      change: '+12 this month',
-      icon: Building2,
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10'
-    },
-    { 
-      label: 'Open Tickets', 
-      value: String(openTicketCount), 
-      change: 'View tickets',
-      icon: MessagesSquare,
-      color: 'text-purple-500',
-      bg: 'bg-purple-500/10',
-      onClick: () => setActiveView('support')
-    },
-    { 
-      label: 'Total Users', 
-      value: '2.4k', 
-      change: '+240 this month',
-      icon: Users,
-      color: 'text-green-500',
-      bg: 'bg-green-500/10'
-    }
-  ];
 
   return (
     <div className="space-y-6">

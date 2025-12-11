@@ -5,7 +5,7 @@
 
 export type DashboardTab = 'overview' | 'challenges' | 'challenge' | 'projects' | 'create-project' | 'project' | 'edit-project' | 'events' | 'create-event' | 'event' | 'edit-event' | 'teams' | 'teams-discover' | 'teams-invitations' | 'team-manage' | 'profile' | 'settings' | 'notifications';
 export type PartnerTab = 'overview' | 'challenges' | 'submissions' | 'events' | 'create-event' | 'event' | 'edit-event' | 'settings' | 'create-challenge' | 'preview-challenge' | 'notifications';
-export type AdminTab = 'overview' | 'partners' | 'communities' | 'support' | 'analytics' | 'settings' | 'notifications';
+export type AdminTab = 'overview' | 'partners' | 'communities' | 'support' | 'analytics' | 'settings' | 'testing' | 'notifications';
 
 /**
  * Parse URL pathname to determine which tab should be active for regular dashboard
@@ -61,6 +61,7 @@ export const getAdminTabFromPath = (pathname: string): AdminTab => {
   if (pathname.includes('/communities')) return 'communities';
   if (pathname.includes('/support')) return 'support';
   if (pathname.includes('/analytics')) return 'analytics';
+  if (pathname.includes('/testing')) return 'testing';
   if (pathname.includes('/settings')) return 'settings';
   return 'overview'; // default
 };
@@ -122,7 +123,9 @@ export const getAdminRouteFromTab = (tab: AdminTab): string => {
     communities: '/admin/dashboard/communities',
     support: '/admin/dashboard/support',
     analytics: '/admin/dashboard/analytics',
+    testing: '/admin/dashboard/testing',
     settings: '/admin/dashboard/settings',
+    notifications: '/admin/dashboard/notifications',
   };
   return routes[tab] || '/admin/dashboard';
 };

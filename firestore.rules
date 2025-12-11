@@ -411,5 +411,51 @@ service cloud.firestore {
                        isAdmin());
       }
     }
+
+    // Support Tickets collection
+    match /support_tickets/{ticketId} {
+      // Users can read their own tickets, admins can read all
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      
+      // Any authenticated user can create a ticket
+      allow create: if request.auth != null && 
+                    request.resource.data.userId == request.auth.uid;
+      
+      // Users can update their own tickets (for marking read), admins can update any
+      allow update: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+      
+      // Only admins can delete tickets
+      allow delete: if request.auth != null && isAdmin();
+
+      // Messages subcollection within tickets
+      match /messages/{messageId} {
+        // Users can read messages in their own tickets, admins can read all
+        allow read: if request.auth != null && (
+          get(/databases/$(database)/documents/support_tickets/$(ticketId)).data.userId == request.auth.uid ||
+          isAdmin()
+        );
+        
+        // Users can send messages to their own tickets, admins can send to any
+        allow create: if request.auth != null && (
+          get(/databases/$(database)/documents/support_tickets/$(ticketId)).data.userId == request.auth.uid ||
+          isAdmin()
+        );
+        
+        // Allow updating messages (for read status)
+        allow update: if request.auth != null && (
+          get(/databases/$(database)/documents/support_tickets/$(ticketId)).data.userId == request.auth.uid ||
+          isAdmin()
+        );
+        
+        // Only admins can delete messages
+        allow delete: if request.auth != null && isAdmin();
+      }
+    }
   }
 }

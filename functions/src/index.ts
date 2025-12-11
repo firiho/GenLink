@@ -20,3 +20,9 @@ export * from "./team";
 // Export notification functions
 export * from "./notifications";
 
+// Export support functions
+export * from "./support";
+
+// Export testing functions
+export * from "./testing";
+

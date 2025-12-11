@@ -5,6 +5,7 @@ import {
   Building2, 
   Users, 
   MessagesSquare,
+  FlaskConical,
   Settings
 } from 'lucide-react';
 
@@ -33,9 +34,9 @@ const AdminMobileTabNav = ({ activeView, setActiveView }: AdminMobileTabNavProps
       value: 'communities'
     },
     {
-      icon: MessagesSquare,
-      label: 'Support',
-      value: 'support'
+      icon: FlaskConical,
+      label: 'Testing',
+      value: 'testing'
     },
     {
       icon: Settings,

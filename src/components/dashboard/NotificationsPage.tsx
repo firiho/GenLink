@@ -224,7 +224,7 @@ const NotificationsPage = () => {
                       {notification.link && (
                         <a 
                           href={notification.link}
-                          className="text-xs text-primary hover:underline mt-2 inline-block font-medium"
+                          className="text-xs hover:underline mt-2 inline-block font-medium"
                         >
                           View Details
                         </a>

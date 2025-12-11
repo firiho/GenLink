@@ -5,7 +5,7 @@ import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { 
   LayoutDashboard, Users, Shield, Settings, LogOut, 
-  MessagesSquare, BarChart, Building2
+  MessagesSquare, BarChart, Building2, FlaskConical
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -19,6 +19,7 @@ import Communities from '@/components/admin-dashboard/Communities';
 import Support from '@/components/admin-dashboard/Support';
 import Analytics from '@/components/admin-dashboard/Analytics';
 import SettingsPanel from '@/components/admin-dashboard/SettingsPanel';
+import Testing from '@/components/admin-dashboard/Testing';
 import AdminMobileTabNav from '@/components/admin-dashboard/AdminMobileTabNav';
 import { getAdminTabFromPath, getAdminRouteFromTab, type AdminTab } from '@/lib/routing';
 
@@ -98,6 +99,11 @@ const AdminDashboard = () => {
           action: () => handleViewChange('analytics') 
         },
         { 
+          icon: FlaskConical, 
+          text: 'Testing', 
+          action: () => handleViewChange('testing') 
+        },
+        { 
           icon: Settings, 
           text: 'Settings', 
           action: () => handleViewChange('settings') 
@@ -141,6 +147,8 @@ const AdminDashboard = () => {
         return <Support />;
       case 'analytics':
         return <Analytics />;
+      case 'testing':
+        return <Testing />;
       case 'settings':
         return <SettingsPanel />;
 

@@ -24,6 +24,7 @@ import Onboarding from '@/pages/Onboarding';
 import UserProfile from '@/pages/UserProfile';
 import TeamDetails from '@/pages/TeamDetails';
 import EventDetails from '@/pages/EventDetails';
+import HelpCenter from '@/pages/HelpCenter';
 import ProjectView from '@/components/dashboard/projects/ProjectView';
 import ProjectShowcase from '@/pages/ProjectShowcase';
 import { auth } from '@/lib/firebase';
@@ -153,6 +154,7 @@ function App() {
               <Route path="/u/:id" element={<UserProfile />} />
               <Route path="/t/:id" element={<TeamDetails />} />
               <Route path="/e/:id" element={<EventDetails />} />
+              <Route path="/help" element={<HelpCenter />} />
               <Route path="/verify" element={<VerifyAction />} />
               <Route path="/email-verification" element={<EmailVerification />} />
               <Route 

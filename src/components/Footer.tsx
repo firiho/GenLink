@@ -94,8 +94,8 @@ export const Footer = () => {
               </h3>
               <ul className="space-y-3">
                 {items.map((item, itemIndex) => {
-                  // Check if the page exists (only /challenges, /community, and /admin/login exist)
-                  const existingPages = ['/challenges', '/community', '/admin/login'];
+                  // Check if the page exists (only /challenges, /community, /admin/login, and /help exist)
+                  const existingPages = ['/challenges', '/community', '/admin/login', '/help'];
                   const isExistingPage = existingPages.includes(item.href);
                   
                   return (

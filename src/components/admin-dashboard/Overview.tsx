@@ -11,12 +11,24 @@ import { collection, getDocs, query, where, orderBy, limit } from 'firebase/fire
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
+interface SupportTicket {
+  id: string;
+  subject: string;
+  userEmail: string;
+  userName: string;
+  status: string;
+  priority: string;
+  createdAt: Date;
+}
+
 export default function Overview({ setActiveView }) {
   const { actualTheme } = useTheme();
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pendingPartners, setPendingPartners] = useState([]);
+  const [openTickets, setOpenTickets] = useState<SupportTicket[]>([]);
+  const [openTicketCount, setOpenTicketCount] = useState(0);
 
   useEffect(() => {
     const fetchPendingApplications = async () => {
@@ -48,6 +60,44 @@ export default function Overview({ setActiveView }) {
     };
 
     fetchPendingApplications();
+
+    // Fetch open support tickets
+    const fetchOpenTickets = async () => {
+      try {
+        const q = query(
+          collection(db, 'support_tickets'),
+          where('status', 'in', ['open', 'in-progress']),
+          orderBy('updatedAt', 'desc'),
+          limit(5)
+        );
+        const querySnapshot = await getDocs(q);
+        const tickets = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            subject: data.subject,
+            userEmail: data.userEmail,
+            userName: data.userName,
+            status: data.status,
+            priority: data.priority,
+            createdAt: data.createdAt?.toDate() || new Date(),
+          };
+        });
+        setOpenTickets(tickets);
+        
+        // Get total count of open tickets
+        const countQuery = query(
+          collection(db, 'support_tickets'),
+          where('status', 'in', ['open', 'in-progress'])
+        );
+        const countSnapshot = await getDocs(countQuery);
+        setOpenTicketCount(countSnapshot.size);
+      } catch (err) {
+        console.error('Error fetching support tickets:', err);
+      }
+    };
+
+    fetchOpenTickets();
   }, []);
 
   if (loading) {
@@ -78,11 +128,12 @@ export default function Overview({ setActiveView }) {
     },
     { 
       label: 'Open Tickets', 
-      value: '28', 
-      change: '-5 this week',
+      value: String(openTicketCount), 
+      change: 'View tickets',
       icon: MessagesSquare,
       color: 'text-purple-500',
-      bg: 'bg-purple-500/10'
+      bg: 'bg-purple-500/10',
+      onClick: () => setActiveView('support')
     },
     { 
       label: 'Total Users', 
@@ -233,29 +284,52 @@ export default function Overview({ setActiveView }) {
                 "divide-y",
                 actualTheme === 'dark' ? "divide-slate-700" : "divide-gray-100"
               )}>
-                {[1, 2, 3].map((_, i) => (
-                  <div key={i} className="py-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="p-2 bg-purple-50 rounded-lg">
-                        <MessagesSquare className="h-5 w-5 text-purple-500" />
-                      </div>
-                      <div>
-                        <h3 className={cn(
-                          "font-medium",
-                          actualTheme === 'dark' ? "text-white" : "text-gray-900"
-                        )}>Payment Issue</h3>
-                        <p className={cn(
-                          "text-sm",
-                          actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
-                        )}>From: john@example.com</p>
-                      </div>
-                    </div>
-                    <Button size="sm" variant="outline">
-                      View Details
-                      <ArrowUpRight className="ml-2 h-4 w-4" />
-                    </Button>
+                {openTickets.length === 0 ? (
+                  <div className={cn(
+                    "py-8 text-center",
+                    actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                  )}>
+                    No open support tickets
                   </div>
-                ))}
+                ) : (
+                  openTickets.map((ticket) => (
+                    <div key={ticket.id} className="py-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className={cn(
+                          "p-2 rounded-lg",
+                          ticket.priority === 'high' || ticket.priority === 'urgent' 
+                            ? "bg-red-50" 
+                            : "bg-purple-50"
+                        )}>
+                          <MessagesSquare className={cn(
+                            "h-5 w-5",
+                            ticket.priority === 'high' || ticket.priority === 'urgent' 
+                              ? "text-red-500" 
+                              : "text-purple-500"
+                          )} />
+                        </div>
+                        <div>
+                          <h3 className={cn(
+                            "font-medium",
+                            actualTheme === 'dark' ? "text-white" : "text-gray-900"
+                          )}>{ticket.subject}</h3>
+                          <p className={cn(
+                            "text-sm",
+                            actualTheme === 'dark' ? "text-slate-400" : "text-gray-500"
+                          )}>From: {ticket.userName || ticket.userEmail}</p>
+                        </div>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setActiveView('support')}
+                      >
+                        View Details
+                        <ArrowUpRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

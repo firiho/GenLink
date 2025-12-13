@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { User, ChevronDown, Menu, ArrowRight, LogOut, LayoutDashboard, Code, Sparkles, X, Folder, Users } from 'lucide-react';
+import { User, ChevronDown, Menu, ArrowRight, LogOut, LayoutDashboard, Code, Sparkles, X, Folder, Users, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ const navItems = [
   { label: 'Projects', path: '/projects', icon: Folder },
   //{ label: 'Teams', path: '/teams/discover', icon: Users },
   { label: 'Community', path: '/community', icon: User },
+  { label: 'Help Center', path: '/help', icon: HelpCircle },
 ];
 
 export const Header = () => {

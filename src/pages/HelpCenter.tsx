@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -366,17 +366,13 @@ const HelpCenter = () => {
         <Header />
 
         {/* Hero Section */}
-        <section className="relative pt-24 pb-16 overflow-hidden">
+        <section className="relative pt-24 pb-16">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
           <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-30" />
           <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl opacity-30" />
 
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-                <HelpCircle className="h-4 w-4" />
-                Help Center
-              </div>
 
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
                 How can we help you?
@@ -388,21 +384,21 @@ const HelpCenter = () => {
               </p>
 
               {/* Search Bar */}
-              <div className="relative max-w-xl mx-auto z-50">
+              <div className="relative max-w-xl mx-auto">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
                 <Input
                   type="text"
                   placeholder="Search for help articles..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 pr-4 py-6 text-lg rounded-xl border-2 focus:border-primary"
+                  className="pl-12 pr-4 py-6 text-lg rounded-xl border-2 focus:border-primary relative z-10"
                 />
 
                 {/* Search Results Dropdown */}
                 {searchResults && searchResults.length > 0 && (
                   <div
                     className={cn(
-                      "absolute left-0 right-0 mt-2 rounded-xl border shadow-xl max-h-96 overflow-y-auto",
+                      "absolute left-0 right-0 top-full mt-2 rounded-xl border shadow-xl max-h-96 overflow-y-auto z-[9999]",
                       actualTheme === "dark"
                         ? "bg-slate-900 border-slate-700"
                         : "bg-white border-slate-200"
@@ -456,7 +452,7 @@ const HelpCenter = () => {
                 {searchResults && searchResults.length === 0 && searchQuery && (
                   <div
                     className={cn(
-                      "absolute left-0 right-0 mt-2 rounded-xl border shadow-xl p-6 text-center",
+                      "absolute left-0 right-0 top-full mt-2 rounded-xl border shadow-xl p-6 text-center z-[9999]",
                       actualTheme === "dark"
                         ? "bg-slate-900 border-slate-700"
                         : "bg-white border-slate-200"

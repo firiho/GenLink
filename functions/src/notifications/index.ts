@@ -34,9 +34,11 @@ export interface NotificationPreferences {
 }
 
 interface NotificationRequest {
-  action: "get" | "markRead" | "markAllRead" | "delete" | "getPreferences" | "updatePreferences";
+  action: "get" | "markRead" | "markAllRead" | "delete" | "getPreferences" | "updatePreferences" | "setForUsers";
   notificationId?: string;
   preferences?: NotificationPreferences;
+  userIds?: string[];
+  notificationData?: Omit<Notification, "id" | "createdAt" | "read">;
 }
 
 /**
@@ -134,6 +136,39 @@ export const notifications = onCall({ region: config.region }, async (request) =
         });
 
         return { success: true };
+    }
+
+    if (data.action === "setForUsers") {
+      if (!data.userIds || !Array.isArray(data.userIds) || data.userIds.length === 0) {
+        throw new HttpsError("invalid-argument", "userIds array is required for setForUsers action.");
+      }
+      if (!data.notificationData) {
+        throw new HttpsError("invalid-argument", "notificationData is required for setForUsers action.");
+      }
+
+      // Create notifications for all specified users
+      const results = await Promise.all(
+        data.userIds.map(async (userId) => {
+          try {
+            await addNotification(userId, data.notificationData!);
+            return { userId, success: true };
+          } catch (error) {
+            console.error(`Failed to add notification for user ${userId}:`, error);
+            return { userId, success: false, error: error instanceof Error ? error.message : "Unknown error" };
+          }
+        })
+      );
+
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+
+      return { 
+        success: true, 
+        results,
+        successCount,
+        failCount,
+        total: data.userIds.length
+      };
     }
 
     throw new HttpsError("invalid-argument", "Invalid action specified.");

@@ -5,9 +5,11 @@ import { Notification, NotificationState, NotificationPreferences } from '@/type
 const notificationsFunction = httpsCallable(functions, 'notifications');
 
 interface NotificationRequest {
-  action: 'get' | 'markRead' | 'markAllRead' | 'delete' | 'getPreferences' | 'updatePreferences';
+  action: 'get' | 'markRead' | 'markAllRead' | 'delete' | 'getPreferences' | 'updatePreferences' | 'setForUsers';
   notificationId?: string;
   preferences?: NotificationPreferences;
+  userIds?: string[];
+  notificationData?: Omit<Notification, 'id' | 'createdAt' | 'read'>;
 }
 
 interface NotificationResponse {
@@ -15,6 +17,10 @@ interface NotificationResponse {
   unreadCount?: number;
   preferences?: NotificationPreferences;
   success?: boolean;
+  results?: Array<{ userId: string; success: boolean; error?: string }>;
+  successCount?: number;
+  failCount?: number;
+  total?: number;
 }
 
 /**
@@ -66,4 +72,19 @@ export const markAllNotificationsAsRead = async (): Promise<void> => {
 
 export const deleteNotification = async (notificationId: string): Promise<void> => {
     await notifications({ action: 'delete', notificationId });
+};
+
+/**
+ * Set notifications for multiple users
+ * Useful for team messages, announcements, etc.
+ */
+export const setNotificationsForUsers = async (
+  userIds: string[],
+  notificationData: Omit<Notification, 'id' | 'createdAt' | 'read'>
+): Promise<NotificationResponse> => {
+  return await notifications({ 
+    action: 'setForUsers', 
+    userIds,
+    notificationData 
+  });
 };

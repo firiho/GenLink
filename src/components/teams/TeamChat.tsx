@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, Timestamp, getDoc, doc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, Timestamp, getDoc, doc, getDocs, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Send, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
+import { setNotificationsForUsers } from '@/services/notificationService';
 
 interface TeamChatProps {
   teamId: string;
@@ -174,6 +175,54 @@ export default function TeamChat({ teamId }: TeamChatProps) {
         text: text,
         createdAt: serverTimestamp()
       });
+
+      // Send notifications to other team members
+      try {
+        // Get team data for team name
+        const teamDoc = await getDoc(doc(db, 'teams', teamId));
+        const teamName = teamDoc.exists() ? (teamDoc.data()?.name || 'your team') : 'your team';
+
+        // Get sender's name
+        const senderProfile = await fetchUserProfile(user.uid);
+        const senderName = senderProfile.name;
+
+        // Get all active team members
+        const membersRef = collection(db, 'teams', teamId, 'members');
+        const membersQuery = query(membersRef, where('status', '==', 'active'));
+        const membersSnapshot = await getDocs(membersQuery);
+
+        // Get member IDs excluding the sender
+        const memberIds: string[] = [];
+        membersSnapshot.forEach((memberDoc) => {
+          const memberData = memberDoc.data();
+          if (memberData.userId && memberData.userId !== user.uid) {
+            memberIds.push(memberData.userId);
+          }
+        });
+
+        // Send notifications if there are other members
+        if (memberIds.length > 0) {
+          // Truncate message text for notification (max 100 chars)
+          const truncatedMessage = text.length > 100 ? text.substring(0, 100) + '...' : text;
+
+          await setNotificationsForUsers(memberIds, {
+            type: 'info',
+            title: 'New Team Message',
+            message: `${senderName} sent a message in ${teamName}: "${truncatedMessage}"`,
+            link: `/dashboard?tab=teams&teamId=${teamId}`,
+            actionLabel: 'View Message',
+            metadata: {
+              teamId,
+              teamName,
+              senderId: user.uid,
+              senderName,
+            },
+          });
+        }
+      } catch (notificationError) {
+        // Don't fail message sending if notification fails
+        console.error('Error sending team message notifications:', notificationError);
+      }
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast.error(error.message || 'Failed to send message');

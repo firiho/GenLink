@@ -22,17 +22,20 @@ import { updateStatsPrevValues } from "./updateStatsPrevValues";
 import { calculatePublicStatsTask } from "./calculatePublicStats";
 import { processDeadlinesTask } from "./processDeadlines";
 import { sendRemindersTask } from "./sendReminders";
+import { processReleasedScoresTask } from "./processReleasedScores";
 // import { cleanupExpiredData } from "./cleanupExpiredData";
 // import { sendDailyDigests } from "./sendDailyDigests";
 
 /**
  * Array of all midnight tasks
  * Add new tasks to this array after importing them
- * Note: sendRemindersTask runs first, then processDeadlinesTask completes challenges, then stats are updated
+ * Note: sendRemindersTask runs first, then processDeadlinesTask moves challenges to judging,
+ * then processReleasedScoresTask distributes prizes, then stats are updated
  */
 const tasks: MidnightTask[] = [
   sendRemindersTask,
   processDeadlinesTask,
+  processReleasedScoresTask,
   updateStatsPrevValues,
   calculatePublicStatsTask,
   // cleanupExpiredData,

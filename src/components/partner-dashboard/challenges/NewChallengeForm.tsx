@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
-import WelcomeSection from '../dashboard/WelcomeSection';
+import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, X, Plus } from 'lucide-react';

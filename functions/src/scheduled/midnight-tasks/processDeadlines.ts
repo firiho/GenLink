@@ -3,14 +3,15 @@
  * 
  * This task checks all active challenges to see if their deadline has passed.
  * When a challenge deadline passes:
- * 1. The challenge status is set to 'completed'
+ * 1. The challenge status is set to 'judging' (waiting for partner to review and release scores)
  * 2. Participants who submitted have their status updated to 'completed'
  * 3. Participants who didn't submit have their status updated to 'expired'
  * 4. Teams tied to the challenge are disabled (status set to 'closed')
  * 5. Notifications are sent to all affected users
  * 6. Participant stats are updated (removed from activeChallenges)
  * 
- * This ensures challenges automatically close when their deadline passes.
+ * The challenge will move to 'completed' status after the partner releases scores
+ * and the processReleasedScores task distributes prizes and sends final notifications.
  */
 
 import * as admin from "firebase-admin";
@@ -213,11 +214,11 @@ async function processExpiredChallenge(challengeDoc: admin.firestore.DocumentSna
     ? Math.round((teamsSubmitted / teamsDisabled) * 100)
     : 0;
 
-  // 1. Update challenge status to 'completed' with completion stats
+  // 1. Update challenge status to 'judging' (waiting for partner to release scores)
   await challengeDoc.ref.update({
-    status: "completed",
-    completedAt: admin.firestore.FieldValue.serverTimestamp(),
-    completedReason: "deadline_passed",
+    status: "judging",
+    judgingStartedAt: admin.firestore.FieldValue.serverTimestamp(),
+    statusReason: "deadline_passed",
     // Completion stats for partner dashboard
     completionStats: {
       totalParticipants,
@@ -323,7 +324,7 @@ async function run(): Promise<void> {
 
 export const processDeadlinesTask: MidnightTask = {
   name: "processDeadlines",
-  description: "Checks active challenges for passed deadlines, marks them as completed, updates participant statuses, disables teams, and sends notifications",
+  description: "Checks active challenges for passed deadlines, marks them as 'judging', updates participant statuses, disables teams, and sends notifications",
   enabled: true,
   run
 };

@@ -15,14 +15,12 @@ import Logo from '@/components/Logo';
 import { OverviewView } from '@/components/partner-dashboard/OverviewView';
 import SubmissionsView from '@/components/partner-dashboard/SubmissionsView';
 import { SettingsView } from '@/components/partner-dashboard/SettingsView';
-import { ChallengesView } from '@/components/partner-dashboard/ChallengesView';
-import { NewChallengeForm } from '@/components/partner-dashboard/NewChallengeForm';
+import { ChallengesView, NewChallengeForm, PreviewChallenge } from '@/components/partner-dashboard/challenges';
 import EventsTab from '@/components/dashboard/events/EventsTab';
 import CreateEvent from '@/components/dashboard/events/CreateEvent';
 import EventView from '@/components/dashboard/events/EventView';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
-import PreviewChallenge from '@/components/partner-dashboard/PreviewChallenge';
 import NotificationsPage from '@/components/dashboard/NotificationsPage';
 import { getPartnerTabFromPath, getPartnerRouteFromTab, type PartnerTab } from '@/lib/routing';
 import { PERMISSIONS } from '@/constants/permissions';
@@ -366,6 +364,7 @@ const PartnerDashboard = () => {
             setActiveView={handleViewChange}
             refreshChallenges={fetchChallenges}
             user={authUser}
+            submissions={submissions}
           />
         );
 
@@ -389,6 +388,15 @@ const PartnerDashboard = () => {
               existingChallenge={viewData?.challenge || null}
             />
           );
+
+      case 'preview-challenge':
+        if (!hasPermission(PERMISSIONS.MANAGE_CHALLENGES)) return <div className="p-8 text-center text-slate-500">Access Denied</div>;
+        return (
+          <PreviewChallenge 
+            challenge={viewData?.challenge}
+            setActiveView={handleViewChange}
+          />
+        );
 
       case 'settings':
         return (

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Filter, ChevronDown, CheckCircle, XCircle, Clock, Users, User, ExternalLink, Star, Eye } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, Filter, ChevronDown, ChevronUp, CheckCircle, XCircle, Clock, Users, User, ExternalLink, Star, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -39,6 +39,27 @@ export default function SubmissionsView({ submissions, challenges, refreshSubmis
   const [feedback, setFeedback] = useState('');
   const [score, setScore] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  
+  // Sorting state
+  const [sortField, setSortField] = useState<'submittedAt' | 'score'>('submittedAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  const handleSortToggle = (field: 'submittedAt' | 'score') => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Switch to new field with default desc order
+      setSortField(field);
+      setSortDirection('desc');
+    }
+    // Reset to first page when sorting changes
+    setCurrentPage(1);
+  };
 
   const handleReviewSubmit = async () => {
     if (!selectedSubmission) return;
@@ -95,31 +116,63 @@ export default function SubmissionsView({ submissions, challenges, refreshSubmis
   };
 
   // Filter submissions based on search, status, challenge, and score
-  const filteredSubmissions = submissions.filter(submission => {
-    const matchesSearch = 
-      submission.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      submission.participant.name.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredSubmissions = useMemo(() => {
+    const filtered = submissions.filter(submission => {
+      const matchesSearch = 
+        submission.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        submission.participant.name.toLowerCase().includes(searchQuery.toLowerCase());
+        
+      const matchesStatus = statusFilter === 'all' || submission.status === statusFilter;
       
-    const matchesStatus = statusFilter === 'all' || submission.status === statusFilter;
-    
-    const matchesChallenge = challengeFilter === 'all' || submission.challengeId === challengeFilter;
-    
-    // Score filtering
-    let matchesScore = true;
-    if (scoreFilter === 'scored') {
-      matchesScore = submission.score !== null && submission.score !== undefined;
-    } else if (scoreFilter === 'not-scored') {
-      matchesScore = submission.score === null || submission.score === undefined;
-    } else if (scoreFilter === 'high') {
-      matchesScore = submission.score !== null && submission.score !== undefined && submission.score >= 80;
-    } else if (scoreFilter === 'medium') {
-      matchesScore = submission.score !== null && submission.score !== undefined && submission.score >= 50 && submission.score < 80;
-    } else if (scoreFilter === 'low') {
-      matchesScore = submission.score !== null && submission.score !== undefined && submission.score < 50;
-    }
-    
-    return matchesSearch && matchesStatus && matchesChallenge && matchesScore;
-  });
+      const matchesChallenge = challengeFilter === 'all' || submission.challengeId === challengeFilter;
+      
+      // Score filtering
+      let matchesScore = true;
+      if (scoreFilter === 'scored') {
+        matchesScore = submission.score !== null && submission.score !== undefined;
+      } else if (scoreFilter === 'not-scored') {
+        matchesScore = submission.score === null || submission.score === undefined;
+      } else if (scoreFilter === 'high') {
+        matchesScore = submission.score !== null && submission.score !== undefined && submission.score >= 80;
+      } else if (scoreFilter === 'medium') {
+        matchesScore = submission.score !== null && submission.score !== undefined && submission.score >= 50 && submission.score < 80;
+      } else if (scoreFilter === 'low') {
+        matchesScore = submission.score !== null && submission.score !== undefined && submission.score < 50;
+      }
+      
+      return matchesSearch && matchesStatus && matchesChallenge && matchesScore;
+    });
+
+    // Sort the filtered results
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortField === 'submittedAt') {
+        const dateA = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
+        const dateB = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
+        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+      } else if (sortField === 'score') {
+        const scoreA = a.score ?? -1; // Treat null/undefined as -1 for sorting
+        const scoreB = b.score ?? -1;
+        return sortDirection === 'asc' ? scoreA - scoreB : scoreB - scoreA;
+      }
+      return 0;
+    });
+
+    return sorted;
+  }, [submissions, searchQuery, statusFilter, challengeFilter, scoreFilter, sortField, sortDirection]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
+  const paginatedSubmissions = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredSubmissions.slice(startIndex, endIndex);
+  }, [filteredSubmissions, currentPage, itemsPerPage]);
+
+  // Reset to first page when filters change
+  const handleFilterChange = (setter: (value: string) => void, value: string) => {
+    setter(value);
+    setCurrentPage(1);
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -180,12 +233,12 @@ export default function SubmissionsView({ submissions, challenges, refreshSubmis
             placeholder="Search by project name or participant..." 
             className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)} 
+            onChange={(e) => handleFilterChange(setSearchQuery, e.target.value)} 
           />
         </div>
         
         <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(value) => handleFilterChange(setStatusFilter, value)}>
             <SelectTrigger className="w-full sm:w-[180px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
@@ -197,7 +250,7 @@ export default function SubmissionsView({ submissions, challenges, refreshSubmis
             </SelectContent>
           </Select>
           
-          <Select value={challengeFilter} onValueChange={setChallengeFilter}>
+          <Select value={challengeFilter} onValueChange={(value) => handleFilterChange(setChallengeFilter, value)}>
             <SelectTrigger className="w-full sm:w-[200px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
               <SelectValue placeholder="Filter by challenge" />
             </SelectTrigger>
@@ -211,7 +264,7 @@ export default function SubmissionsView({ submissions, challenges, refreshSubmis
             </SelectContent>
           </Select>
 
-          <Select value={scoreFilter} onValueChange={setScoreFilter}>
+          <Select value={scoreFilter} onValueChange={(value) => handleFilterChange(setScoreFilter, value)}>
             <SelectTrigger className="w-full sm:w-[200px] bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
               <SelectValue placeholder="Filter by score" />
             </SelectTrigger>
@@ -241,14 +294,42 @@ export default function SubmissionsView({ submissions, challenges, refreshSubmis
                   <span className="hidden sm:inline">Participant</span>
                   <span className="sm:hidden">User</span>
                 </th>
-                <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:table-cell">
-                  Submitted
+                <th 
+                  scope="col" 
+                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:table-cell cursor-pointer transition-colors select-none"
+                  onClick={() => handleSortToggle('submittedAt')}
+                >
+                  <div className="flex items-center gap-1">
+                    Submitted
+                    {sortField === 'submittedAt' && (
+                      sortDirection === 'asc' ? 
+                        <ChevronUp className="h-4 w-4" /> : 
+                        <ChevronDown className="h-4 w-4" />
+                    )}
+                    {sortField !== 'submittedAt' && (
+                      <ChevronDown className="h-4 w-4 opacity-30" />
+                    )}
+                  </div>
                 </th>
                 <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">
-                  Score
+                <th 
+                  scope="col" 
+                  className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell cursor-pointer transition-colors select-none"
+                  onClick={() => handleSortToggle('score')}
+                >
+                  <div className="flex items-center gap-1">
+                    Score
+                    {sortField === 'score' && (
+                      sortDirection === 'asc' ? 
+                        <ChevronUp className="h-4 w-4" /> : 
+                        <ChevronDown className="h-4 w-4" />
+                    )}
+                    {sortField !== 'score' && (
+                      <ChevronDown className="h-4 w-4 opacity-30" />
+                    )}
+                  </div>
                 </th>
                 <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Actions
@@ -256,14 +337,14 @@ export default function SubmissionsView({ submissions, challenges, refreshSubmis
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-700">
-              {filteredSubmissions.length === 0 ? (
+              {paginatedSubmissions.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-3 sm:px-6 py-10 text-center text-slate-500 dark:text-slate-400 text-sm">
                     No submissions found. Try adjusting your filters or check back later.
                   </td>
                 </tr>
               ) : (
-                filteredSubmissions.map((submission) => (
+                paginatedSubmissions.map((submission) => (
                   <tr key={submission.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="px-3 sm:px-6 py-4">
                       <div className="flex items-center">
@@ -576,6 +657,67 @@ export default function SubmissionsView({ submissions, challenges, refreshSubmis
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="px-4 sm:px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50 dark:bg-slate-800/50">
+            <div className="text-sm text-slate-500 dark:text-slate-400">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredSubmissions.length)} of {filteredSubmissions.length} submissions
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {/* Page numbers */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => {
+                    // Show first, last, current, and pages around current
+                    if (page === 1 || page === totalPages) return true;
+                    if (Math.abs(page - currentPage) <= 1) return true;
+                    return false;
+                  })
+                  .map((page, index, array) => (
+                    <React.Fragment key={page}>
+                      {/* Show ellipsis if there's a gap */}
+                      {index > 0 && page - array[index - 1] > 1 && (
+                        <span className="px-2 text-slate-400 dark:text-slate-500">...</span>
+                      )}
+                      <Button
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className={currentPage === page 
+                          ? "bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 min-w-[36px]" 
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 min-w-[36px]"
+                        }
+                      >
+                        {page}
+                      </Button>
+                    </React.Fragment>
+                  ))
+                }
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50"
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -82,8 +82,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
 
       {/* Challenge header */}
       <div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
         className="relative rounded-xl overflow-hidden"
       >
         {challenge.coverImageUrl ? (
@@ -117,9 +115,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
       {/* Challenge overview cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
           className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
         >
           <div className="flex items-center space-x-3">
@@ -134,9 +129,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
         </div>
 
         <div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
           className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
         >
           <div className="flex items-center space-x-3">
@@ -151,9 +143,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
         </div>
 
         <div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
           className="bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
         >
           <div className="flex items-center space-x-3">
@@ -208,8 +197,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
 
             <TabsContent value="overview" className="space-y-6">
               <div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
                 className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
               >
                 <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Challenge Description</h2>
@@ -219,9 +206,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
               </div>
 
               <div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
                 className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
               >
                 <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Prize Distribution</h2>
@@ -312,9 +296,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
 
               {challenge.categories?.length > 0 && (
                 <div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
                   <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Categories</h2>
@@ -334,9 +315,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
 
               {challenge.timeline?.length > 0 && (
                 <div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
                   <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Timeline</h2>
@@ -362,8 +340,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
             <TabsContent value="details" className="space-y-6">
               {challenge.requirements && (
                 <div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
                   <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Technical Requirements</h2>
@@ -375,9 +351,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
 
               {challenge.evaluationCriteria && (
                 <div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.1 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
                   <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Evaluation Criteria</h2>
@@ -389,9 +362,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
 
               {challenge.skills?.length > 0 && (
                 <div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
                   <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Required Skills</h2>
@@ -411,9 +381,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
 
               {challenge.termsAndConditions && (
                 <div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
                   <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Terms and Conditions</h2>
@@ -427,8 +394,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
             <TabsContent value="resources" className="space-y-6">
               {challenge.resources?.length > 0 ? (
                 <div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
                   <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Resources & Materials</h2>
@@ -473,8 +438,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
             <TabsContent value="faq" className="space-y-6">
               {challenge.faq?.length > 0 ? (
                 <div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
                   <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Frequently Asked Questions</h2>
@@ -496,8 +459,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
 
             <TabsContent value="submission" className="space-y-6">
               <div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
                 className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
               >
                 <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Submission Format</h2>
@@ -513,9 +474,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
               
               {challenge.maxParticipants && (
                 <div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.1 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
                   <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Participation Limit</h2>
@@ -525,9 +483,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
 
               {challenge.allowTeams && (
                 <div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
                   className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
                 >
                   <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Team Information</h2>
@@ -542,8 +497,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
         <div className="space-y-6">
           {/* Organization info */}
           <div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
             className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
           >
             <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">About the Organizer</h2>
@@ -583,9 +536,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
 
           {/* Challenge stats */}
           <div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
             className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
           >
             <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Challenge Stats</h2>
@@ -618,9 +568,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
           {/* Judges */}
           {challenge.judges?.length > 0 && (
             <div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
               className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
             >
               <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Judges & Evaluators</h2>
@@ -645,9 +592,6 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
 
           {/* Share */}
           <div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
             className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800"
           >
             <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">Share Challenge</h2>

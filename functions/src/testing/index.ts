@@ -451,6 +451,10 @@ async function generateTestData(db: admin.firestore.Firestore, counts: any) {
     const title = getRandomItem(PROJECT_TITLES);
     const status = getRandomItem(["draft", "in-progress", "in-progress", "submitted"]);
 
+    // Determine userId for the project
+    const projectUserId = team ? (team.memberIds.length > 0 ? team.memberIds[0] : "") : (participantIds.length > 0 ? getRandomItem(participantIds) : "");
+    const projectChallengeId = challenge?.id || team?.challengeId || "";
+
     // Create project document (follows /projects schema)
     await db.collection("projects").doc(id).set({
       id: id,
@@ -458,11 +462,11 @@ async function generateTestData(db: admin.firestore.Firestore, counts: any) {
       description: getRandomItem(PROJECT_DESCRIPTIONS),
       readme: `# ${title}\n\n## Overview\n${getRandomItem(PROJECT_DESCRIPTIONS)}\n\n## Features\n- Feature 1\n- Feature 2\n- Feature 3\n\n## Tech Stack\n- React\n- TypeScript\n- Firebase`,
       youtubeVideoId: getRandomBoolean(0.4) ? getRandomItem(YOUTUBE_VIDEO_IDS) : "",
-      challengeId: challenge?.id || team?.challengeId || "",
+      challengeId: projectChallengeId,
       challengeTitle: challenge?.title || "",
       categories: getRandomItems(CHALLENGE_CATEGORIES, getRandomInt(1, 3)),
       teamId: team?.id || "",
-      userId: team ? "" : (participantIds.length > 0 ? getRandomItem(participantIds) : ""),
+      userId: team ? "" : projectUserId,
       status: status,
       visibility: "public",
       createdAt: admin.firestore.Timestamp.fromDate(now),
@@ -471,6 +475,34 @@ async function generateTestData(db: admin.firestore.Firestore, counts: any) {
     });
 
     results.projects++;
+
+    // Create corresponding submission document for submitted projects
+    if (status === "submitted" && projectChallengeId) {
+      const submissionId = generateId("test_submission_");
+      const submissionStatus = getRandomItem(["pending", "pending", "pending", "reviewed"]);
+      const hasScore = submissionStatus === "reviewed";
+
+      await db.collection("submissions").doc(submissionId).set({
+        id: submissionId,
+        projectId: id,
+        challengeId: projectChallengeId,
+        teamId: team?.id || null,
+        userId: projectUserId,
+        status: submissionStatus,
+        score: hasScore ? getRandomInt(50, 100) : null,
+        feedback: hasScore ? getRandomItem([
+          "Great work on this project! The implementation is solid and well-documented.",
+          "Innovative approach to the problem. Consider improving the UI/UX in future iterations.",
+          "Strong technical execution. The code quality is excellent.",
+          "Good effort overall. Some areas could use more polish but the core functionality works well.",
+          "Excellent submission! This project demonstrates a deep understanding of the challenge requirements."
+        ]) : "",
+        note: getRandomBoolean(0.3) ? "This submission looks promising." : "",
+        createdAt: admin.firestore.Timestamp.fromDate(now),
+        updatedAt: admin.firestore.Timestamp.fromDate(now),
+        reviewedAt: hasScore ? admin.firestore.Timestamp.fromDate(now) : null
+      });
+    }
   }
 
   // ========================================
@@ -536,7 +568,7 @@ async function generateTestData(db: admin.firestore.Firestore, counts: any) {
 // ============================================================================
 
 async function deleteTestData(db: admin.firestore.Firestore) {
-  const collections = ["users", "profiles", "organizations", "challenges", "teams", "projects", "events"];
+  const collections = ["users", "profiles", "organizations", "challenges", "teams", "projects", "submissions", "events"];
   const deleted: Record<string, number> = {};
   let totalDeleted = 0;
 
@@ -607,7 +639,7 @@ async function deleteTestData(db: admin.firestore.Firestore) {
 // ============================================================================
 
 async function getTestStats(db: admin.firestore.Firestore) {
-  const collections = ["users", "profiles", "organizations", "challenges", "teams", "projects", "events"];
+  const collections = ["users", "profiles", "organizations", "challenges", "teams", "projects", "submissions", "events"];
   const stats: Record<string, number> = {};
 
   for (const collectionName of collections) {

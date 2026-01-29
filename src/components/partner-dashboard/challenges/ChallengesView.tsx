@@ -1,26 +1,35 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, FileText, Eye, PenTool, Play, Archive } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import WelcomeSection from '../dashboard/WelcomeSection';
+import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc, setDoc, getDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { ChallengeCard } from './ChallengeCard';
+import { ReleaseScoresModal } from './ReleaseScoresModal';
 
 export const ChallengesView = ({
   challenges,
   setActiveView,
   refreshChallenges, // Optional prop to refresh challenges after status changes
-  user // User object with organization info
+  user, // User object with organization info
+  submissions = [] // Submissions array for determining winners
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Release Scores Modal State
+  const [releaseModalOpen, setReleaseModalOpen] = useState(false);
+  const [selectedChallengeForRelease, setSelectedChallengeForRelease] = useState<any>(null);
+  const [challengeSubmissions, setChallengeSubmissions] = useState<any[]>([]);
+  const [specialAwardSelections, setSpecialAwardSelections] = useState<Record<string, string>>({});
+  const [isReleasingScores, setIsReleasingScores] = useState(false);
 
   // Function to publish a challenge (change status to active)
-  const publishChallenge = async (challengeId) => {
+  const publishChallenge = async (challengeId: string) => {
     if (isUpdating) return;
     
     try {
@@ -80,7 +89,7 @@ export const ChallengesView = ({
   };
 
   // Function to archive a challenge (change status to completed)
-  const archiveChallenge = async (challengeId) => {
+  const archiveChallenge = async (challengeId: string) => {
     if (isUpdating) return;
     
     try {
@@ -121,9 +130,123 @@ export const ChallengesView = ({
     }
   };
 
+  // Function to open the release scores modal
+  const openReleaseModal = async (challenge: any) => {
+    setSelectedChallengeForRelease(challenge);
+    
+    // Get submissions for this challenge from the submissions prop
+    const challengeSubs = submissions
+      .filter((sub: any) => sub.challengeId === challenge.id)
+      .sort((a: any, b: any) => (b.score ?? -1) - (a.score ?? -1)); // Sort by score descending
+    
+    setChallengeSubmissions(challengeSubs);
+    
+    // Initialize special award selections
+    const initialSelections: Record<string, string> = {};
+    if (challenge.prizeDistribution?.additional) {
+      challenge.prizeDistribution.additional.forEach((_award: any, index: number) => {
+        initialSelections[`award_${index}`] = '';
+      });
+    }
+    setSpecialAwardSelections(initialSelections);
+    
+    setReleaseModalOpen(true);
+  };
+
+  // Function to release scores and awards
+  const releaseScoresAndAwards = async () => {
+    if (!selectedChallengeForRelease || isReleasingScores) return;
+    
+    try {
+      setIsReleasingScores(true);
+      
+      // Get top 3 winners based on score
+      const winners = challengeSubmissions.slice(0, 3);
+      
+      // Helper to build winner data without undefined values
+      const buildWinnerData = (submission: any, prize: number) => {
+        if (!submission) return null;
+        const data: any = {
+          submissionId: submission.id,
+          projectTitle: submission.title || '',
+          score: submission.score ?? null,
+          prize: prize
+        };
+        // Only include fields that have values
+        if (submission.participant?.name) data.participantName = submission.participant.name;
+        if (submission.participantId) data.participantId = submission.participantId;
+        if (submission.participantType) data.participantType = submission.participantType;
+        if (submission.teamId) data.teamId = submission.teamId;
+        return data;
+      };
+      
+      // Build the awards data
+      const awardsData = {
+        first: buildWinnerData(winners[0], selectedChallengeForRelease.prizeDistribution?.first || 0),
+        second: buildWinnerData(winners[1], selectedChallengeForRelease.prizeDistribution?.second || 0),
+        third: buildWinnerData(winners[2], selectedChallengeForRelease.prizeDistribution?.third || 0),
+        specialAwards: [] as any[]
+      };
+      
+      // Add special awards
+      if (selectedChallengeForRelease.prizeDistribution?.additional) {
+        selectedChallengeForRelease.prizeDistribution.additional.forEach((award: any, index: number) => {
+          const selectedSubmissionId = specialAwardSelections[`award_${index}`];
+          const selectedSubmission = challengeSubmissions.find((s: any) => s.id === selectedSubmissionId);
+          
+          if (selectedSubmission) {
+            const specialAwardData: any = {
+              awardName: award.name || `Special Award ${index + 1}`,
+              prize: award.amount || 0,
+              submissionId: selectedSubmission.id,
+              projectTitle: selectedSubmission.title || '',
+              score: selectedSubmission.score ?? null
+            };
+            // Only include fields that have values
+            if (selectedSubmission.participant?.name) specialAwardData.participantName = selectedSubmission.participant.name;
+            if (selectedSubmission.participantId) specialAwardData.participantId = selectedSubmission.participantId;
+            if (selectedSubmission.participantType) specialAwardData.participantType = selectedSubmission.participantType;
+            if (selectedSubmission.teamId) specialAwardData.teamId = selectedSubmission.teamId;
+            
+            awardsData.specialAwards.push(specialAwardData);
+          }
+        });
+      }
+      
+      // Update the challenge with released scores
+      const challengeRef = doc(db, 'challenges', selectedChallengeForRelease.id);
+      await updateDoc(challengeRef, {
+        scoresReleased: true,
+        scoresReleasedAt: new Date(),
+        awards: awardsData,
+        updatedAt: new Date()
+      });
+      
+      toast.success('Scores and awards saved successfully!');
+      toast.success('Participants will be notified at midnight!');
+      handleCloseReleaseModal();
+      
+      // Refresh the challenges list
+      if (typeof refreshChallenges === 'function') {
+        await refreshChallenges();
+      }
+    } catch (error) {
+      console.error('Error releasing scores:', error);
+      toast.error('Failed to release scores. Please try again.');
+    } finally {
+      setIsReleasingScores(false);
+    }
+  };
+
+  const handleCloseReleaseModal = () => {
+    setReleaseModalOpen(false);
+    setSelectedChallengeForRelease(null);
+    setChallengeSubmissions([]);
+    setSpecialAwardSelections({});
+  };
+
   const filteredChallenges = useMemo(() => {
-    // Your existing filtering logic
-    return challenges.filter(challenge => {
+    return challenges.filter((challenge: any) => {
       // First apply the status filter
       if (selectedFilter !== 'all' && challenge.status !== selectedFilter) {
         return false;
@@ -138,10 +261,26 @@ export const ChallengesView = ({
       return (
         challenge.title.toLowerCase().includes(searchLower) ||
         challenge.description.toLowerCase().includes(searchLower) ||
-        challenge.categories.some(cat => cat.toLowerCase().includes(searchLower))
+        challenge.categories.some((cat: string) => cat.toLowerCase().includes(searchLower))
       );
     });
   }, [challenges, searchQuery, selectedFilter]);
+
+  const renderChallengesList = () => (
+    <div className="grid gap-6">
+      {filteredChallenges.map((challenge: any) => (
+        <ChallengeCard
+          key={challenge.id}
+          challenge={challenge}
+          onView={() => setActiveView('preview-challenge', { challenge })}
+          onEdit={() => setActiveView('create-challenge', { challenge, editMode: true })}
+          onPublish={() => publishChallenge(challenge.id)}
+          onArchive={() => archiveChallenge(challenge.id)}
+          onReleaseScores={() => openReleaseModal(challenge)}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
@@ -188,6 +327,12 @@ export const ChallengesView = ({
             Drafts
           </TabsTrigger>
           <TabsTrigger 
+            value="judging" 
+            className="flex-1 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
+          >
+            Judging
+          </TabsTrigger>
+          <TabsTrigger 
             value="completed" 
             className="flex-1 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200 rounded-lg"
           >
@@ -196,191 +341,38 @@ export const ChallengesView = ({
         </TabsList>
 
         <TabsContent value="all" className="mt-6">
-          <div className="grid gap-6">
-            {filteredChallenges.map((challenge) => (
-              <ChallengeCard
-                key={challenge.id}
-                challenge={challenge}
-                onView={() => setActiveView('preview-challenge', { challenge })}
-                onEdit={() => setActiveView('create-challenge', { challenge, editMode: true })}
-                onPublish={() => publishChallenge(challenge.id)}
-                onArchive={() => archiveChallenge(challenge.id)}
-              />
-            ))}
-          </div>
+          {renderChallengesList()}
         </TabsContent>
         
         <TabsContent value="active" className="mt-6">
-          <div className="grid gap-6">
-            {filteredChallenges.map((challenge) => (
-              <ChallengeCard
-                key={challenge.id}
-                challenge={challenge}
-                onView={() => setActiveView('preview-challenge', { challenge })}
-                onEdit={() => setActiveView('create-challenge', { challenge, editMode: true })}
-                onPublish={() => publishChallenge(challenge.id)}
-                onArchive={() => archiveChallenge(challenge.id)}
-              />
-            ))}
-          </div>
+          {renderChallengesList()}
         </TabsContent>
         
         <TabsContent value="draft" className="mt-6">
-          <div className="grid gap-6">
-            {filteredChallenges.map((challenge) => (
-              <ChallengeCard
-                key={challenge.id}
-                challenge={challenge}
-                onView={() => setActiveView('preview-challenge', { challenge })}
-                onEdit={() => setActiveView('create-challenge', { challenge, editMode: true })}
-                onPublish={() => publishChallenge(challenge.id)}
-                onArchive={() => archiveChallenge(challenge.id)}
-              />
-            ))}
-          </div>
+          {renderChallengesList()}
+        </TabsContent>
+        
+        <TabsContent value="judging" className="mt-6">
+          {renderChallengesList()}
         </TabsContent>
         
         <TabsContent value="completed" className="mt-6">
-          <div className="grid gap-6">
-            {filteredChallenges.map((challenge) => (
-              <ChallengeCard
-                key={challenge.id}
-                challenge={challenge}
-                onView={() => setActiveView('preview-challenge', { challenge })}
-                onEdit={() => setActiveView('create-challenge', { challenge, editMode: true })}
-                onPublish={() => publishChallenge(challenge.id)}
-                onArchive={() => archiveChallenge(challenge.id)}
-              />
-            ))}
-          </div>
+          {renderChallengesList()}
         </TabsContent>
       </Tabs>
+
+      {/* Release Scores Modal */}
+      <ReleaseScoresModal
+        open={releaseModalOpen}
+        onOpenChange={setReleaseModalOpen}
+        challenge={selectedChallengeForRelease}
+        submissions={challengeSubmissions}
+        specialAwardSelections={specialAwardSelections}
+        onSpecialAwardChange={setSpecialAwardSelections}
+        onRelease={releaseScoresAndAwards}
+        isReleasing={isReleasingScores}
+        onCancel={handleCloseReleaseModal}
+      />
     </div>
   );
 };
-
-interface ChallengeCardProps {
-  challenge;
-  onView: () => void;
-  onEdit: () => void;
-  onPublish: () => void;
-  onArchive: () => void;
-}
-
-const ChallengeCard = ({
-  challenge,
-  onView,
-  onEdit,
-  onPublish,
-  onArchive
-}: ChallengeCardProps) => {
-  return (
-    <div
-      className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-200 dark:border-slate-800"
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex items-start space-x-4">
-          <div className="p-3 bg-slate-100 dark:bg-slate-700 rounded-xl">
-            <FileText className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg text-slate-900 dark:text-white group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
-              {challenge.title}
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-3 line-clamp-2">
-              {challenge.description}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {challenge.categories.map((category) => (
-                <Badge 
-                  key={category}
-                  variant="secondary" 
-                  className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
-                >
-                  {category}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col items-end space-y-2">
-          <Badge 
-            variant="secondary"
-            className={`${
-              challenge.status === 'active' 
-                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' 
-                : challenge.status === 'draft'
-                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
-                : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
-            } rounded-lg px-3 py-1`}
-          >
-            {challenge.status.charAt(0).toUpperCase() + challenge.status.slice(1)}
-          </Badge>
-          <p className="text-slate-900 dark:text-white font-semibold">
-            ${challenge.total_prize}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="grid grid-cols-3 gap-4 sm:gap-6">
-            <div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Participants</p>
-              <p className="font-semibold text-slate-900 dark:text-white">{challenge.participants}</p>
-            </div>
-            <div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Submissions</p>
-              <p className="font-semibold text-slate-900 dark:text-white">{challenge.submissions}</p>
-            </div>
-            <div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Time Left</p>
-              <p className="font-semibold text-slate-900 dark:text-white">{challenge.daysLeft} days</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={onView}
-              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
-            >
-              <Eye className="h-4 w-4 mr-1" />
-              View
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={onEdit}
-              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
-            >
-              <PenTool className="h-4 w-4 mr-1" />
-              Edit
-            </Button>
-            {challenge.status === 'draft' ? (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20" 
-                onClick={onPublish}
-              >
-                <Play className="h-4 w-4 mr-1" />
-                Publish
-              </Button>
-            ) : challenge.status !== 'completed' ? (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20" 
-                onClick={onArchive}
-              >
-                <Archive className="h-4 w-4 mr-1" />
-                Archive
-              </Button>
-            ) : null}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}; 

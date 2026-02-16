@@ -346,9 +346,12 @@ export const ChallengesView = ({
         };
         // Only include fields that have values
         if (submission.participant?.name) data.participantName = submission.participant.name;
-        if (submission.participantId) data.participantId = submission.participantId;
         if (submission.participantType) data.participantType = submission.participantType;
-        if (submission.teamId) data.teamId = submission.teamId;
+        if (submission.teamId) {
+          data.teamId = submission.teamId;
+        } else if (submission.participant?.uid) {
+          data.participantId = submission.participant.uid;
+        }
         return data;
       };
       
@@ -376,9 +379,12 @@ export const ChallengesView = ({
             };
             // Only include fields that have values
             if (selectedSubmission.participant?.name) specialAwardData.participantName = selectedSubmission.participant.name;
-            if (selectedSubmission.participantId) specialAwardData.participantId = selectedSubmission.participantId;
             if (selectedSubmission.participantType) specialAwardData.participantType = selectedSubmission.participantType;
-            if (selectedSubmission.teamId) specialAwardData.teamId = selectedSubmission.teamId;
+            if (selectedSubmission.teamId) {
+              specialAwardData.teamId = selectedSubmission.teamId;
+            } else if (selectedSubmission.participant?.uid) {
+              specialAwardData.participantId = selectedSubmission.participant.uid;
+            }
             
             awardsData.specialAwards.push(specialAwardData);
           }

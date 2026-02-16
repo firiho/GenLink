@@ -1,6 +1,7 @@
 import { FileText, Eye, PenTool, Play, Archive, Trophy, Users, User, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/currency';
 
 export interface ChallengeCardProps {
   challenge: any;
@@ -83,7 +84,7 @@ export const ChallengeCard = ({
             )}
           </div>
           <p className="text-slate-900 dark:text-white font-semibold">
-            ${challenge.total_prize}
+            {formatCurrency(challenge.total_prize || 0, challenge.currency)}
           </p>
         </div>
       </div>

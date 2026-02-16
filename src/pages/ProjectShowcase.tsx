@@ -53,13 +53,6 @@ const ProjectShowcase = () => {
 
         const projectData = projectSnap.data();
         
-        // Only show public submitted projects
-        if (projectData.visibility !== 'public' || projectData.status !== 'submitted') {
-          toast.error('Project is not available for public viewing');
-          navigate('/projects');
-          return;
-        }
-        
         // Fetch challenge data
         let challengeData = null;
         if (projectData.challengeId) {
@@ -202,9 +195,13 @@ const ProjectShowcase = () => {
         });
         setChallenge(challengeData);
         setCreator(creatorData);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching project:', error);
-        toast.error('Error loading project');
+        if (error?.code === 'permission-denied') {
+          toast.error('Project is not available for public viewing');
+        } else {
+          toast.error('Error loading project');
+        }
         navigate('/projects');
       } finally {
         setLoading(false);

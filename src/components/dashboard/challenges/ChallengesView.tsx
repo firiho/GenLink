@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, Download, FileText, Info, MessageSquare, Trophy, Upload, Users, FolderPlus, AlertTriangle, User, Award, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
+import { formatCurrency } from '@/lib/currency';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { TeamService } from '@/services/teamService';
@@ -123,8 +124,9 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
           organization: challengeData.companyInfo?.name || 'Unknown Organization',
           organizationLogo: challengeData.companyInfo?.logoUrl || null,
           participants: challengeData.participants || 0,
-          prize: challengeData.total_prize ? `$${challengeData.total_prize.toLocaleString()}` : 'No prize',
+          prize: challengeData.total_prize ? formatCurrency(challengeData.total_prize, challengeData.currency) : 'No prize',
           total_prize: challengeData.total_prize || 0,
+          currency: challengeData.currency,
           deadline: challengeData.deadline ? new Date(challengeData.deadline) : null,
           instructions: challengeData.evaluationCriteria || 'No specific instructions provided.',
           requirements: challengeData.requirements || 'No specific requirements provided.',

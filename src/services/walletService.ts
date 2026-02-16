@@ -8,6 +8,10 @@
 import { db } from '@/lib/firebase';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { Wallet, WalletTransaction, WalletSummary } from '@/types/wallet';
+import { formatCurrency, formatCompactCurrency, DEFAULT_CURRENCY } from '@/lib/currency';
+
+// Re-export from centralized currency module so existing imports keep working
+export { formatCurrency, formatCompactCurrency };
 
 /**
  * Get wallet for a user
@@ -26,7 +30,7 @@ export async function getUserWallet(userId: string): Promise<Wallet | null> {
       ownerId: data.ownerId,
       ownerType: data.ownerType,
       balance: data.balance || 0,
-      currency: data.currency || 'USD',
+      currency: data.currency || DEFAULT_CURRENCY,
       transactions: (data.transactions || []).map((t: any) => ({
         ...t,
         createdAt: t.createdAt?.toDate?.() || t.createdAt
@@ -57,7 +61,7 @@ export async function getTeamWallet(teamId: string): Promise<Wallet | null> {
       ownerId: data.ownerId,
       ownerType: data.ownerType,
       balance: data.balance || 0,
-      currency: data.currency || 'USD',
+      currency: data.currency || DEFAULT_CURRENCY,
       transactions: (data.transactions || []).map((t: any) => ({
         ...t,
         createdAt: t.createdAt?.toDate?.() || t.createdAt
@@ -148,17 +152,6 @@ export function calculateWalletSummary(wallet: Wallet): WalletSummary {
     totalWithdrawn,
     recentTransactions: transactions.slice(0, 10)
   };
-}
-
-/**
- * Format currency amount
- */
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2
-  }).format(amount);
 }
 
 /**

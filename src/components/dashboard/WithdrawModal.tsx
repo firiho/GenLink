@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatCurrency } from '@/services/walletService';
+import { formatCurrency, getCurrencySymbol, getCurrencyInputPadding } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -114,13 +114,13 @@ export default function WithdrawModal({
                 onClick={() => handleMethodSelect('mtn')}
                 className={cn(
                   "w-full p-4 rounded-xl border-2 text-left transition-all",
-                  "hover:border-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/10",
-                  "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  "hover:border-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-900/30",
+                  "border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-950/40"
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                    <Phone className="h-5 w-5 text-yellow-600" />
+                  <div className="p-2 bg-yellow-400 dark:bg-yellow-500/30 rounded-lg">
+                    <Phone className="h-5 w-5 text-yellow-800 dark:text-yellow-300" />
                   </div>
                   <div>
                     <p className="font-medium text-slate-900 dark:text-white">MTN Mobile Money</p>
@@ -169,13 +169,13 @@ export default function WithdrawModal({
             <div className="space-y-2">
               <Label>Withdrawal Amount</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none">{getCurrencySymbol(currency)}</span>
                 <Input
                   type="number"
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="pl-7"
+                  className={getCurrencyInputPadding(currency)}
                   max={balance}
                   step="0.01"
                 />
@@ -187,14 +187,15 @@ export default function WithdrawModal({
 
             {paymentMethod === 'mtn' && (
               <div className="space-y-2">
-                <Label>MTN Phone Number</Label>
+                <Label className="text-yellow-700 dark:text-yellow-400">MTN Phone Number</Label>
                 <Input
                   type="tel"
                   placeholder="+250 78X XXX XXX"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="border-yellow-300 dark:border-yellow-700 focus-visible:ring-yellow-400"
                 />
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-yellow-600 dark:text-yellow-500">
                   Enter the MTN number registered with MoMo
                 </p>
               </div>
@@ -219,7 +220,12 @@ export default function WithdrawModal({
               </Button>
               <Button
                 onClick={handleDetailsSubmit}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                className={cn(
+                  "flex-1 text-white",
+                  paymentMethod === 'mtn'
+                    ? "bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700"
+                    : "bg-emerald-600 hover:bg-emerald-700"
+                )}
               >
                 Continue
               </Button>
@@ -230,7 +236,12 @@ export default function WithdrawModal({
         {/* Step 3: Confirm */}
         {step === 'confirm' && (
           <div className="space-y-4 pt-4">
-            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl space-y-3">
+            <div className={cn(
+              "p-4 rounded-xl space-y-3",
+              paymentMethod === 'mtn'
+                ? "bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800"
+                : "bg-slate-50 dark:bg-slate-800"
+            )}>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Method</span>
                 <span className="font-medium text-slate-900 dark:text-white">
@@ -278,7 +289,12 @@ export default function WithdrawModal({
               <Button
                 onClick={handleConfirm}
                 disabled={loading}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                className={cn(
+                  "flex-1 text-white",
+                  paymentMethod === 'mtn'
+                    ? "bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700"
+                    : "bg-emerald-600 hover:bg-emerald-700"
+                )}
               >
                 {loading ? (
                   <>

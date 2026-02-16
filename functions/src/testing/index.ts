@@ -309,6 +309,7 @@ async function generateTestData(db: admin.firestore.Firestore, counts: any) {
         additional: []
       },
       total_prize: prizeFirst + prizeSecond + prizeThird,
+      currency: "USD",
       deadline: getISODate(endDate),
       requirements: getRandomItems(CHALLENGE_REQUIREMENTS, getRandomInt(3, 6)).join("\n"),
       categories: getRandomItems(CHALLENGE_CATEGORIES, getRandomInt(2, 5)),

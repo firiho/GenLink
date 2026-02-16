@@ -10,6 +10,7 @@
 import * as admin from "firebase-admin";
 import { logger } from "firebase-functions/v2";
 import { MidnightTask } from "./types";
+import { convertToUSD } from "../../config";
 
 const db = admin.firestore();
 
@@ -47,7 +48,8 @@ async function calculatePublicStats(): Promise<{
   let totalPrizes = 0;
   for (const doc of completedChallengesSnapshot.docs) {
     const data = doc.data();
-    totalPrizes += data.total_prize || 0;
+    const prize = data.total_prize || 0;
+    totalPrizes += convertToUSD(prize, data.currency);
   }
 
   return {

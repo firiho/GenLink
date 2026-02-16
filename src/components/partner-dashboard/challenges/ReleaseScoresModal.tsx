@@ -1,6 +1,7 @@
 import { Trophy, Award, Star, Users, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/currency';
 import {
   Dialog,
   DialogContent,
@@ -100,7 +101,7 @@ export const ReleaseScoresModal = ({
                           {submissions[0].score ?? 'N/A'}/100
                         </Badge>
                         <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                          ${challenge.prizeDistribution?.first || 0}
+                          {formatCurrency(challenge.prizeDistribution?.first || 0, challenge.currency)}
                         </span>
                       </div>
                     </div>
@@ -131,7 +132,7 @@ export const ReleaseScoresModal = ({
                           {submissions[1].score ?? 'N/A'}/100
                         </Badge>
                         <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                          ${challenge.prizeDistribution?.second || 0}
+                          {formatCurrency(challenge.prizeDistribution?.second || 0, challenge.currency)}
                         </span>
                       </div>
                     </div>
@@ -162,7 +163,7 @@ export const ReleaseScoresModal = ({
                           {submissions[2].score ?? 'N/A'}/100
                         </Badge>
                         <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                          ${challenge.prizeDistribution?.third || 0}
+                          {formatCurrency(challenge.prizeDistribution?.third || 0, challenge.currency)}
                         </span>
                       </div>
                     </div>
@@ -190,7 +191,7 @@ export const ReleaseScoresModal = ({
                           <Award className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                           <span className="font-medium text-slate-900 dark:text-white">{award.name || `Special Award ${index + 1}`}</span>
                         </div>
-                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">${award.amount}</span>
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(award.amount || 0, challenge.currency)}</span>
                       </div>
                       <Select
                         value={specialAwardSelections[`award_${index}`] || ''}

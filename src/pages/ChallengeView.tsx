@@ -17,6 +17,7 @@ import { Header } from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { TeamService } from '@/services/teamService';
 import { Team } from '@/types/team';
+import { formatCurrency } from '@/lib/currency';
 
 export default function ChallengeView() {
   const { id } = useParams();
@@ -80,6 +81,7 @@ export default function ChallengeView() {
           prize: data.prize || 'No prize information',
           prizeDistribution: data.prizeDistribution || {},
           total_prize: data.total_prize || 0,
+          currency: data.currency,
           participants: data.participants || 0,
           daysLeft: daysLeft,
           image: data.coverImageUrl || "/placeholder-challenge.jpg",
@@ -130,7 +132,7 @@ export default function ChallengeView() {
                 title: relData.title,
                 image: relData.coverImageUrl || "/placeholder-challenge.jpg",
                 organizer: relData.companyInfo?.name || 'Unknown',
-                prize: relData.total_prize ? `$${relData.total_prize.toLocaleString()}` : 'No prize'
+                prize: relData.total_prize ? formatCurrency(relData.total_prize, relData.currency) : 'No prize'
               });
             }
           });
@@ -320,12 +322,12 @@ const handleJoinAsTeam = async (teamId: string) => {
                     <Trophy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     <span className="hidden sm:inline">
                       {challenge.total_prize > 0 
-                        ? `$${challenge.total_prize.toLocaleString()} in prizes` 
+                        ? `${formatCurrency(challenge.total_prize, challenge.currency)} in prizes` 
                         : challenge.prize}
                     </span>
                     <span className="sm:hidden">
                       {challenge.total_prize > 0 
-                        ? `$${challenge.total_prize.toLocaleString()}` 
+                        ? formatCurrency(challenge.total_prize, challenge.currency) 
                         : challenge.prize}
                     </span>
                   </div>
@@ -563,7 +565,7 @@ const handleJoinAsTeam = async (teamId: string) => {
                             <p className="font-medium flex items-center text-slate-900 dark:text-white">
                               <Trophy className="w-4 h-4 mr-2 text-slate-600 dark:text-slate-400" />
                               {challenge.total_prize > 0 
-                                ? `$${challenge.total_prize.toLocaleString()}` 
+                                ? formatCurrency(challenge.total_prize, challenge.currency) 
                                 : challenge.prize}
                             </p>
                           </div>
@@ -775,7 +777,7 @@ const handleJoinAsTeam = async (teamId: string) => {
                           </div>
                           <h4 className="font-bold text-lg mb-1 text-foreground">1st Place</h4>
                           <p className="text-amber-800 dark:text-amber-300 font-bold text-xl">
-                            ${challenge.prizeDistribution?.first}
+                            {formatCurrency(challenge.prizeDistribution?.first || 0, challenge.currency)}
                           </p>
                         </div>
                         
@@ -786,7 +788,7 @@ const handleJoinAsTeam = async (teamId: string) => {
                           </div>
                           <h4 className="font-bold text-lg mb-1 text-foreground">2nd Place</h4>
                           <p className="text-gray-800 dark:text-gray-200 font-bold text-xl">
-                            ${challenge.prizeDistribution?.second}
+                            {formatCurrency(challenge.prizeDistribution?.second || 0, challenge.currency)}
                           </p>
                         </div>
                         
@@ -797,7 +799,7 @@ const handleJoinAsTeam = async (teamId: string) => {
                           </div>
                           <h4 className="font-bold text-lg mb-1 text-foreground">3rd Place</h4>
                           <p className="text-amber-800 dark:text-amber-300 font-bold text-xl">
-                            ${challenge.prizeDistribution?.third}
+                            {formatCurrency(challenge.prizeDistribution?.third || 0, challenge.currency)}
                           </p>
                         </div>
                       </div>
@@ -815,7 +817,7 @@ const handleJoinAsTeam = async (teamId: string) => {
                                   </div>
                                   <span className="font-medium text-foreground">{prize.name || 'Special Prize'}</span>
                                 </div>
-                                <span className="text-accent font-bold text-lg">${Number(prize.amount || 0).toLocaleString()}</span>
+                                <span className="text-accent font-bold text-lg">{formatCurrency(Number(prize.amount || 0), challenge.currency)}</span>
                               </div>
                             ))}
                           </div>
@@ -843,7 +845,7 @@ const handleJoinAsTeam = async (teamId: string) => {
                       <div className="bg-muted/20 rounded-lg p-6 border border-border">
                         <h4 className="text-lg font-semibold mb-4 text-foreground">Total Prize Pool</h4>
                         <p className="text-3xl font-bold text-accent">
-                          ${challenge.total_prize.toLocaleString()}
+                          {formatCurrency(challenge.total_prize, challenge.currency)}
                         </p>
                         
                         <div className="mt-6 pt-6 border-t border-border">
@@ -1023,7 +1025,7 @@ const handleJoinAsTeam = async (teamId: string) => {
                                   </Badge>
                                 )}
                                 <p className="font-bold text-xl text-emerald-600 dark:text-emerald-400">
-                                  ${challenge.awards.first.prize?.toLocaleString()}
+                                  {formatCurrency(challenge.awards.first.prize || 0, challenge.currency)}
                                 </p>
                               </div>
                             </div>
@@ -1056,7 +1058,7 @@ const handleJoinAsTeam = async (teamId: string) => {
                                   </Badge>
                                 )}
                                 <p className="font-bold text-xl text-emerald-600 dark:text-emerald-400">
-                                  ${challenge.awards.second.prize?.toLocaleString()}
+                                  {formatCurrency(challenge.awards.second.prize || 0, challenge.currency)}
                                 </p>
                               </div>
                             </div>
@@ -1089,7 +1091,7 @@ const handleJoinAsTeam = async (teamId: string) => {
                                   </Badge>
                                 )}
                                 <p className="font-bold text-xl text-emerald-600 dark:text-emerald-400">
-                                  ${challenge.awards.third.prize?.toLocaleString()}
+                                  {formatCurrency(challenge.awards.third.prize || 0, challenge.currency)}
                                 </p>
                               </div>
                             </div>
@@ -1120,7 +1122,7 @@ const handleJoinAsTeam = async (teamId: string) => {
                                     <span>{award.participantName || 'Anonymous'}</span>
                                   </div>
                                   <p className="font-bold text-emerald-600 dark:text-emerald-400 mt-2">
-                                    ${award.prize?.toLocaleString()}
+                                    {formatCurrency(award.prize || 0, challenge.currency)}
                                   </p>
                                 </div>
                               ))}
@@ -1143,7 +1145,7 @@ const handleJoinAsTeam = async (teamId: string) => {
                             <div>
                               <p className="text-sm text-slate-500 dark:text-slate-400">Total Prize Pool</p>
                               <p className="font-bold text-xl text-emerald-600 dark:text-emerald-400">
-                                ${challenge.total_prize?.toLocaleString()}
+                                {formatCurrency(challenge.total_prize || 0, challenge.currency)}
                               </p>
                             </div>
                             <div>

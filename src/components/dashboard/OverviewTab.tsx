@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import { set } from 'date-fns';
+import { formatCurrency } from '@/lib/currency';
 import { ParticipantStats, parseStatValue, formatStatNumber, formatStatPercentage } from '@/types/stats';
 
 export default function OverviewTab({setActiveView, user}) {
@@ -104,7 +105,7 @@ export default function OverviewTab({setActiveView, user}) {
                             submissions: 0,
                             progress: submissionData?.progress || 0,
                             daysLeft: daysLeft,
-                            prize: challengeData.total_prize ? `$${challengeData.total_prize.toLocaleString()}` : 'No prize',
+                            prize: challengeData.total_prize ? formatCurrency(challengeData.total_prize, challengeData.currency) : 'No prize',
                             deadline: challengeData.deadline || null,
                             joinedAt: userChallengeData.joinedAt ? new Date(userChallengeData.joinedAt) : new Date(),
                             image: challengeData.coverImageUrl || "/placeholder-challenge.jpg"

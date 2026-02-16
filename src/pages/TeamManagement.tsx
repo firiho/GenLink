@@ -6,6 +6,7 @@ import { TeamService } from '@/services/teamService';
 import { toast } from 'sonner';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { formatCurrency } from '@/lib/currency';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -736,7 +737,7 @@ export default function TeamManagement({ teamId }: TeamManagementProps) {
                   {challengeData.total_prize && (
                     <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                       <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Prize Pool</p>
-                      <p className="font-semibold">${challengeData.total_prize.toLocaleString()}</p>
+                      <p className="font-semibold">{formatCurrency(challengeData.total_prize, challengeData.currency)}</p>
                     </div>
                   )}
                   {challengeData.deadline && (

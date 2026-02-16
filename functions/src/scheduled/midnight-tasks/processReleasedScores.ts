@@ -15,6 +15,7 @@ import * as admin from "firebase-admin";
 import { logger } from "firebase-functions/v2";
 import { MidnightTask } from "./types";
 import { addNotification } from "../../notifications";
+import { resolveCurrency, type CurrencyCode } from "../../config";
 
 const db = admin.firestore();
 
@@ -47,7 +48,8 @@ async function creditWallet(
   amount: number,
   challengeId: string,
   challengeTitle: string,
-  awardType: string
+  awardType: string,
+  currency: CurrencyCode = "USD"
 ): Promise<void> {
   if (amount <= 0) return;
 
@@ -62,7 +64,7 @@ async function creditWallet(
     challengeId,
     challengeTitle,
     awardType,
-    createdAt: admin.firestore.FieldValue.serverTimestamp()
+    createdAt: admin.firestore.Timestamp.now()
   };
 
   await db.runTransaction(async (transaction) => {
@@ -82,7 +84,7 @@ async function creditWallet(
         ownerId,
         ownerType,
         balance: amount,
-        currency: "USD",
+        currency,
         transactions: [transactionData],
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -163,14 +165,15 @@ async function processWinner(
   challengeId: string,
   challengeTitle: string,
   awardType: string,
-  processedUserIds: Set<string>
+  processedUserIds: Set<string>,
+  currency: CurrencyCode
 ): Promise<void> {
   const prize = winner.prize || 0;
 
   // Determine if it's a team or individual
   if (winner.teamId) {
     // Credit team wallet
-    await creditWallet(winner.teamId, "team", prize, challengeId, challengeTitle, awardType);
+    await creditWallet(winner.teamId, "team", prize, challengeId, challengeTitle, awardType, currency);
 
     // Notify all team members
     const memberIds = await getTeamMemberIds(winner.teamId);
@@ -180,7 +183,7 @@ async function processWinner(
     }
   } else if (winner.participantId) {
     // Credit individual wallet
-    await creditWallet(winner.participantId, "user", prize, challengeId, challengeTitle, awardType);
+    await creditWallet(winner.participantId, "user", prize, challengeId, challengeTitle, awardType, currency);
 
     // Notify the winner
     await notifyWinner(winner.participantId, challengeTitle, challengeId, awardType, prize, winner.projectTitle);
@@ -203,8 +206,9 @@ async function processReleasedChallenge(
   const challengeData = challengeDoc.data()!;
   const challengeTitle = challengeData.title || "Challenge";
   const awards = challengeData.awards as ChallengeAwards;
+  const currency = resolveCurrency(challengeData.currency);
 
-  logger.info(`Processing released scores for: ${challengeTitle}`, { challengeId });
+  logger.info(`Processing released scores for: ${challengeTitle}`, { challengeId, currency });
 
   const processedUserIds = new Set<string>();
   let winnersProcessed = 0;
@@ -221,11 +225,11 @@ async function processReleasedChallenge(
     const winner = awards[placement.key];
     if (winner) {
       try {
-        await processWinner(winner, challengeId, challengeTitle, placement.type, processedUserIds);
+        await processWinner(winner, challengeId, challengeTitle, placement.type, processedUserIds, currency);
         winnersProcessed++;
         totalPrizeDistributed += winner.prize || 0;
-      } catch (error) {
-        logger.error(`Failed to process ${placement.type} place winner`, { challengeId, error });
+      } catch (error: any) {
+        logger.error(`Failed to process ${placement.type} place winner`, { challengeId, error: error?.message || error?.code || String(error) });
       }
     }
   }
@@ -236,11 +240,11 @@ async function processReleasedChallenge(
       if (specialAward) {
         try {
           const awardName = specialAward.awardName || "Special Award";
-          await processWinner(specialAward, challengeId, challengeTitle, awardName, processedUserIds);
+          await processWinner(specialAward, challengeId, challengeTitle, awardName, processedUserIds, currency);
           winnersProcessed++;
           totalPrizeDistributed += specialAward.prize || 0;
-        } catch (error) {
-          logger.error("Failed to process special award winner", { challengeId, error });
+        } catch (error: any) {
+          logger.error("Failed to process special award winner", { challengeId, error: error?.message || error?.code || String(error) });
         }
       }
     }
@@ -272,13 +276,13 @@ async function processReleasedChallenge(
           }
         }
       }
-    } else if (submissionData.participantId && !processedUserIds.has(submissionData.participantId)) {
+    } else if (submissionData.userId && !processedUserIds.has(submissionData.userId)) {
       try {
-        await notifyParticipant(submissionData.participantId, challengeTitle, challengeId);
-        processedUserIds.add(submissionData.participantId);
+        await notifyParticipant(submissionData.userId, challengeTitle, challengeId);
+        processedUserIds.add(submissionData.userId);
         participantsNotified++;
       } catch (error) {
-        logger.error(`Failed to notify participant ${submissionData.participantId}`, { error });
+        logger.error(`Failed to notify participant ${submissionData.userId}`, { error });
       }
     }
   }

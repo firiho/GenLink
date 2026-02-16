@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ChallengeCard from '@/components/dashboard/challenges/ChallengeCard';
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/currency';
 
 export default function ChallengesTab({setActiveView}) {
     const [userChallenges, setUserChallenges] = useState([]);
@@ -60,7 +61,7 @@ export default function ChallengesTab({setActiveView}) {
                             participants: challengeData.participants || 0,
                             status: userChallengeData.status || 'in-progress',
                             daysLeft: daysLeft,
-                            prize: challengeData.total_prize ? `$${challengeData.total_prize.toLocaleString()}` : 'No prize',
+                            prize: challengeData.total_prize ? formatCurrency(challengeData.total_prize, challengeData.currency) : 'No prize',
                             deadline: challengeData.deadline || null,
                             joinedAt: userChallengeData.joinedAt || null,
                         });

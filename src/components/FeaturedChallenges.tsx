@@ -5,6 +5,7 @@ import { HackathonCard } from '@/components/HackathonCard';
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { formatCurrency } from '@/lib/currency';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function FeaturedChallenges() {
@@ -39,7 +40,7 @@ export default function FeaturedChallenges() {
             challengeId: doc.id,
             title: data.title || 'Unnamed Challenge',
             organizer: data.companyInfo?.name || 'Unknown Organization',
-            prize: data.total_prize ? `$${data.total_prize.toLocaleString()}` : 'No prize',
+            prize: data.total_prize ? formatCurrency(data.total_prize, data.currency) : 'No prize',
             participants: data.participants || 0,
             daysLeft: daysLeft,
             image: data.coverImageUrl || '/placeholder-challenge.jpg',

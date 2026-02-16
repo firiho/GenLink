@@ -13,6 +13,7 @@ import { X, Plus, Users, Globe, Lock, Settings, Search, ArrowRight, ArrowLeft, C
 import { CreateTeamData, Team } from '@/types/team';
 import { Challenge } from '@/types/user';
 import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { formatCurrency } from '@/lib/currency';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -126,7 +127,7 @@ export default function CreateTeamModal({ onClose, onSubmit }: CreateTeamModalPr
               submissions: data.submissions || 0,
               progress: 0,
               daysLeft: 0,
-              prize: data.total_prize ? `$${data.total_prize}` : 'No prize',
+              prize: data.total_prize ? formatCurrency(data.total_prize, data.currency) : 'No prize',
               deadline: data.deadline || '',
               categories: data.categories || [],
               createdAt: data.createdAt || '',

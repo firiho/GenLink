@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Link } from 'react-router-dom';
+import { formatCurrency, convertToUSD } from '@/lib/currency';
 
 export default function PublicChallenges() {
   const [challenges, setChallenges] = useState([]);
@@ -83,6 +84,7 @@ export default function PublicChallenges() {
             organizerLogo: data.companyInfo?.logoUrl || null,
             prize: data.prize || 'No prize information',
             total_prize: data.total_prize || 0,
+            currency: data.currency,
             participants: data.participants || Math.floor(Math.random() * 100), // Placeholder for demo
             daysLeft: daysLeft,
             image: data.coverImageUrl || "/placeholder-challenge.jpg",
@@ -161,20 +163,22 @@ export default function PublicChallenges() {
       results = results.filter(challenge => challenge.daysLeft <= 0);
     }
     
-    // Filter by prize range
+    // Filter by prize range (convert each challenge's prize to USD for comparison)
     if (!filters.prizeRange.any) {
       if (filters.prizeRange.under1k) {
-        results = results.filter(challenge => challenge.total_prize < 1000);
+        results = results.filter(challenge => convertToUSD(challenge.total_prize, challenge.currency) < 1000);
       } else if (filters.prizeRange['1k-5k']) {
-        results = results.filter(challenge => 
-          challenge.total_prize >= 1000 && challenge.total_prize < 5000
-        );
+        results = results.filter(challenge => {
+          const usd = convertToUSD(challenge.total_prize, challenge.currency);
+          return usd >= 1000 && usd < 5000;
+        });
       } else if (filters.prizeRange['5k-10k']) {
-        results = results.filter(challenge => 
-          challenge.total_prize >= 5000 && challenge.total_prize < 10000
-        );
+        results = results.filter(challenge => {
+          const usd = convertToUSD(challenge.total_prize, challenge.currency);
+          return usd >= 5000 && usd < 10000;
+        });
       } else if (filters.prizeRange.over10k) {
-        results = results.filter(challenge => challenge.total_prize >= 10000);
+        results = results.filter(challenge => convertToUSD(challenge.total_prize, challenge.currency) >= 10000);
       }
     }
     
@@ -182,7 +186,7 @@ export default function PublicChallenges() {
     if (sortBy === 'newest') {
       results = [...results].sort((a, b) => b.createdAt - a.createdAt);
     } else if (sortBy === 'prize') {
-      results = [...results].sort((a, b) => b.total_prize - a.total_prize);
+      results = [...results].sort((a, b) => convertToUSD(b.total_prize, b.currency) - convertToUSD(a.total_prize, a.currency));
     } else if (sortBy === 'deadline') {
       results = [...results].sort((a, b) => a.daysLeft - b.daysLeft);
     }
@@ -299,7 +303,7 @@ export default function PublicChallenges() {
       </div>
 
       <div className="pb-4 border-b border-border">
-        <h3 className="text-lg font-semibold mb-3 text-foreground">Prize Range</h3>
+        <h3 className="text-lg font-semibold mb-3 text-foreground">Award Range</h3>
         <div className="space-y-2">
           {Object.keys(filters.prizeRange).map((range) => (
             <div key={range} className="flex items-center">
@@ -415,7 +419,7 @@ export default function PublicChallenges() {
                 </h3>
               </div>
               <div className="text-sm font-semibold text-primary flex-shrink-0">
-                {challenge.total_prize > 0 ? `$${challenge.total_prize.toLocaleString()}` : challenge.prize}
+                {challenge.total_prize > 0 ? formatCurrency(challenge.total_prize, challenge.currency) : challenge.prize}
               </div>
             </div>
             

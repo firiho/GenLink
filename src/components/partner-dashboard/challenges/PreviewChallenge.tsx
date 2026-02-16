@@ -2,6 +2,7 @@ import { ArrowLeft, FileText, Users, Award, Calendar, ExternalLink, Clock, Share
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 
 export default function PreviewChallenge({ challenge, setActiveView }) {
   if (!challenge) {
@@ -123,7 +124,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
             </div>
             <div>
               <p className="text-sm text-slate-500 dark:text-slate-400">Total Prize</p>
-              <p className="text-lg font-semibold text-slate-900 dark:text-white">${challenge.total_prize?.toLocaleString() || '0'}</p>
+              <p className="text-lg font-semibold text-slate-900 dark:text-white">{formatCurrency(challenge.total_prize || 0, challenge.currency)}</p>
             </div>
           </div>
         </div>
@@ -217,7 +218,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                   </div>
                   <div>
                     <p className="text-sm text-slate-500 dark:text-slate-400">Total Prize Pool</p>
-                    <p className="text-xl font-semibold text-slate-900 dark:text-white">${challenge.total_prize?.toLocaleString() || '0'}</p>
+                    <p className="text-xl font-semibold text-slate-900 dark:text-white">{formatCurrency(challenge.total_prize || 0, challenge.currency)}</p>
                   </div>
                 </div>
                 
@@ -230,9 +231,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                     </div>
                     <h4 className="font-bold text-sm mb-1 text-slate-900 dark:text-white">1st Place</h4>
                     <p className="text-amber-800 dark:text-amber-300 font-bold text-xl">
-                      ${(challenge.prizeDistribution?.first || 
-                        Math.round((challenge.total_prize || 0) * 0.6)
-                      ).toLocaleString()}
+                      {formatCurrency(challenge.prizeDistribution?.first || Math.round((challenge.total_prize || 0) * 0.6), challenge.currency)}
                     </p>
                   </div>
                   
@@ -243,9 +242,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                     </div>
                     <h4 className="font-bold text-sm mb-1 text-slate-900 dark:text-white">2nd Place</h4>
                     <p className="text-slate-800 dark:text-slate-200 font-bold text-xl">
-                      ${(challenge.prizeDistribution?.second || 
-                        Math.round((challenge.total_prize || 0) * 0.3)
-                      ).toLocaleString()}
+                      {formatCurrency(challenge.prizeDistribution?.second || Math.round((challenge.total_prize || 0) * 0.3), challenge.currency)}
                     </p>
                   </div>
                   
@@ -256,9 +253,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                     </div>
                     <h4 className="font-bold text-sm mb-1 text-slate-900 dark:text-white">3rd Place</h4>
                     <p className="text-amber-800 dark:text-amber-300 font-bold text-xl">
-                      ${(challenge.prizeDistribution?.third || 
-                        Math.round((challenge.total_prize || 0) * 0.1)
-                      ).toLocaleString()}
+                      {formatCurrency(challenge.prizeDistribution?.third || Math.round((challenge.total_prize || 0) * 0.1), challenge.currency)}
                     </p>
                   </div>
                 </div>
@@ -276,7 +271,7 @@ export default function PreviewChallenge({ challenge, setActiveView }) {
                             </div>
                             <span className="font-medium text-slate-900 dark:text-white">{prize.name || 'Special Prize'}</span>
                           </div>
-                          <span className="text-slate-900 dark:text-white font-bold">${Number(prize.amount).toLocaleString()}</span>
+                          <span className="text-slate-900 dark:text-white font-bold">{formatCurrency(Number(prize.amount), challenge.currency)}</span>
                         </div>
                       ))}
                     </div>

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/currency';
 import { 
   Users, 
   ArrowLeft,
@@ -407,7 +408,7 @@ const TeamDetails = () => {
                   {team.challengeData.total_prize && (
                     <div className="p-3 rounded-lg bg-accent/5 border border-border">
                       <p className="text-xs text-muted-foreground mb-1">Prize Pool</p>
-                      <p className="font-semibold">${team.challengeData.total_prize.toLocaleString()}</p>
+                      <p className="font-semibold">{formatCurrency(team.challengeData.total_prize, team.challengeData.currency)}</p>
                     </div>
                   )}
                   {team.challengeData.deadline && (

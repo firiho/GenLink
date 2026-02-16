@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, X, Plus } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { db, storage } from '@/lib/firebase';
+import { getCurrencySymbol, getCurrencyInputPadding, formatCurrency, DEFAULT_CURRENCY, type CurrencyCode } from '@/lib/currency';
+import { CurrencySelect } from '@/components/ui/currency-select';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,6 +57,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
           additional: []
         },
         total_prize: 0,
+        currency: DEFAULT_CURRENCY as string,
         deadline: '',
         requirements: '',
         categories: [],
@@ -517,32 +520,37 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Total Prize Amount*</label>
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400">$</span>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={challengeData.total_prize}
-                          onChange={(e) => {
-                            const total = parseFloat(e.target.value) || 0;
-                            setChallengeData({ 
-                              ...challengeData, 
-                              total_prize: total,
-                              // Auto-calculate prize distribution when total changes
-                              prizeDistribution: {
-                                ...challengeData.prizeDistribution,
-                                first: total > 0 ? Math.round(total * 0.6) : 0,
-                                second: total > 0 ? Math.round(total * 0.3) : 0,
-                                third: total > 0 ? Math.round(total * 0.1) : 0
-                              }
-                            });
-                          }}
-                          placeholder="0.00"
-                          className="pl-8 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
-                          required
+                      <div className="flex gap-2">
+                        <CurrencySelect
+                          value={challengeData.currency || DEFAULT_CURRENCY}
+                          onChange={(code: CurrencyCode) => setChallengeData({ ...challengeData, currency: code })}
+                          className="w-[130px] shrink-0 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
                         />
+                        <div className="flex-1">
+                          <Input
+                            type="number"
+                            min="0"
+                            value={challengeData.total_prize}
+                            onChange={(e) => {
+                              const total = parseFloat(e.target.value) || 0;
+                              setChallengeData({ 
+                                ...challengeData, 
+                                total_prize: total,
+                                prizeDistribution: {
+                                  ...challengeData.prizeDistribution,
+                                  first: total > 0 ? Math.round(total * 0.6) : 0,
+                                  second: total > 0 ? Math.round(total * 0.3) : 0,
+                                  third: total > 0 ? Math.round(total * 0.1) : 0
+                                }
+                              });
+                            }}
+                            placeholder="0.00"
+                            className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                            required
+                          />
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Enter the total prize pool amount</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Select currency and enter the total prize pool amount</p>
                     </div>
                   
                     <div>
@@ -557,7 +565,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">First Place</label>
                           </div>
                           <div className="col-span-3 relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400">$</span>
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400 text-xs pointer-events-none">{getCurrencySymbol(challengeData.currency)}</span>
                             <Input
                               type="number"
                               min="0"
@@ -569,7 +577,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                                   first: parseFloat(e.target.value) || 0
                                 }
                               })}
-                              className="pl-8 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                              className={`${getCurrencyInputPadding(challengeData.currency)} bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white`}
                             />
                           </div>
                         </div>
@@ -583,7 +591,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                             <label className="text-sm font-medium">Second Place</label>
                           </div>
                           <div className="col-span-3 relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400">$</span>
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400 text-xs pointer-events-none">{getCurrencySymbol(challengeData.currency)}</span>
                             <Input
                               type="number"
                               min="0"
@@ -595,7 +603,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                                   second: parseFloat(e.target.value) || 0
                                 }
                               })}
-                              className="pl-8"
+                              className={getCurrencyInputPadding(challengeData.currency)}
                             />
                           </div>
                         </div>
@@ -609,7 +617,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                             <label className="text-sm font-medium">Third Place</label>
                           </div>
                           <div className="col-span-3 relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400">$</span>
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400 text-xs pointer-events-none">{getCurrencySymbol(challengeData.currency)}</span>
                             <Input
                               type="number"
                               min="0"
@@ -621,7 +629,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                                   third: parseFloat(e.target.value) || 0
                                 }
                               })}
-                              className="pl-8"
+                              className={getCurrencyInputPadding(challengeData.currency)}
                             />
                           </div>
                         </div>
@@ -647,7 +655,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                               />
                             </div>
                             <div className="col-span-2 relative">
-                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400">$</span>
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400 text-xs pointer-events-none">{getCurrencySymbol(challengeData.currency)}</span>
                               <Input
                                 type="number"
                                 min="0"
@@ -666,7 +674,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                                     }
                                   });
                                 }}
-                                className="pl-8"
+                                className={getCurrencyInputPadding(challengeData.currency)}
                               />
                             </div>
                             <div className="col-span-1 flex justify-end">
@@ -718,7 +726,7 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
                         <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
                           <span className="text-sm font-medium">Total Allocated:</span>
                           <span className="font-bold">
-                            ${calculateTotalAllocated(challengeData.prizeDistribution).toLocaleString()}
+                            {formatCurrency(calculateTotalAllocated(challengeData.prizeDistribution), challengeData.currency)}
                           </span>
                         </div>
                         

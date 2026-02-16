@@ -1,4 +1,5 @@
 import { LucideIcon } from 'lucide-react';
+import { formatCompactCurrency, DEFAULT_CURRENCY } from '@/lib/currency';
 
 /**
  * Represents a stat value with current and previous values
@@ -152,16 +153,11 @@ export function formatStatNumber(value: number): string {
 }
 
 /**
- * Format a currency value for display
+ * Format a currency value for display (compact).
+ * Delegates to the centralized currency module.
  */
-export function formatStatCurrency(value: number): string {
-  if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(1)}M`;
-  }
-  if (value >= 1000) {
-    return `$${(value / 1000).toFixed(1)}k`;
-  }
-  return `$${value.toLocaleString()}`;
+export function formatStatCurrency(value: number, currency: string = DEFAULT_CURRENCY): string {
+  return formatCompactCurrency(value, currency);
 }
 
 /**

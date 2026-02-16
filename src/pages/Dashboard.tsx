@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { signOut } from '@/services/auth';
 import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import { LayoutDashboard, Users, Trophy, Settings, LogOut, User, FolderOpen, Calendar} from 'lucide-react';
+import { LayoutDashboard, Users, Trophy, Settings, LogOut, User, FolderOpen, Calendar, Wallet} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from "@/lib/utils";
 import MobileHeader from '@/components/dashboard/MobileHeader';
@@ -22,16 +22,19 @@ import EventView from '@/components/dashboard/events/EventView';
 import TeamsTab from '@/components/dashboard/TeamsTab';
 import SettingsTab from '@/components/dashboard/SettingsTab';
 import ProfileTab from '@/components/dashboard/ProfileTab';
+import WalletTab from '@/components/dashboard/WalletTab';
 import ChallengesView from '@/components/dashboard/challenges/ChallengesView';
 import TeamManagement from '@/pages/TeamManagement';
 import NotificationsPage from '@/components/dashboard/NotificationsPage';
 import { getDashboardTabFromPath, getDashboardRouteFromTab, type DashboardTab } from '@/lib/routing';
+import { checkUserHasWallet } from '@/services/walletService';
 
 const Dashboard = () => {
   const { user: authUser, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+  const [hasWallet, setHasWallet] = useState(false);
   
   // Initialize state from URL
   const [activeView, setActiveView] = useState<DashboardTab>(() => 
@@ -158,6 +161,18 @@ const Dashboard = () => {
     checkOnboarding();
   }, [authUser, loading, navigate]);
 
+  // Check if user has any wallets
+  useEffect(() => {
+    const checkWallet = async () => {
+      if (authUser?.uid) {
+        const userHasWallet = await checkUserHasWallet(authUser.uid);
+        setHasWallet(userHasWallet);
+      }
+    };
+    
+    checkWallet();
+  }, [authUser?.uid]);
+
   // Only redirect to signin if we're not loading and there's no user
   useEffect(() => {
     if (!loading && !authUser) {
@@ -221,6 +236,12 @@ const Dashboard = () => {
           text: 'Profile', 
           action: () => handleViewChange('profile') 
         },
+        // Only show Wallet if user has one
+        ...(hasWallet ? [{ 
+          icon: Wallet, 
+          text: 'Wallet', 
+          action: () => handleViewChange('wallet') 
+        }] : []),
         { 
           icon: Settings, 
           text: 'Settings', 
@@ -287,6 +308,9 @@ const Dashboard = () => {
       
       case 'profile':
         return <ProfileTab user={authUser} />;
+      
+      case 'wallet':
+        return <WalletTab user={authUser} />;
       
       case 'teams':
         return <TeamsTab setActiveView={handleViewChange} />;
@@ -397,7 +421,7 @@ const Dashboard = () => {
           </div>
         </main>
 
-      <MobileTabNav activeView={activeView} setActiveView={handleViewChange} />
+      <MobileTabNav activeView={activeView} setActiveView={handleViewChange} hasWallet={hasWallet} />
     </div>
   );
 };

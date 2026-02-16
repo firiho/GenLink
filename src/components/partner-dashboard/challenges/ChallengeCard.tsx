@@ -1,4 +1,4 @@
-import { FileText, Eye, PenTool, Play, Archive, Trophy } from 'lucide-react';
+import { FileText, Eye, PenTool, Play, Archive, Trophy, Users, User, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -9,6 +9,7 @@ export interface ChallengeCardProps {
   onPublish: () => void;
   onArchive: () => void;
   onReleaseScores: () => void;
+  onViewWinners?: () => void;
 }
 
 export const ChallengeCard = ({
@@ -17,7 +18,8 @@ export const ChallengeCard = ({
   onEdit,
   onPublish,
   onArchive,
-  onReleaseScores
+  onReleaseScores,
+  onViewWinners
 }: ChallengeCardProps) => {
   // Determine if deadline has passed
   const deadlinePassed = challenge.daysLeft <= 0;
@@ -86,6 +88,45 @@ export const ChallengeCard = ({
         </div>
       </div>
 
+      {/* Winners Summary - shown when scores are released */}
+      {scoresReleased && challenge.awards && (
+        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+          <div className="flex items-center gap-2 mb-3">
+            <Trophy className="h-4 w-4 text-amber-500" />
+            <span className="text-sm font-semibold text-slate-900 dark:text-white">Winners</span>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {challenge.awards.first && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800/30">
+                <span className="w-5 h-5 bg-amber-400 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                <span className="text-sm text-slate-900 dark:text-white font-medium">{challenge.awards.first.projectTitle}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {challenge.awards.first.participantType === 'team' ? <Users className="h-3 w-3 inline" /> : <User className="h-3 w-3 inline" />}
+                </span>
+              </div>
+            )}
+            {challenge.awards.second && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                <span className="w-5 h-5 bg-slate-400 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                <span className="text-sm text-slate-900 dark:text-white font-medium">{challenge.awards.second.projectTitle}</span>
+              </div>
+            )}
+            {challenge.awards.third && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800/30">
+                <span className="w-5 h-5 bg-orange-400 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                <span className="text-sm text-slate-900 dark:text-white font-medium">{challenge.awards.third.projectTitle}</span>
+              </div>
+            )}
+            {challenge.awards.specialAwards && challenge.awards.specialAwards.length > 0 && (
+              <div className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800/30">
+                <Award className="h-3 w-3 text-purple-500" />
+                <span className="text-xs text-purple-700 dark:text-purple-300">+{challenge.awards.specialAwards.length} special</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="grid grid-cols-3 gap-4 sm:gap-6">
@@ -115,6 +156,19 @@ export const ChallengeCard = ({
               <Eye className="h-4 w-4 mr-1" />
               View
             </Button>
+            
+            {/* View Winners button - visible when scores are released */}
+            {scoresReleased && onViewWinners && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onViewWinners}
+                className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+              >
+                <Trophy className="h-4 w-4 mr-1" />
+                Winners
+              </Button>
+            )}
             
             {/* Edit button - hidden if deadline passed (unless draft) */}
             {showEditButtons && (

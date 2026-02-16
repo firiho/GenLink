@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,17 +6,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, setDoc, getDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, getDoc, getDocs, increment, arrayUnion, arrayRemove, collection, query, where } from 'firebase/firestore';
 import { ChallengeCard } from './ChallengeCard';
 import { ReleaseScoresModal } from './ReleaseScoresModal';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const ChallengesView = ({
-  challenges,
   setActiveView,
-  refreshChallenges, // Optional prop to refresh challenges after status changes
-  user, // User object with organization info
-  submissions = [] // Submissions array for determining winners
+  user // User object with organization info
 }) => {
+  const [challenges, setChallenges] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isUpdating, setIsUpdating] = useState(false);
@@ -27,6 +28,155 @@ export const ChallengesView = ({
   const [challengeSubmissions, setChallengeSubmissions] = useState<any[]>([]);
   const [specialAwardSelections, setSpecialAwardSelections] = useState<Record<string, string>>({});
   const [isReleasingScores, setIsReleasingScores] = useState(false);
+
+  // Fetch challenges and submissions
+  const fetchChallenges = async () => {
+    const orgId = user?.organization?.id;
+    if (!orgId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Fetch challenge IDs from org subcollection
+      const orgChallengesRef = collection(db, 'organizations', orgId, 'challenges');
+      const orgChallengesSnapshot = await getDocs(orgChallengesRef);
+      const challengeIds = orgChallengesSnapshot.docs.map(d => d.id);
+      
+      // Fetch full challenge data for each ID
+      const challengesList = [];
+      for (const challengeId of challengeIds) {
+        const challengeDoc = await getDoc(doc(db, 'challenges', challengeId));
+        if (challengeDoc.exists()) {
+          const data = challengeDoc.data();
+          const createdAt = data.createdAt?.toDate ? 
+            data.createdAt.toDate().toISOString() : 
+            data.createdAt;
+          const updatedAt = data.updatedAt?.toDate ? 
+            data.updatedAt.toDate().toISOString() : 
+            data.updatedAt;
+          const deadline = data.deadline;
+          const daysLeft = deadline ? 
+            Math.max(0, Math.ceil((new Date(deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 
+            'Unknown';
+          challengesList.push({
+            id: challengeDoc.id,
+            ...data,
+            createdAt,
+            updatedAt,
+            daysLeft,
+            participants: data.participants || 0,
+            submissions: data.submissions || 0,
+          });
+        }
+      }
+      setChallenges(challengesList);
+
+      // Fetch submissions for these challenges
+      if (challengesList.length > 0) {
+        const challengeIds = challengesList.map(c => c.id);
+        const allSubmissions = [];
+        
+        for (let i = 0; i < challengeIds.length; i += 10) {
+          const batch = challengeIds.slice(i, i + 10);
+          const submissionsQuery = query(
+            collection(db, 'submissions'),
+            where('challengeId', 'in', batch)
+          );
+          const submissionsSnapshot = await getDocs(submissionsQuery);
+          allSubmissions.push(...submissionsSnapshot.docs);
+        }
+
+        const submissionsList = await Promise.all(
+          allSubmissions.map(async (submissionDoc) => {
+            const data = submissionDoc.data();
+            
+            // Get project title
+            let projectTitle = 'Untitled Project';
+            if (data.projectId) {
+              try {
+                const projectRef = doc(db, 'projects', data.projectId);
+                const projectSnap = await getDoc(projectRef);
+                if (projectSnap.exists()) {
+                  projectTitle = projectSnap.data().title || 'Untitled Project';
+                }
+              } catch (error) {
+                console.error('Error fetching project:', error);
+              }
+            }
+
+            // Get participant info
+            let participant = { name: 'Anonymous User', type: 'individual', uid: data.userId };
+            if (data.teamId) {
+              try {
+                const teamRef = doc(db, 'teams', data.teamId);
+                const teamSnap = await getDoc(teamRef);
+                if (teamSnap.exists()) {
+                  participant = { 
+                    uid: data.teamId,
+                    name: teamSnap.data().name || 'Unnamed Team', 
+                    type: 'team' 
+                  };
+                }
+              } catch (error) {
+                console.error('Error fetching team:', error);
+              }
+            } else if (data.userId) {
+              try {
+                const profileRef = doc(db, 'profiles', data.userId);
+                const profileSnap = await getDoc(profileRef);
+                if (profileSnap.exists()) {
+                  const profileData = profileSnap.data();
+                  participant = { 
+                    uid: data.userId,
+                    name: `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim() || 'Anonymous User',
+                    type: 'individual'
+                  };
+                }
+              } catch (error) {
+                console.error('Error fetching profile:', error);
+              }
+            }
+
+            const submittedAt = data.createdAt?.toDate ? 
+              data.createdAt.toDate().toISOString() : 
+              data.createdAt;
+
+            return {
+              id: submissionDoc.id,
+              projectId: data.projectId || null,
+              title: projectTitle,
+              challengeId: data.challengeId,
+              participant,
+              participantType: participant.type,
+              teamId: data.teamId || null,
+              status: data.status || 'pending',
+              submittedAt,
+              score: data.score !== undefined ? data.score : null,
+            };
+          })
+        );
+
+        submissionsList.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+        setSubmissions(submissionsList);
+      }
+    } catch (error) {
+      console.error('Error fetching challenges:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchChallenges();
+  }, [user?.organization?.id]);
+
+  // Function to refresh challenges (used after updates)
+  const refreshChallenges = () => {
+    fetchChallenges();
+  };
 
   // Function to publish a challenge (change status to active)
   const publishChallenge = async (challengeId: string) => {
@@ -42,11 +192,22 @@ export const ChallengesView = ({
       const prizeAmount = challengeData?.total_prize || 0;
       const organizationId = challengeData?.organizationId || user?.organization?.id;
       
+      const now = new Date();
+      
       // Update the challenge status in Firestore
       await updateDoc(challengeRef, {
         status: 'active',
-        updatedAt: new Date()
+        updatedAt: now
       });
+      
+      // Also update the org subcollection reference
+      if (organizationId) {
+        const orgChallengeRef = doc(db, 'organizations', organizationId, 'challenges', challengeId);
+        await setDoc(orgChallengeRef, {
+          status: 'active',
+          updatedAt: now
+        }, { merge: true });
+      }
       
       // Update organization stats in stats collection - stats/org_{orgId}
       // Use arrayUnion for idempotent tracking of both active challenges and prize pool
@@ -101,11 +262,22 @@ export const ChallengesView = ({
       const challengeData = challengeSnap.data();
       const organizationId = challengeData?.organizationId || user?.organization?.id;
       
+      const now = new Date();
+      
       // Update the challenge status in Firestore
       await updateDoc(challengeRef, {
         status: 'completed',
-        updatedAt: new Date()
+        updatedAt: now
       });
+      
+      // Also update the org subcollection reference
+      if (organizationId) {
+        const orgChallengeRef = doc(db, 'organizations', organizationId, 'challenges', challengeId);
+        await setDoc(orgChallengeRef, {
+          status: 'completed',
+          updatedAt: now
+        }, { merge: true });
+      }
       
       // Update organization stats in stats collection - stats/org_{orgId}
       // Note: We don't decrement prize pool since that money was already allocated
@@ -266,21 +438,51 @@ export const ChallengesView = ({
     });
   }, [challenges, searchQuery, selectedFilter]);
 
-  const renderChallengesList = () => (
-    <div className="grid gap-6">
-      {filteredChallenges.map((challenge: any) => (
-        <ChallengeCard
-          key={challenge.id}
-          challenge={challenge}
-          onView={() => setActiveView('preview-challenge', { challenge })}
-          onEdit={() => setActiveView('create-challenge', { challenge, editMode: true })}
-          onPublish={() => publishChallenge(challenge.id)}
-          onArchive={() => archiveChallenge(challenge.id)}
-          onReleaseScores={() => openReleaseModal(challenge)}
-        />
-      ))}
-    </div>
-  );
+  const renderChallengesList = () => {
+    if (loading) {
+      return (
+        <div className="grid gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start space-x-4">
+                  <Skeleton className="h-12 w-12 rounded-lg" />
+                  <div>
+                    <Skeleton className="h-5 w-48 mb-2" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </div>
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-3/4 mb-4" />
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    
+    return (
+      <div className="grid gap-6">
+        {filteredChallenges.map((challenge: any) => (
+          <ChallengeCard
+            key={challenge.id}
+            challenge={challenge}
+            onView={() => setActiveView('preview-challenge', { challenge })}
+            onEdit={() => setActiveView('create-challenge', { challenge, editMode: true })}
+            onPublish={() => publishChallenge(challenge.id)}
+            onArchive={() => archiveChallenge(challenge.id)}
+            onReleaseScores={() => openReleaseModal(challenge)}
+          />
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">

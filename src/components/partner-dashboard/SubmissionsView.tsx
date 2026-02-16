@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, ChevronDown, ChevronUp, CheckCircle, XCircle, Clock, Users, User, ExternalLink, Star, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -21,16 +21,19 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, getDocs, collection, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import LoadingScreen from '@/components/dashboard/LoadingScreen';
+import { Skeleton } from '@/components/ui/skeleton';
 import WelcomeSection from '../dashboard/WelcomeSection';
 import { useNavigate } from 'react-router-dom';
 
-export default function SubmissionsView({ submissions, challenges, refreshSubmissions, isLoading }) {
+export default function SubmissionsView({ user }) {
   const navigate = useNavigate();
+  const [submissions, setSubmissions] = useState([]);
+  const [challenges, setChallenges] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [challengeFilter, setChallengeFilter] = useState('all');
@@ -47,6 +50,180 @@ export default function SubmissionsView({ submissions, challenges, refreshSubmis
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+
+  // Fetch submissions and challenges
+  const fetchSubmissionsData = async () => {
+    const orgId = user?.organization?.id;
+    if (!orgId) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // First fetch challenge IDs from org subcollection
+      const orgChallengesRef = collection(db, 'organizations', orgId, 'challenges');
+      const orgChallengesSnapshot = await getDocs(orgChallengesRef);
+      const challengeIds = orgChallengesSnapshot.docs.map(d => d.id);
+      
+      // Fetch full challenge data for each ID
+      const challengesList = [];
+      for (const challengeId of challengeIds) {
+        const challengeDoc = await getDoc(doc(db, 'challenges', challengeId));
+        if (challengeDoc.exists()) {
+          challengesList.push({
+            id: challengeDoc.id,
+            title: challengeDoc.data().title,
+            ...challengeDoc.data()
+          });
+        }
+      }
+      setChallenges(challengesList);
+
+      // Then fetch submissions for these challenges
+      if (challengesList.length > 0) {
+        const allChallengeIds = challengesList.map(c => c.id);
+        const allSubmissions = [];
+        
+        // Process in batches of 10 (Firestore limit)
+        for (let i = 0; i < allChallengeIds.length; i += 10) {
+          const batch = allChallengeIds.slice(i, i + 10);
+          const submissionsQuery = query(
+            collection(db, 'submissions'),
+            where('challengeId', 'in', batch)
+          );
+          const submissionsSnapshot = await getDocs(submissionsQuery);
+          allSubmissions.push(...submissionsSnapshot.docs);
+        }
+
+        const submissionsList = await Promise.all(
+          allSubmissions.map(async (submissionDoc) => {
+            const data = submissionDoc.data();
+            
+            // Get project data
+            let projectData = null;
+            let projectTitle = 'Untitled Project';
+            if (data.projectId) {
+              try {
+                const projectRef = doc(db, 'projects', data.projectId);
+                const projectSnap = await getDoc(projectRef);
+                if (projectSnap.exists()) {
+                  projectData = projectSnap.data();
+                  projectTitle = projectData.title || 'Untitled Project';
+                }
+              } catch (error) {
+                console.error('Error fetching project:', error);
+              }
+            }
+
+            // Get challenge data
+            const challengeRef = doc(db, 'challenges', data.challengeId);
+            const challengeSnap = await getDoc(challengeRef);
+            const challengeData = challengeSnap.exists() ? challengeSnap.data() : {};
+
+            // Get participant info
+            let participant = null;
+            let participantType = 'individual';
+            
+            if (data.teamId) {
+              try {
+                const teamRef = doc(db, 'teams', data.teamId);
+                const teamSnap = await getDoc(teamRef);
+                if (teamSnap.exists()) {
+                  const teamData = teamSnap.data();
+                  participantType = 'team';
+                  participant = {
+                    uid: data.teamId,
+                    name: teamData.name || 'Unnamed Team',
+                    email: '',
+                    avatar: teamData.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(teamData.name || 'T')}`,
+                    type: 'team'
+                  };
+                }
+              } catch (error) {
+                console.error('Error fetching team:', error);
+              }
+            }
+            
+            if (!participant && data.userId) {
+              try {
+                const profileRef = doc(db, 'profiles', data.userId);
+                const profileSnap = await getDoc(profileRef);
+                const profileData = profileSnap.exists() ? profileSnap.data() : {};
+                participant = {
+                  uid: data.userId,
+                  name: `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim() || 'Anonymous User',
+                  email: profileData.email || 'No email provided',
+                  avatar: profileData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.firstName || 'U')}`,
+                  type: 'individual'
+                };
+              } catch (error) {
+                console.error('Error fetching profile:', error);
+              }
+            }
+
+            if (!participant) {
+              participant = {
+                uid: data.userId || 'unknown',
+                name: 'Anonymous User',
+                email: 'No email provided',
+                avatar: 'https://ui-avatars.com/api/?name=U',
+                type: 'individual'
+              };
+            }
+
+            // Convert timestamps
+            const submittedAt = data.createdAt?.toDate ? 
+              data.createdAt.toDate().toISOString() : 
+              data.createdAt;
+            const updatedAt = data.updatedAt?.toDate ? 
+              data.updatedAt.toDate().toISOString() : 
+              data.updatedAt;
+            const reviewedAt = data.reviewedAt?.toDate ? 
+              data.reviewedAt.toDate().toISOString() : 
+              data.reviewedAt;
+
+            return {
+              id: submissionDoc.id,
+              projectId: data.projectId || null,
+              title: projectTitle,
+              challenge: challengeData.title || 'Unnamed Challenge',
+              challengeId: data.challengeId,
+              participant,
+              participantType,
+              teamId: data.teamId || null,
+              status: data.status || 'pending',
+              submittedAt,
+              lastUpdated: updatedAt,
+              reviewedAt,
+              tags: challengeData.tags || [],
+              score: data.score !== undefined ? data.score : null,
+              feedback: data.feedback || '',
+              note: data.note || '',
+              projectData
+            };
+          })
+        );
+
+        // Sort by date (newest first)
+        submissionsList.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+        setSubmissions(submissionsList);
+      }
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubmissionsData();
+  }, [user?.organization?.id]);
+
+  const refreshSubmissions = () => {
+    fetchSubmissionsData();
+  };
 
   const handleSortToggle = (field: 'submittedAt' | 'score') => {
     if (sortField === field) {
@@ -215,7 +392,79 @@ export default function SubmissionsView({ submissions, challenges, refreshSubmis
   };
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return (
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+        <WelcomeSection title='Submissions' subtitle="Manage and review participant submissions from teams and individuals." />
+        
+        {/* Filter Skeletons */}
+        <div className="flex flex-col space-y-3 lg:flex-row lg:space-y-0 lg:space-x-4">
+          <Skeleton className="h-10 flex-grow rounded-md" />
+          <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+            <Skeleton className="h-10 w-full sm:w-[180px] rounded-md" />
+            <Skeleton className="h-10 w-full sm:w-[200px] rounded-md" />
+            <Skeleton className="h-10 w-full sm:w-[200px] rounded-md" />
+          </div>
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="bg-white dark:bg-slate-900 overflow-hidden rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+              <thead className="bg-slate-50 dark:bg-slate-800">
+                <tr>
+                  <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Project</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Participant</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:table-cell">Submitted</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Score</th>
+                  <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-700">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <tr key={i}>
+                    <td className="px-3 sm:px-6 py-4">
+                      <Skeleton className="h-4 w-32 mb-1" />
+                      <Skeleton className="h-3 w-24" />
+                    </td>
+                    <td className="px-3 sm:px-6 py-4">
+                      <div className="flex items-center">
+                        <Skeleton className="h-8 w-8 rounded-full mr-3" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-5 w-16 rounded-full" />
+                          </div>
+                          <Skeleton className="h-3 w-32 mt-1 hidden sm:block" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 hidden sm:table-cell">
+                      <Skeleton className="h-4 w-28" />
+                    </td>
+                    <td className="px-3 sm:px-6 py-4">
+                      <div className="flex items-center">
+                        <Skeleton className="h-5 w-5 rounded-full mr-2" />
+                        <Skeleton className="h-5 w-20 rounded-full" />
+                      </div>
+                    </td>
+                    <td className="px-3 sm:px-6 py-4 hidden md:table-cell">
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                    </td>
+                    <td className="px-3 sm:px-6 py-4">
+                      <div className="flex items-center gap-2 justify-end">
+                        <Skeleton className="h-8 w-8 rounded-md" />
+                        <Skeleton className="h-8 w-16 rounded-md" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

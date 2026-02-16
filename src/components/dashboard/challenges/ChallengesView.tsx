@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Clock, Download, FileText, Info, MessageSquare, Trophy, Upload, Users, FolderPlus, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Download, FileText, Info, MessageSquare, Trophy, Upload, Users, FolderPlus, AlertTriangle, User, Award, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { AlertCircle } from 'lucide-react';
@@ -124,12 +124,17 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
           organizationLogo: challengeData.companyInfo?.logoUrl || null,
           participants: challengeData.participants || 0,
           prize: challengeData.total_prize ? `$${challengeData.total_prize.toLocaleString()}` : 'No prize',
+          total_prize: challengeData.total_prize || 0,
           deadline: challengeData.deadline ? new Date(challengeData.deadline) : null,
           instructions: challengeData.evaluationCriteria || 'No specific instructions provided.',
           requirements: challengeData.requirements || 'No specific requirements provided.',
           coverImage: challengeData.coverImageUrl || '/placeholder-challenge.jpg',
           resources: challengeData.resources || [],
-          rules: challengeData.termsAndConditions || 'No specific rules provided.'
+          rules: challengeData.termsAndConditions || 'No specific rules provided.',
+          scoresReleased: challengeData.scoresReleased || false,
+          scoresReleasedAt: challengeData.scoresReleasedAt ? new Date(challengeData.scoresReleasedAt.seconds * 1000) : null,
+          awards: challengeData.awards || null,
+          status: challengeData.status || 'active'
         };
         
         // Set state with fetched data
@@ -437,6 +442,99 @@ export default function ChallengesView({ challengeId, onBack, setActiveView }: C
         </div>
         
         <div>
+          {/* Winners Section - Shown when scores are released */}
+          {challenge.scoresReleased && challenge.awards && (
+            <Card className="shadow-sm bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-amber-200 dark:border-amber-800/30 mb-6">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Trophy className="h-5 w-5 text-amber-500" />
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Winners Announced!</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  {/* 1st Place */}
+                  {challenge.awards.first && (
+                    <div className="flex items-center gap-3 p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg">
+                      <div className="w-8 h-8 bg-amber-400 dark:bg-amber-500 text-white rounded-full flex items-center justify-center font-bold text-xs">
+                        1st
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-slate-900 dark:text-white truncate">{challenge.awards.first.projectTitle}</p>
+                        <div className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400">
+                          {challenge.awards.first.participantType === 'team' ? (
+                            <Users className="h-3 w-3" />
+                          ) : (
+                            <User className="h-3 w-3" />
+                          )}
+                          <span className="truncate">{challenge.awards.first.participantName || 'Anonymous'}</span>
+                        </div>
+                      </div>
+                      <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                        ${challenge.awards.first.prize?.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* 2nd Place */}
+                  {challenge.awards.second && (
+                    <div className="flex items-center gap-3 p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg">
+                      <div className="w-8 h-8 bg-slate-400 dark:bg-slate-500 text-white rounded-full flex items-center justify-center font-bold text-xs">
+                        2nd
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-slate-900 dark:text-white truncate">{challenge.awards.second.projectTitle}</p>
+                        <div className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400">
+                          {challenge.awards.second.participantType === 'team' ? (
+                            <Users className="h-3 w-3" />
+                          ) : (
+                            <User className="h-3 w-3" />
+                          )}
+                          <span className="truncate">{challenge.awards.second.participantName || 'Anonymous'}</span>
+                        </div>
+                      </div>
+                      <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                        ${challenge.awards.second.prize?.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* 3rd Place */}
+                  {challenge.awards.third && (
+                    <div className="flex items-center gap-3 p-3 bg-white/60 dark:bg-slate-800/60 rounded-lg">
+                      <div className="w-8 h-8 bg-orange-400 dark:bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-xs">
+                        3rd
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-slate-900 dark:text-white truncate">{challenge.awards.third.projectTitle}</p>
+                        <div className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400">
+                          {challenge.awards.third.participantType === 'team' ? (
+                            <Users className="h-3 w-3" />
+                          ) : (
+                            <User className="h-3 w-3" />
+                          )}
+                          <span className="truncate">{challenge.awards.third.participantName || 'Anonymous'}</span>
+                        </div>
+                      </div>
+                      <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                        ${challenge.awards.third.prize?.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Special Awards (collapsed) */}
+                  {challenge.awards.specialAwards && challenge.awards.specialAwards.length > 0 && (
+                    <div className="pt-2 border-t border-amber-200 dark:border-amber-800/30">
+                      <p className="text-xs text-amber-700 dark:text-amber-300 flex items-center gap-1">
+                        <Award className="h-3 w-3" />
+                        +{challenge.awards.specialAwards.length} Special Award{challenge.awards.specialAwards.length > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
           <Card className="shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
             <CardContent className="p-6 space-y-6">
               {!hasPublicProfile && (

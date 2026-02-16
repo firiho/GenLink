@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Trophy, Calendar, Users, Timer, Award, Clock, Link2, Download, Globe, Copy,
- BarChart2, Share2, BriefcaseBusiness, CalendarDays, Tag, UserPlus
+ BarChart2, Share2, BriefcaseBusiness, CalendarDays, Tag, UserPlus, User, Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -100,7 +100,10 @@ export default function ChallengeView() {
           createdAt: createdAt,
           status: data.status || 'active',
           termsAndConditions: data.termsAndConditions || '',
-          organizationId: data.organizationId || null
+          organizationId: data.organizationId || null,
+          scoresReleased: data.scoresReleased || false,
+          scoresReleasedAt: data.scoresReleasedAt ? new Date(data.scoresReleasedAt.seconds * 1000) : null,
+          awards: data.awards || null
         };
         
         setChallenge(challengeData);
@@ -347,6 +350,54 @@ const handleJoinAsTeam = async (teamId: string) => {
             </Button>
           </div>
           
+          {/* Winners Announcement Banner */}
+          {challenge.scoresReleased && challenge.awards && (
+            <div className="container mx-auto px-4 mt-6">
+              <div className="bg-gradient-to-r from-amber-50 via-amber-100 to-orange-50 dark:from-amber-900/30 dark:via-amber-800/30 dark:to-orange-900/30 rounded-xl p-4 sm:p-6 border border-amber-200 dark:border-amber-800/40 shadow-lg">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-amber-500 rounded-full">
+                      <Trophy className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">Winners Announced!</h3>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">Results are now available for this challenge</p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => setActiveTab('winners')}
+                    className="bg-amber-500 hover:bg-amber-600 text-white font-medium"
+                  >
+                    <Trophy className="h-4 w-4 mr-2" />
+                    View Winners
+                  </Button>
+                </div>
+                
+                {/* Quick Winners Preview */}
+                <div className="mt-4 pt-4 border-t border-amber-200 dark:border-amber-800/40 flex flex-wrap gap-3">
+                  {challenge.awards.first && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-white/60 dark:bg-slate-800/60 rounded-lg">
+                      <span className="w-6 h-6 bg-amber-400 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                      <span className="text-sm font-medium text-slate-900 dark:text-white">{challenge.awards.first.projectTitle}</span>
+                    </div>
+                  )}
+                  {challenge.awards.second && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-white/60 dark:bg-slate-800/60 rounded-lg">
+                      <span className="w-6 h-6 bg-slate-400 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                      <span className="text-sm font-medium text-slate-900 dark:text-white">{challenge.awards.second.projectTitle}</span>
+                    </div>
+                  )}
+                  {challenge.awards.third && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-white/60 dark:bg-slate-800/60 rounded-lg">
+                      <span className="w-6 h-6 bg-orange-400 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                      <span className="text-sm font-medium text-slate-900 dark:text-white">{challenge.awards.third.projectTitle}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Main Content */}
           <div className="container mx-auto px-4 mt-10">
             <div className="bg-white dark:bg-slate-900 rounded-t-xl border border-slate-200 dark:border-slate-800 shadow-lg">
@@ -453,6 +504,15 @@ const handleJoinAsTeam = async (teamId: string) => {
                     >
                       Resources
                     </TabsTrigger>
+                    {challenge.scoresReleased && (
+                      <TabsTrigger 
+                        value="winners"
+                        className="h-12 sm:h-14 px-2 sm:px-0 data-[state=active]:border-b-2 data-[state=active]:border-amber-500 dark:data-[state=active]:border-amber-400 rounded-none data-[state=active]:shadow-none text-amber-600 dark:text-amber-400 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-300 text-xs sm:text-sm whitespace-nowrap font-medium"
+                      >
+                        <Trophy className="h-3.5 w-3.5 mr-1 inline" />
+                        Winners
+                      </TabsTrigger>
+                    )}
                   </TabsList>
                 </div>
                 
@@ -923,6 +983,187 @@ const handleJoinAsTeam = async (teamId: string) => {
                     </div>
                   </div>
                 </TabsContent>
+                
+                {/* Winners Tab Content - Only shown when scores are released */}
+                {challenge.scoresReleased && challenge.awards && (
+                  <TabsContent value="winners" className="p-4 sm:p-6 pt-6 sm:pt-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                      <div className="lg:col-span-2">
+                        <div className="flex items-center gap-2 mb-6">
+                          <Trophy className="h-6 w-6 text-amber-500" />
+                          <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Challenge Winners</h3>
+                        </div>
+                        
+                        {/* Top 3 Winners */}
+                        <div className="space-y-4 mb-8">
+                          {/* 1st Place */}
+                          {challenge.awards.first && (
+                            <div className="flex items-center justify-between p-5 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-xl border border-amber-200 dark:border-amber-800/30">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-amber-400 dark:bg-amber-500 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                                  1st
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-lg text-slate-900 dark:text-white">{challenge.awards.first.projectTitle}</p>
+                                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                    {challenge.awards.first.participantType === 'team' ? (
+                                      <Users className="h-4 w-4" />
+                                    ) : (
+                                      <User className="h-4 w-4" />
+                                    )}
+                                    <span>{challenge.awards.first.participantName || 'Anonymous'}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                {challenge.awards.first.score !== null && (
+                                  <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-0 mb-1">
+                                    <Star className="h-3 w-3 mr-1 fill-current" />
+                                    {challenge.awards.first.score}/100
+                                  </Badge>
+                                )}
+                                <p className="font-bold text-xl text-emerald-600 dark:text-emerald-400">
+                                  ${challenge.awards.first.prize?.toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* 2nd Place */}
+                          {challenge.awards.second && (
+                            <div className="flex items-center justify-between p-5 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-slate-400 dark:bg-slate-500 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                                  2nd
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-lg text-slate-900 dark:text-white">{challenge.awards.second.projectTitle}</p>
+                                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                    {challenge.awards.second.participantType === 'team' ? (
+                                      <Users className="h-4 w-4" />
+                                    ) : (
+                                      <User className="h-4 w-4" />
+                                    )}
+                                    <span>{challenge.awards.second.participantName || 'Anonymous'}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                {challenge.awards.second.score !== null && (
+                                  <Badge className="bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-0 mb-1">
+                                    <Star className="h-3 w-3 mr-1 fill-current" />
+                                    {challenge.awards.second.score}/100
+                                  </Badge>
+                                )}
+                                <p className="font-bold text-xl text-emerald-600 dark:text-emerald-400">
+                                  ${challenge.awards.second.prize?.toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* 3rd Place */}
+                          {challenge.awards.third && (
+                            <div className="flex items-center justify-between p-5 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/10 dark:to-orange-800/10 rounded-xl border border-orange-200 dark:border-orange-800/30">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-orange-400 dark:bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                                  3rd
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-lg text-slate-900 dark:text-white">{challenge.awards.third.projectTitle}</p>
+                                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                    {challenge.awards.third.participantType === 'team' ? (
+                                      <Users className="h-4 w-4" />
+                                    ) : (
+                                      <User className="h-4 w-4" />
+                                    )}
+                                    <span>{challenge.awards.third.participantName || 'Anonymous'}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                {challenge.awards.third.score !== null && (
+                                  <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 border-0 mb-1">
+                                    <Star className="h-3 w-3 mr-1 fill-current" />
+                                    {challenge.awards.third.score}/100
+                                  </Badge>
+                                )}
+                                <p className="font-bold text-xl text-emerald-600 dark:text-emerald-400">
+                                  ${challenge.awards.third.prize?.toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Special Awards */}
+                        {challenge.awards.specialAwards && challenge.awards.specialAwards.length > 0 && (
+                          <div>
+                            <div className="flex items-center gap-2 mb-4">
+                              <Award className="h-5 w-5 text-purple-500" />
+                              <h4 className="text-lg font-semibold text-slate-900 dark:text-white">Special Awards</h4>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {challenge.awards.specialAwards.map((award: any, index: number) => (
+                                <div key={index} className="p-4 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-200 dark:border-purple-800/30">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Award className="h-4 w-4 text-purple-500" />
+                                    <span className="font-semibold text-purple-700 dark:text-purple-300">{award.awardName}</span>
+                                  </div>
+                                  <p className="font-medium text-slate-900 dark:text-white">{award.projectTitle}</p>
+                                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                    {award.participantType === 'team' ? (
+                                      <Users className="h-3 w-3" />
+                                    ) : (
+                                      <User className="h-3 w-3" />
+                                    )}
+                                    <span>{award.participantName || 'Anonymous'}</span>
+                                  </div>
+                                  <p className="font-bold text-emerald-600 dark:text-emerald-400 mt-2">
+                                    ${award.prize?.toLocaleString()}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Sidebar */}
+                      <div>
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
+                          <h4 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Results Summary</h4>
+                          <div className="space-y-4">
+                            <div>
+                              <p className="text-sm text-slate-500 dark:text-slate-400">Results Announced</p>
+                              <p className="font-medium text-slate-900 dark:text-white">
+                                {challenge.scoresReleasedAt ? format(challenge.scoresReleasedAt, 'MMMM d, yyyy') : 'Recently'}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-slate-500 dark:text-slate-400">Total Prize Pool</p>
+                              <p className="font-bold text-xl text-emerald-600 dark:text-emerald-400">
+                                ${challenge.total_prize?.toLocaleString()}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-slate-500 dark:text-slate-400">Total Participants</p>
+                              <p className="font-medium text-slate-900 dark:text-white">
+                                {challenge.participants} participants
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg p-4 border border-amber-200 dark:border-amber-800/30">
+                          <p className="text-sm text-amber-800 dark:text-amber-300">
+                            <strong>Congratulations</strong> to all winners! Prize distribution will be completed within 30 days.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
           </div>

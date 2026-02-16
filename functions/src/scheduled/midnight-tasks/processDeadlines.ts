@@ -93,7 +93,7 @@ async function processExpiredChallenge(challengeDoc: admin.firestore.DocumentSna
         type: "success",
         title: "Challenge Completed!",
         message: `The challenge "${challengeTitle}" has ended. Your submission has been recorded successfully!`,
-        link: "/dashboard?tab=challenges",
+        link: `/dashboard/challenges/${challengeId}`,
         metadata: { challengeId, challengeTitle }
       });
 
@@ -134,7 +134,7 @@ async function processExpiredChallenge(challengeDoc: admin.firestore.DocumentSna
         type: "warning",
         title: "Challenge Expired",
         message: `The challenge "${challengeTitle}" has ended. Unfortunately, you did not submit before the deadline.`,
-        link: "/dashboard?tab=challenges",
+        link: `/dashboard/challenges/${challengeId}`,
         metadata: { challengeId, challengeTitle }
       });
 
@@ -191,7 +191,7 @@ async function processExpiredChallenge(challengeDoc: admin.firestore.DocumentSna
             type: "info",
             title: "Team Closed",
             message: `Your team "${teamName}" has been closed because the challenge "${challengeTitle}" has ended.`,
-            link: "/dashboard?tab=teams",
+            link: `/dashboard/teams/${teamDoc.id}`,
             metadata: { teamId: teamDoc.id, teamName, challengeId, challengeTitle }
           });
         } catch (error) {

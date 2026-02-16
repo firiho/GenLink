@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { signOut } from '@/services/auth';
 import { 
@@ -7,7 +7,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from "@/lib/utils";
 import { useAuth } from '@/contexts/AuthContext';
-import LoadingScreen from '@/components/dashboard/LoadingScreen';
 import AuthLoadingScreen from '@/components/ui/auth-loading-screen';
 import MobileHeader from '@/components/dashboard/MobileHeader';
 import MobileTabNav from '@/components/partner-dashboard/MobileTabNav';
@@ -19,8 +18,7 @@ import { ChallengesView, NewChallengeForm, PreviewChallenge } from '@/components
 import EventsTab from '@/components/dashboard/events/EventsTab';
 import CreateEvent from '@/components/dashboard/events/CreateEvent';
 import EventView from '@/components/dashboard/events/EventView';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
+
 import NotificationsPage from '@/components/dashboard/NotificationsPage';
 import { getPartnerTabFromPath, getPartnerRouteFromTab, type PartnerTab } from '@/lib/routing';
 import { PERMISSIONS } from '@/constants/permissions';
@@ -34,12 +32,7 @@ const PartnerDashboard = () => {
   const [activeView, setActiveView] = useState<PartnerTab>(() => 
     getPartnerTabFromPath(location.pathname)
   );
-  const [challenges, setChallenges] = useState([]);
-  const [submissions, setSubmissions] = useState([]);
-  const [fetchingChallenges, setFetchingChallenges] = useState(true);
-  const [fetchingSubmissions, setFetchingSubmissions] = useState(true);
   const [viewData, setViewData] = useState(null);
-  const previousView = useRef(activeView);
 
   const hasPermission = (permission: string) => {
     return authUser?.permissions?.includes(permission);
@@ -66,241 +59,6 @@ const PartnerDashboard = () => {
       if (eventId) setViewData(eventId);
     }
   }, [location.pathname]);
-
-  // Extract the fetch function so we can reuse it
-  const fetchChallenges = async () => {
-    if (!authUser || !authUser.organization?.id) return;
-    
-    setFetchingChallenges(true);
-    try {
-      // Query challenges where organizationId equals current user's organization ID
-      const challengesQuery = query(
-        collection(db, 'challenges'), 
-        where('organizationId', '==', authUser.organization.id)
-      );
-      
-      const querySnapshot = await getDocs(challengesQuery);
-      const challengesList = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        
-        // Convert Firestore timestamps to JS dates
-        const createdAt = data.createdAt?.toDate ? 
-          data.createdAt.toDate().toISOString() : 
-          data.createdAt;
-          
-        const updatedAt = data.updatedAt?.toDate ? 
-          data.updatedAt.toDate().toISOString() : 
-          data.updatedAt;
-          
-        const deadline = data.deadline;
-        
-        // Calculate days left          
-        const daysLeft = deadline ? 
-          Math.max(0, Math.ceil((new Date(deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 
-          'Unknown';
-        
-        return {
-          id: doc.id,
-          ...data,
-          createdAt,
-          updatedAt,
-          daysLeft,
-          participants: data.participants || 0,
-          submissions: data.submissions || 0,
-        };
-      });
-      
-      setChallenges(challengesList);
-      console.log("Challenges refreshed:", challengesList.length);
-      
-      // Fetch submissions for these challenges
-      if (challengesList.length > 0) {
-        fetchSubmissions(challengesList.map(c => c.id));
-      } else {
-        setFetchingSubmissions(false);
-      }
-    } catch (error) {
-      console.error('Error fetching challenges:', error);
-      setFetchingSubmissions(false);
-    } finally {
-      setFetchingChallenges(false);
-    }
-  };
-  
-  // New function to fetch submissions
-  const fetchSubmissions = async (challengeIds) => {
-    if (!challengeIds || challengeIds.length === 0) {
-      setSubmissions([]);
-      setFetchingSubmissions(false);
-      return;
-    }
-    
-    setFetchingSubmissions(true);
-    try {
-      // Firestore limits 'in' queries to 10 items, so we need to batch if there are more
-      const allSubmissions = [];
-      
-      // Process challenges in batches of 10
-      for (let i = 0; i < challengeIds.length; i += 10) {
-        const batch = challengeIds.slice(i, i + 10);
-        const submissionsQuery = query(
-          collection(db, 'submissions'),
-          where('challengeId', 'in', batch)
-        );
-        
-        const submissionsSnapshot = await getDocs(submissionsQuery);
-        allSubmissions.push(...submissionsSnapshot.docs);
-      }
-      
-      const submissionsPromises = allSubmissions.map(async (submissionDoc) => {
-        const data = submissionDoc.data();
-        
-        // Get project data
-        let projectData = null;
-        let projectTitle = 'Untitled Project';
-        if (data.projectId) {
-          try {
-            const projectRef = doc(db, 'projects', data.projectId);
-            const projectSnap = await getDoc(projectRef);
-            if (projectSnap.exists()) {
-              projectData = projectSnap.data();
-              projectTitle = projectData.title || 'Untitled Project';
-            }
-          } catch (error) {
-            console.error('Error fetching project:', error);
-          }
-        }
-        
-        // Get challenge data
-        const challengeRef = doc(db, 'challenges', data.challengeId);
-        const challengeSnap = await getDoc(challengeRef);
-        const challengeData = challengeSnap.exists() ? challengeSnap.data() : {};
-        
-        // Handle team submissions
-        let participant = null;
-        let participantType = 'individual';
-        
-        if (data.teamId) {
-          // Team submission - fetch team data
-          try {
-            const teamRef = doc(db, 'teams', data.teamId);
-            const teamSnap = await getDoc(teamRef);
-            if (teamSnap.exists()) {
-              const teamData = teamSnap.data();
-              participantType = 'team';
-              participant = {
-                uid: data.teamId,
-                name: teamData.name || 'Unnamed Team',
-                email: '', // Teams don't have emails
-                avatar: teamData.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(teamData.name || 'T')}`,
-                type: 'team'
-              };
-            }
-          } catch (error) {
-            console.error('Error fetching team:', error);
-            // Fallback to individual if team fetch fails
-            const publicProfileRef = doc(db, 'profiles', data.userId);
-            const publicProfileSnap = await getDoc(publicProfileRef);
-            const publicProfileData = publicProfileSnap.exists() ? publicProfileSnap.data() : {};
-            participant = {
-              uid: data.userId,
-              name: `${publicProfileData.firstName || ''} ${publicProfileData.lastName || ''}`.trim() || 'Anonymous User',
-              email: publicProfileData.email || 'No email provided',
-              avatar: publicProfileData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(publicProfileData.firstName || 'U')}`,
-              type: 'individual'
-            };
-          }
-        } else {
-          // Individual submission - fetch user profile
-          const publicProfileRef = doc(db, 'profiles', data.userId);
-          const publicProfileSnap = await getDoc(publicProfileRef);
-          const publicProfileData = publicProfileSnap.exists() ? publicProfileSnap.data() : {};
-          participant = {
-            uid: data.userId,
-            name: `${publicProfileData.firstName || ''} ${publicProfileData.lastName || ''}`.trim() || 'Anonymous User',
-            email: publicProfileData.email || 'No email provided',
-            avatar: publicProfileData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(publicProfileData.firstName || 'U')}`,
-            type: 'individual'
-          };
-        }
-        
-        // Convert timestamps
-        const submittedAt = data.createdAt?.toDate ? 
-          data.createdAt.toDate().toISOString() : 
-          data.createdAt;
-          
-        const updatedAt = data.updatedAt?.toDate ? 
-          data.updatedAt.toDate().toISOString() : 
-          data.updatedAt;
-        
-        const reviewedAt = data.reviewedAt?.toDate ? 
-          data.reviewedAt.toDate().toISOString() : 
-          data.reviewedAt;
-        
-        return {
-          id: submissionDoc.id,
-          projectId: data.projectId || null,
-          title: projectTitle,
-          challenge: challengeData.title || 'Unnamed Challenge',
-          challengeId: data.challengeId,
-          participant: participant,
-          participantType: participantType,
-          teamId: data.teamId || null,
-          status: data.status || 'pending',
-          submittedAt: submittedAt,
-          lastUpdated: updatedAt,
-          reviewedAt: reviewedAt,
-          tags: challengeData.tags || [],
-          score: data.score !== undefined ? data.score : null,
-          feedback: data.feedback || '',
-          note: data.note || '',
-          projectData: projectData // Store full project data for navigation
-        };
-      });
-      
-      // Use Promise.all to process all promises in parallel
-      const submissionsList = await Promise.all(submissionsPromises);
-      
-      // Sort submissions by date (newest first)
-      submissionsList.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
-      
-      setSubmissions(submissionsList);
-      console.log("Submissions refreshed:", submissionsList.length);
-    } catch (error) {
-      console.error('Error fetching submissions:', error);
-    } finally {
-      setFetchingSubmissions(false);
-    }
-  };
-
-  // Initial fetch when component mounts
-  useEffect(() => {
-    if (authUser) {
-      fetchChallenges();
-    }
-  }, [authUser]);
-
-  // Only fetch when specifically going to relevant views
-  useEffect(() => {
-    // Fetch challenges when returning to these views
-    if ((activeView === 'challenges' && previousView.current === 'create-challenge') ||
-        (activeView === 'overview' && 
-         (previousView.current === 'create-challenge' || 
-          previousView.current === 'preview-challenge'))) {
-      fetchChallenges();
-    }
-    
-    // Fetch submissions when going to submissions view
-    if (activeView === 'submissions' && previousView.current !== 'submissions') {
-      // If we already have challenge IDs, fetch submissions directly
-      if (challenges.length > 0) {
-        fetchSubmissions(challenges.map(c => c.id));
-      }
-    }
-    
-    // Update the previous view ref
-    previousView.current = activeView;
-  }, [activeView, challenges]);
 
   const handleSignOut = async () => {
     try {
@@ -341,17 +99,12 @@ const PartnerDashboard = () => {
     return <Navigate to="/signin" />;
   }
 
-  const isLoading = loading || fetchingChallenges || 
-    (activeView === 'submissions' && fetchingSubmissions);
-
   const renderMainContent = () => {
     switch (activeView) {
       case 'overview':
         return (
           <OverviewView 
             user={authUser} 
-            recentChallenges={challenges.slice(0, 3)} 
-            recentSubmissions={submissions.slice(0, 5)} 
             setActiveView={handleViewChange}
           />
         );
@@ -360,11 +113,8 @@ const PartnerDashboard = () => {
         if (!hasPermission(PERMISSIONS.MANAGE_CHALLENGES)) return <div className="p-8 text-center text-slate-500">Access Denied</div>;
         return (
           <ChallengesView 
-            challenges={challenges} 
             setActiveView={handleViewChange}
-            refreshChallenges={fetchChallenges}
             user={authUser}
-            submissions={submissions}
           />
         );
 
@@ -372,10 +122,7 @@ const PartnerDashboard = () => {
         if (!hasPermission(PERMISSIONS.MANAGE_SUBMISSIONS)) return <div className="p-8 text-center text-slate-500">Access Denied</div>;
         return (
           <SubmissionsView 
-            submissions={submissions} 
-            challenges={challenges}
-            refreshSubmissions={() => fetchSubmissions(challenges.map(c => c.id))}
-            isLoading={fetchingSubmissions}
+            user={authUser}
           />
         );
 
@@ -591,15 +338,9 @@ const PartnerDashboard = () => {
           "px-3 sm:px-4 lg:px-6 xl:px-8",
           "pt-16 sm:pt-20 lg:pt-6 pb-20 lg:pb-8",
         )}>
-          {isLoading ? (
-        <div className="flex items-center justify-center">
-          <LoadingScreen />
-        </div>
-      ) : (
         <div className="max-w-7xl mx-auto">
           {renderMainContent()}
         </div>
-      )}  
       </main>
       {/* Rest of the component render code */}
       <MobileTabNav activeView={activeView} setActiveView={handleViewChange} user={authUser} />

@@ -115,11 +115,11 @@ async function notifyWinner(
 
   await addNotification(userId, {
     type: "achievement",
-    title: isSpecialAward ? `🏆 Special Award Winner!` : `🏆 ${placement} Place Winner!`,
+    title: isSpecialAward ? "🏆 Special Award Winner!" : `🏆 ${placement} Place Winner!`,
     message: isSpecialAward
       ? `Congratulations! Your project "${projectTitle}" won the ${awardType} award in "${challengeTitle}"! You've been awarded $${prize}.`
       : `Congratulations! Your project "${projectTitle}" won ${placement} place in "${challengeTitle}"! You've been awarded $${prize}.`,
-    link: "/dashboard?tab=challenges",
+    link: `/dashboard/challenges/${challengeId}`,
     metadata: { challengeId, challengeTitle, awardType, prize, projectTitle }
   });
 }
@@ -136,7 +136,7 @@ async function notifyParticipant(
     type: "info",
     title: "Challenge Results Announced",
     message: `The results for "${challengeTitle}" have been announced. Check out the winners and see how you ranked!`,
-    link: `/challenges/${challengeId}`,
+    link: `/challenge/${challengeId}`,
     metadata: { challengeId, challengeTitle }
   });
 }
@@ -240,7 +240,7 @@ async function processReleasedChallenge(
           winnersProcessed++;
           totalPrizeDistributed += specialAward.prize || 0;
         } catch (error) {
-          logger.error(`Failed to process special award winner`, { challengeId, error });
+          logger.error("Failed to process special award winner", { challengeId, error });
         }
       }
     }

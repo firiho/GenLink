@@ -8,25 +8,26 @@ import WelcomeSection from '../dashboard/WelcomeSection';
 import { PERMISSIONS } from '@/constants/permissions';
 import { PartnerStats, parseStatValue, formatStatNumber, formatStatCurrency, formatStatPercentage } from '@/types/stats';
 import { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const OverviewView = ({
-  recentChallenges,
-  recentSubmissions,
   setActiveView,
   user
 }) => {
   const [orgStats, setOrgStats] = useState<PartnerStats>({});
   const [loading, setLoading] = useState(true);
+  const [recentChallenges, setRecentChallenges] = useState([]);
+  const [recentSubmissions, setRecentSubmissions] = useState([]);
 
   const hasPermission = (permission: string) => {
     return user?.permissions?.includes(permission);
   };
 
-  // Fetch stats from stats collection - stats/org_{orgId}
+  // Fetch stats and recent data
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchOverviewData = async () => {
       const orgId = user?.organization?.id;
       if (!orgId) {
         setLoading(false);
@@ -34,20 +35,122 @@ export const OverviewView = ({
       }
 
       try {
+        setLoading(true);
+        
+        // Fetch stats
         const statsDocRef = doc(db, 'stats', `org_${orgId}`);
         const statsSnapshot = await getDoc(statsDocRef);
         
         if (statsSnapshot.exists()) {
           setOrgStats(statsSnapshot.data() || {});
         }
+
+        // Fetch recent challenges from org subcollection
+        const orgChallengesRef = collection(db, 'organizations', orgId, 'challenges');
+        const orgChallengesSnapshot = await getDocs(orgChallengesRef);
+        const challengeIds = orgChallengesSnapshot.docs.map(d => d.id);
+        
+        // Fetch full challenge data for each ID
+        const challengesList = [];
+        for (const challengeId of challengeIds) {
+          const challengeDoc = await getDoc(doc(db, 'challenges', challengeId));
+          if (challengeDoc.exists()) {
+            const data = challengeDoc.data();
+            const deadline = data.deadline;
+            const daysLeft = deadline ? 
+              Math.max(0, Math.ceil((new Date(deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))) : 
+              'Unknown';
+            challengesList.push({
+              id: challengeDoc.id,
+              ...data,
+              daysLeft,
+              participants: data.participants || 0,
+            });
+          }
+        }
+        setRecentChallenges(challengesList.slice(0, 3));
+
+        // Fetch recent submissions for these challenges
+        if (challengesList.length > 0) {
+          const challengeIds = challengesList.slice(0, 10).map(c => c.id);
+          const submissionsQuery = query(
+            collection(db, 'submissions'),
+            where('challengeId', 'in', challengeIds)
+          );
+          const submissionsSnapshot = await getDocs(submissionsQuery);
+          
+          const submissionsList = await Promise.all(
+            submissionsSnapshot.docs.slice(0, 5).map(async (submissionDoc) => {
+              const data = submissionDoc.data();
+              
+              // Get project title
+              let projectTitle = 'Untitled Project';
+              if (data.projectId) {
+                try {
+                  const projectRef = doc(db, 'projects', data.projectId);
+                  const projectSnap = await getDoc(projectRef);
+                  if (projectSnap.exists()) {
+                    projectTitle = projectSnap.data().title || 'Untitled Project';
+                  }
+                } catch (error) {
+                  console.error('Error fetching project:', error);
+                }
+              }
+              
+              // Get participant info
+              let participant = { name: 'Anonymous User', type: 'individual' };
+              if (data.teamId) {
+                try {
+                  const teamRef = doc(db, 'teams', data.teamId);
+                  const teamSnap = await getDoc(teamRef);
+                  if (teamSnap.exists()) {
+                    participant = { name: teamSnap.data().name || 'Unnamed Team', type: 'team' };
+                  }
+                } catch (error) {
+                  console.error('Error fetching team:', error);
+                }
+              } else if (data.userId) {
+                try {
+                  const profileRef = doc(db, 'profiles', data.userId);
+                  const profileSnap = await getDoc(profileRef);
+                  if (profileSnap.exists()) {
+                    const profileData = profileSnap.data();
+                    participant = { 
+                      name: `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim() || 'Anonymous User',
+                      type: 'individual'
+                    };
+                  }
+                } catch (error) {
+                  console.error('Error fetching profile:', error);
+                }
+              }
+              
+              const submittedAt = data.createdAt?.toDate ? 
+                data.createdAt.toDate().toISOString() : 
+                data.createdAt;
+              
+              return {
+                id: submissionDoc.id,
+                title: projectTitle,
+                participant,
+                status: data.status || 'pending',
+                submittedAt,
+              };
+            })
+          );
+          
+          // Sort by date and take most recent
+          submissionsList.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+          setRecentSubmissions(submissionsList.slice(0, 5));
+        }
       } catch (error) {
-        console.error('Error fetching org stats:', error);
+        console.error('Error fetching overview data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStats();
+    fetchOverviewData();
   }, [user?.organization?.id]);
   
   // Parse stats with change calculations
@@ -105,7 +208,7 @@ export const OverviewView = ({
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       <WelcomeSection title={orgName} subtitle={'Here is what\'s happening with your GenLink'} />
       {/* Stats Grid */}
-      <Stats stats={stats} loading={false}/>
+      <Stats stats={stats} loading={loading}/>
 
       {/* Recent Sections - Updated for better mobile view */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6">
@@ -127,7 +230,22 @@ export const OverviewView = ({
               </div>
             </div>
             <div className="p-4 sm:p-6">
-              {recentChallenges.length > 0 ? (
+              {loading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-start space-x-3">
+                        <Skeleton className="h-9 w-9 rounded-lg" />
+                        <div className="flex-1">
+                          <Skeleton className="h-4 w-3/4 mb-2" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : recentChallenges.length > 0 ? (
                 <div className="space-y-3">
                   {recentChallenges.slice(0, 3).map((challenge) => (
                     <div
@@ -192,7 +310,23 @@ export const OverviewView = ({
               </div>
             </div>
             <div className="p-4 sm:p-6">
-              {recentSubmissions.length > 0 ? (
+              {loading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-start p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                      <Skeleton className="h-9 w-9 rounded-lg mr-4" />
+                      <div className="flex-1">
+                        <Skeleton className="h-4 w-2/3 mb-2" />
+                        <Skeleton className="h-3 w-1/3 mb-2" />
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-5 w-16 rounded-full" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : recentSubmissions.length > 0 ? (
                 <div className="space-y-3">
                   {recentSubmissions.slice(0, 3).map((submission) => (
                     <div 

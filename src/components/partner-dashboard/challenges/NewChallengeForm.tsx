@@ -360,6 +360,19 @@ export const NewChallengeForm = ({setActiveView, editMode=false, existingChallen
       try {
         const docRef = doc(db, 'challenges', preparedData.id);
         await setDoc(docRef, preparedData, { merge: true });
+        
+        // Also save reference in organization's challenges subcollection
+        if (user?.organization?.id) {
+          const orgChallengeRef = doc(db, 'organizations', user.organization.id, 'challenges', preparedData.id);
+          await setDoc(orgChallengeRef, {
+            id: preparedData.id,
+            title: preparedData.title,
+            status: preparedData.status,
+            deadline: preparedData.deadline,
+            createdAt: preparedData.createdAt,
+            updatedAt: preparedData.updatedAt,
+          }, { merge: true });
+        }
       } catch (error) {
         console.error('Error adding document:', error);
         throw error;

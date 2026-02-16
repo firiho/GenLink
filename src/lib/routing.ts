@@ -3,7 +3,7 @@
  * Handles URL-to-state mapping and state-to-URL mapping
  */
 
-export type DashboardTab = 'overview' | 'challenges' | 'challenge' | 'projects' | 'create-project' | 'project' | 'edit-project' | 'events' | 'create-event' | 'event' | 'edit-event' | 'teams' | 'teams-discover' | 'teams-invitations' | 'team-manage' | 'profile' | 'settings' | 'notifications';
+export type DashboardTab = 'overview' | 'challenges' | 'challenge' | 'projects' | 'create-project' | 'project' | 'edit-project' | 'events' | 'create-event' | 'event' | 'edit-event' | 'teams' | 'teams-discover' | 'teams-invitations' | 'team-manage' | 'profile' | 'wallet' | 'settings' | 'notifications';
 export type PartnerTab = 'overview' | 'challenges' | 'submissions' | 'events' | 'create-event' | 'event' | 'edit-event' | 'settings' | 'create-challenge' | 'preview-challenge' | 'notifications';
 export type AdminTab = 'overview' | 'partners' | 'communities' | 'support' | 'analytics' | 'settings' | 'testing' | 'notifications';
 
@@ -30,6 +30,7 @@ export const getDashboardTabFromPath = (pathname: string): DashboardTab => {
   }
   if (pathname.includes('/teams')) return 'teams';
   if (pathname.includes('/profile')) return 'profile';
+  if (pathname.includes('/wallet')) return 'wallet';
   if (pathname.includes('/settings')) return 'settings';
   if (pathname.includes('/notifications')) return 'notifications';
   return 'overview'; // default
@@ -87,6 +88,7 @@ export const getDashboardRouteFromTab = (tab: DashboardTab): string => {
     'teams-invitations': '/dashboard/teams/invitations',
     'team-manage': '/dashboard/teams', // This will be overridden with actual team ID
     profile: '/dashboard/profile',
+    wallet: '/dashboard/wallet',
     settings: '/dashboard/settings',
     notifications: '/dashboard/notifications',
   };

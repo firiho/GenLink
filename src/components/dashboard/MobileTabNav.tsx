@@ -1,4 +1,4 @@
-import { LayoutDashboard, Trophy, Users, Settings, User, FolderOpen, MoreVertical, Calendar } from 'lucide-react';
+import { LayoutDashboard, Trophy, Users, Settings, User, FolderOpen, MoreVertical, Calendar, Wallet } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useState } from 'react';
 import {
@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const MobileTabNav = ({ activeView, setActiveView }) => {
+const MobileTabNav = ({ activeView, setActiveView, hasWallet = false }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const mainTabs = [
@@ -21,6 +21,8 @@ const MobileTabNav = ({ activeView, setActiveView }) => {
   const menuTabs = [
     { icon: Calendar, label: 'Events', value: 'events' },
     { icon: User, label: 'Profile', value: 'profile' },
+    // Only show Wallet if user has one
+    ...(hasWallet ? [{ icon: Wallet, label: 'Wallet', value: 'wallet' }] : []),
     { icon: Settings, label: 'Settings', value: 'settings' }
   ];
 
@@ -71,12 +73,12 @@ const MobileTabNav = ({ activeView, setActiveView }) => {
               className={cn(
                 "flex flex-col items-center px-2 sm:px-3 py-2 rounded-xl transition-all duration-200",
                 "active:scale-95 touch-none select-none relative group flex-1 max-w-[25%]",
-                (activeView === 'events' || activeView === 'profile' || activeView === 'settings')
+                (activeView === 'events' || activeView === 'profile' || activeView === 'wallet' || activeView === 'settings')
                   ? "text-slate-900 dark:text-white" 
                   : "text-slate-500 dark:text-slate-400"
               )}
             >
-              {(activeView === 'events' || activeView === 'profile' || activeView === 'settings') && (
+              {(activeView === 'events' || activeView === 'profile' || activeView === 'wallet' || activeView === 'settings') && (
                 <div
                   className="absolute inset-0 bg-slate-100 dark:bg-slate-800 rounded-xl"
                 />
@@ -84,13 +86,13 @@ const MobileTabNav = ({ activeView, setActiveView }) => {
               <div className="relative z-10 flex flex-col items-center">
                 <MoreVertical className={cn(
                   "h-5 w-5 transition-all duration-200",
-                  (activeView === 'events' || activeView === 'profile' || activeView === 'settings')
+                  (activeView === 'events' || activeView === 'profile' || activeView === 'wallet' || activeView === 'settings')
                     ? "scale-110" 
                     : "group-hover:scale-105"
                 )} />
                 <span className={cn(
                   "text-xs mt-1 font-medium transition-colors duration-200",
-                  (activeView === 'events' || activeView === 'profile' || activeView === 'settings')
+                  (activeView === 'events' || activeView === 'profile' || activeView === 'wallet' || activeView === 'settings')
                     ? "text-slate-900 dark:text-white" 
                     : "text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300"
                 )}>
